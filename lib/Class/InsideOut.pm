@@ -1,6 +1,6 @@
 package Class::InsideOut;
 
-$VERSION     = "0.05";
+$VERSION     = "0.06";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( );
 @EXPORT_OK   = qw ( property register id );
@@ -11,8 +11,8 @@ use Carp;
 use Exporter;
 use Scalar::Util qw( refaddr weaken );
 
-my %PROPERTIES_OF;
-my %REGISTRY_OF;
+my %PROPERTIES_OF;   # class => [ list of properties ]
+my %OBJECT_REGISTRY; # refaddr => object reference
 
 BEGIN { *id = \&Scalar::Util::refaddr; }
 
@@ -20,7 +20,6 @@ sub import {
     my $caller = caller;
     {
         no strict 'refs';
-        *{ $caller . "::CLONE"   } = _gen_CLONE( $caller );
         *{ $caller . "::DESTROY" } = _gen_DESTROY( $caller );
     }
     goto &Exporter::import;
@@ -33,7 +32,7 @@ sub property(\%) {
 
 sub register {
     my $obj = shift;
-    weaken( $REGISTRY_OF{ scalar caller }{ refaddr $obj } = $obj );
+    weaken( $OBJECT_REGISTRY{ refaddr $obj } = $obj );
     return $obj;
 }
 
@@ -41,31 +40,34 @@ sub register {
 # private functions for implementation
 #--------------------------------------------------------------------------#
 
-sub _gen_CLONE {
+# Registering is global to avoid having to register objects for each class. 
+# CLONE is not exported but CLONE in Class::InsideOut updates all registered
+# objects for all properties across all classes 
+
+sub CLONE {
     my $class = shift;
-    return sub {
-        my $registry = $REGISTRY_OF{ $class };
-        my $properties = $PROPERTIES_OF{ $class };
+
+    # assemble references to all properties for all classes
+    my @properties = map { @$_ } values %PROPERTIES_OF;
+    
+    for my $old_id ( keys %OBJECT_REGISTRY ) {  
         
-        for my $old_id ( keys %$registry ) {  
-           
-            # look under old_id to find the new, cloned reference
-            my $object = $registry->{ $old_id };
-            my $new_id = refaddr $object;
-
-            # relocate data for all properties
-            for my $prop ( @$properties ) {
-                $prop->{ $new_id } = $prop->{ $old_id };
-                delete $prop->{ $old_id };
-            }
-
-            # update the weak reference to the new, cloned object
-            weaken ( $registry->{ $new_id } = $object );
-            delete $registry->{ $old_id };
+        # retrieve the new object and id
+        my $object = $OBJECT_REGISTRY{ $old_id };
+        my $new_id = refaddr $object;
+        
+        # for all properties, relocate data to the new id if 
+        # the property has data under the old id
+        for my $prop ( @properties ) {
+            next unless exists $prop->{ $old_id };
+            $prop->{ $new_id } = $prop->{ $old_id };
+            delete $prop->{ $old_id };
         }
-       
-        return;
-    };
+        
+        # update the registry to the new, cloned object
+        weaken ( $OBJECT_REGISTRY{ $new_id } = $object );
+        delete $OBJECT_REGISTRY{ $old_id };
+    }
 }
 
 sub _gen_DESTROY {
@@ -80,7 +82,7 @@ sub _gen_DESTROY {
         }
         $demolish->($obj) if defined $demolish;
         delete $_->{ $obj_id } for @{ $PROPERTIES_OF{ $class } };
-        delete $REGISTRY_OF{ $class }{ $obj_id };
+        delete $OBJECT_REGISTRY{ $obj_id };
         return;
     };
 }
@@ -90,9 +92,7 @@ sub _gen_DESTROY {
 #--------------------------------------------------------------------------#
     
 sub _object_count {
-    my $class = shift;
-    my $registry = $REGISTRY_OF{ $class };
-    return defined $registry ? scalar( keys %$registry ) : 0;
+    return scalar( keys %OBJECT_REGISTRY );
 }
 
 sub _property_count {
@@ -102,10 +102,16 @@ sub _property_count {
 }
 
 sub _leaking_memory {
-    my $class = shift;
-    my $obj_count = keys %{ $REGISTRY_OF{ $class } };
-    my $properties = $PROPERTIES_OF{ $class };
-    return scalar grep { $obj_count != scalar keys %$_ } @$properties;
+    my @properties = map { @$_ } values %PROPERTIES_OF;
+
+    my %leaks;
+    for my $prop ( @properties ) {
+        for my $obj_id ( keys %$prop ) {
+            $leaks{ $obj_id }++ if not exists $OBJECT_REGISTRY{ $obj_id };
+        }
+    }
+
+    return scalar keys %leaks;
 }
 
 1; #this line is important and will help the module return a true value

@@ -1,5 +1,9 @@
 Revision history for Perl module Class::InsideOut
 
+0.06 in progress
+    - CLONE no longer exported; all refaddr index cleanup handled globally in
+      Class::InsideOut::CLONE
+
 0.05 Fri Jan  6 09:07:07 EST 2006
     - added caveats on usage and current limitations
     - more documentation tweaks

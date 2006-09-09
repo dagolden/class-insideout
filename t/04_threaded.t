@@ -16,7 +16,7 @@ BEGIN {
             plan skip_all => "thread support requires perl 5.8";
         }
         else {
-            plan tests => 4;
+            plan tests => 10;
         }
     }
     else {
@@ -28,24 +28,41 @@ $|++; # keep stdout and stderr in order on Win32
 
 #--------------------------------------------------------------------------#
 
-my $class = "t::Object::Animal";
-my $o;
+my $class    = "t::Object::Animal";
+my $subclass = "t::Object::Animal::Baboon";
+my ($o, $p);
 
 #--------------------------------------------------------------------------#
 
 require_ok( $class );
+require_ok( $subclass );
 
 ok( ($o = $class->new()) && $o->isa($class),
     "Creating a $class object"
 );
 
+ok( ($p = $subclass->new()) && $p->isa($subclass),
+    "Creating a $subclass object"
+);
+
+
 is( $o->name( "Larry" ), "Larry",
-    "Setting a name for the object in the parent"
+    "Setting a name for the superclass object in the parent"
+);
+
+is( $p->name( "Harry" ), "Harry",
+    "Setting a name for the subclass object in the parent"
+);
+
+is( $p->color( "brown" ), "brown",
+    "Setting a color for the subclass object in the parent"
 );
 
 my $thr = threads->new( 
     sub { 
-        is( $o->name, "Larry", "got right name in thread") 
+        is( $o->name, "Larry", "got right superclass object name in thread");
+        is( $p->name, "Harry", "got right subclass object name in thread"); 
+        is( $p->color, "brown", "got right subclass object name in thread"); 
     } 
 );
 

@@ -4,7 +4,7 @@ use Class::InsideOut ();
 
 $|++; # keep stdout and stderr in order on Win32
 
-plan tests => 12;
+plan tests => 11;
 
 #--------------------------------------------------------------------------#
 
@@ -35,7 +35,7 @@ is( Class::InsideOut::_object_count( "$class" ), 2,
     "$class has 2 objects registered"
 );
 
-for ( qw( CLONE DESTROY ) ) {
+for ( qw( DESTROY ) ) {
     ok( $o->can($_), "Object can '$_'" );
 }
 

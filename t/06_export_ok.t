@@ -4,7 +4,6 @@ my @available;
 
 BEGIN {
     @available = qw(
-      CLONE
       DESTROY
       property
       register
