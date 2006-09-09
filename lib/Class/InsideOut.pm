@@ -217,8 +217,8 @@ Class::InsideOut - a safe, simple inside-out object construction kit
  use Class::InsideOut qw( property register id );
  use Scalar::Util qw( refaddr );
  
- # declare a lexical property hash with 'my'
- property my %name;
+ # declare a lexical property "name" as a lexical ("my") hash
+ property name => my %name;
  
  sub new {
    my $class = shift;
@@ -253,6 +253,11 @@ Class::InsideOut - a safe, simple inside-out object construction kit
 This is an B<alpha release> for a work in progress. It is B<functional but
 incomplete> and should not be used for any production purpose.  It has been
 released to solicit peer review and feedback.
+
+WARNING: Version 0.08 introduces a B<BACKWARDS INCOMPATIBLE> syntax change to
+the C<property> method.  C<property> now requires two arguments, including a
+label for the property.  This label will be used in future versions to better
+support introspection and accessor creation.
 
 Serialization with L<Storable> appears to be working but may have unanticipated
 bugs and could use some real-world testing.  Property destruction support for
@@ -376,10 +381,15 @@ the description of the C<DEMOLISH> method.
 =head2 Declaring and accessing object properties
 
 Object properties are declared with the C<property> function, which must
-be passed a single lexical (i.e. C<my>) hash.
+be passed a label and  lexical (i.e. C<my>) hash.
 
-  property my %name;
-  property my %age;
+  property name => my %name;
+  property age => my %age;
+
+If users do not wish to import C<property>, properties may be declared
+using a fully qualified syntax:
+
+  Class::InsideOut::property name => my %name;
 
 Properties are private by default and no accessors are created.  Users are
 free to create accessors of any style.
@@ -557,12 +567,16 @@ Perl 5.6.  Win32 Perl 5.8 C<fork> is supported.
 
 =head2 C<property>
 
-  property my %name;
+  property name => my %name;
 
-Declares an inside-out property.  The argument must be a lexical hash, though
-the C<my> keyword can be included as part of the argument rather than as a
-separate statement.  No accessor is created, but the property will be tracked
-for memory cleanup during object destruction and for proper thread-safety.
+Declares an inside-out property.  Two arguments are required.  The first is a
+label for the property; in a future version, this label will be used for
+introspection and generating accessors and thus should be a valid perl
+identifier.  The second argument must be the lexical hash that will be used to
+store data for that property.  Note that the C<my> keyword can be included as
+part of the argument rather than as a separate statement.  No accessor is
+created, but the property will be tracked for memory cleanup during object
+destruction and for proper thread-safety.
 
 =head2 C<register>
 

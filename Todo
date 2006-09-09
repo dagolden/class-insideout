@@ -1,7 +1,9 @@
 TODO list for Perl module Class::InsideOut
 
-- switch property syntax to property name => my %name;
-- add examples showing Class::InsideOut::property my %foo
+- add introspection methods
+- update storable hooks to use new property names
+- "evert" method -- dump/reconstruct to a hash  (??)
+  ( $hash_ref = $obj->evert; $newobj = Class->evert( $hash_ref ) )
 - storable hooks: pre-freeze user hook
 - storable_attach and singleton support (!?)
 - ":all" export key
@@ -15,8 +17,6 @@ TODO list for Perl module Class::InsideOut
 - expand documentation (tutorial?)
 - add checks for XS weaken and add to documentation
 - pre-clone user hook??
-- "evert" method -- dump/reconstruct to a hash  (??)
-  ( $hash_ref = $obj->evert; $newobj = Class->evert( $hash_ref ) )
 
 #--------------------------------------------------------------------------#
 # Interface brainstorming below
