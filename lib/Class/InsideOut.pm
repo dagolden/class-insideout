@@ -3,7 +3,7 @@ package Class::InsideOut;
 $VERSION     = "0.02";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( CLONE DESTROY );
-@EXPORT_OK   = qw ( );
+@EXPORT_OK   = qw ( property register );
 %EXPORT_TAGS = ( );
     
 use strict;
@@ -14,6 +14,12 @@ use Scalar::Util qw( refaddr weaken );
 my %PROPERTIES_OF;
 my %REGISTRY_OF;
 
+sub import {
+    my $package = shift;
+    unshift @_, $package, @Class::InsideOut::EXPORT;
+    goto &Exporter::import;
+}
+    
 sub property(\%) {
     push @{ $PROPERTIES_OF{ scalar caller } }, $_[0];
     return;

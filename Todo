@@ -1,6 +1,5 @@
 TODO list for Perl module Class::InsideOut
 
-- optional exporting while always exporting CLONE and DESTROY
 - SUPER::DESTROY during DESTROY
 - DEMOLISH during DESTROY
 - foreign inheritance

@@ -1,4 +1,4 @@
-# Class::InsideOut - check module loading and create testing directory
+use strict;
 
 my @api;
 
@@ -10,6 +10,7 @@ BEGIN {
       register
       _property_count
       _object_count
+      _leaking_memory
     );
 }
 
