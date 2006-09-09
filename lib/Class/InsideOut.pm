@@ -69,12 +69,13 @@ sub import {
     # check for ":singleton" and do export attach instead of thaw
     # make ":singleton" an empty tag to Exporter doesn't choke on it
     if ( grep { $_ eq ":singleton" } @_ ) {
+        *{ "$caller\::STORABLE_freeze" } = _gen_STORABLE_freeze( $caller, 1 );
         *{ "$caller\::STORABLE_attach" } = _gen_STORABLE_attach( $caller );
     }
     else {
-        *{ "$caller\::STORABLE_freeze" } = _gen_STORABLE_freeze( $caller );
+        *{ "$caller\::STORABLE_freeze" } = _gen_STORABLE_freeze( $caller, 0 );
+        *{ "$caller\::STORABLE_thaw" } = _gen_STORABLE_thaw( $caller );
     }
-    *{ "$caller\::STORABLE_thaw" } = _gen_STORABLE_thaw( $caller );
     goto &Exporter::import;
 }
 
@@ -184,6 +185,47 @@ sub _class_tree {
     return @{ $CLASS_ISA{ $class } };
 }
 
+sub _evert {
+    my ($class, $obj, $data) = @_;
+    
+    # Setup inheritance array
+    my @class_isa = _class_tree( $class );
+    
+    if ( ref $data eq 'HASH' ) { # reload hash to object
+
+    }
+    else { # turn object into hash
+        
+        # Extract properties to save
+        my %property_vals;
+        for my $c ( @class_isa ) {
+            next unless exists $PROP_DATA_FOR{ $c };
+            my $properties = $PROP_DATA_FOR{ $c };
+            for my $prop ( @$properties ) {
+                my $value = exists $prop->{ refaddr $obj }
+                          ? $prop->{ refaddr $obj }
+                          : undef ;
+                push @{ $property_vals{$c} }, $value;
+            }
+        }
+
+        # extract object reference contents (by type)
+        my $type = reftype $obj;
+        my $contents = $type eq 'SCALAR' ? \do{ my $s = $$obj }
+                     : $type eq 'ARRAY'  ? [ @$obj ]
+                     : $type eq 'HASH'   ? { %$obj }
+                     : undef    # other types not supported
+                     ;
+ 
+        # assemble reference to hand back
+        return {
+            type => $type,
+            contents => $contents,
+            properties => \%property_vals
+        };
+    }
+}
+
 sub _gen_accessor {
     my ($ref) = @_;
     return sub {
@@ -261,11 +303,16 @@ sub _gen_DESTROY {
 
 sub _gen_STORABLE_attach {
     my $class = shift;
-    return sub { shift };
+    return sub { 
+        my ( $class, $cloning, $serialized ) = @_;
+        require Storable;
+        my $data = Storable::thaw( $serialized );
+        return $class->new();
+    };
 }
         
 sub _gen_STORABLE_freeze {
-    my $class = shift;
+    my ($class, $singleton) = @_;
     return sub {
         my ( $obj, $cloning ) = @_;
 
@@ -283,36 +330,19 @@ sub _gen_STORABLE_freeze {
         }
 
         # Extract properties to save
-        my %property_vals;
-        for my $c ( @class_isa ) {
-            next unless exists $PROP_DATA_FOR{ $c };
-            my $properties = $PROP_DATA_FOR{ $c };
-            for my $prop ( @$properties ) {
-                my $value = exists $prop->{ refaddr $obj }
-                          ? $prop->{ refaddr $obj }
-                          : undef ;
-                push @{ $property_vals{$c} }, $value;
-            }
+        my $data = _evert( $class, $obj );
+
+        if ( $singleton ) {
+            # can't return refs, so freeze data as string and return
+            require Storable;
+            return Storable::freeze( $data );
         }
-
-        # extract object reference contents (by type)
-        my $type = reftype $obj;
-        my $contents = $type eq 'SCALAR' ? \do{ my $s = $$obj }
-                     : $type eq 'ARRAY'  ? [ @$obj ]
-                     : $type eq 'HASH'   ? { %$obj }
-                     : undef    # other types not supported
-                     ;
- 
-        # assemble reference to hand back to Storable
-        my $data = {
-            contents => $contents,
-            properties => \%property_vals
-        };
-
-        # return $serialized, @refs
-        # serialized string doesn't matter -- all data has been moved into
-        # the additional ref
-        return 'BOGUS', $data;
+        else {
+            # return $serialized, @refs
+            # serialized string doesn't matter -- all data has been moved into
+            # the additional ref
+            return 'BOGUS', $data;
+        }
     };
 }
 
