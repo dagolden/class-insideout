@@ -8,7 +8,6 @@ our $self;
 
 sub get_instance { 
     $self ||= register( bless \(my $s), shift);
-    warn "get_i: " . id $self;
     return $self;
 }
 
@@ -19,11 +18,8 @@ sub STORABLE_attach_hook {
     }
     else {
         my $obj = $class->get_instance();
-        use Data::Dump::Streamer;
-        $name{ id $obj } = $data->{properties}{__PACKAGE__}{name};
-        warn "obj: " . id $obj;
-        warn "self: " . id $self;
-        warn Dump(\%name);
+        my $package = __PACKAGE__;
+        $name{ id $obj } = $data->{properties}{$package}{name};
         return $obj;
     }
 }

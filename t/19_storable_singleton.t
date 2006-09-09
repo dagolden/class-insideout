@@ -17,12 +17,13 @@ if ( $@ ) {
     plan skip_all => "Storable >= 2.14 needed for singleton support",
 }
 else {
-    plan tests => 11 * scalar keys %constructors_for;
+    plan tests => 12 * scalar keys %constructors_for;
 }
 
 #--------------------------------------------------------------------------#
 
 my $name =  "Neo"; 
+my $name2 = "Mr. Smith";
 
 #--------------------------------------------------------------------------#
 
@@ -40,7 +41,6 @@ for my $class ( keys %constructors_for ) {
     is( $o->name(), $name,
         "... Setting 'name' to '$name'"
     );
-    diag refaddr $o;
         
     # freeze object
     my ( $frozen, $thawed );
@@ -48,6 +48,12 @@ for my $class ( keys %constructors_for ) {
         "... Freezing $class object"
     );
 
+    # set a name
+    $o->name( $name2);
+    is( $o->name(), $name2,
+        "... Setting 'name' to '$name2'"
+    );
+        
     # thaw object
     ok( $thawed = Storable::thaw( $frozen ),
         "... Thawing $class object"
@@ -57,21 +63,21 @@ for my $class ( keys %constructors_for ) {
     );
 
     # check it
-    is( $thawed->name(), $name,
-        "... Thawed $class object 'name' is '$name'"
+    is( $thawed->name(), $name2,
+        "... Thawed $class object 'name' is '$name2'"
     );
 
     # destroy the singleton
     {
         no strict 'refs';
-        $thawed = undef;
-        ${"$class\::self"} = undef;
+        ${"$class\::self"} = $thawed = $o = undef;
         is( ${"$class\::self"}, undef,
             "... Destroying $class singleton manually"
         );
-        ok( ! Class::InsideOut::_leaking_memory,
+        my @leaks = Class::InsideOut::_leaking_memory;
+        ok( ! scalar @leaks,
             "... $class not leaking memory"
-        );
+        ) or diag "Leaks in: @leaks";
     }
 
     # recreate it
@@ -80,9 +86,17 @@ for my $class ( keys %constructors_for ) {
     );
 
     # check it
-    is( $thawed->name(), $name,
-        "... Re-thawed $class object 'name' is '$name'"
-    );
+    if ( $class eq "t::Object::Singleton_AltAPI" ) {
+        is( $thawed->name(), $name,
+            "... Re-thawed $class object 'name' is '$name'"
+        );
+    }
+    else { # regular singleton doesn't reinitialize
+        is( $thawed->name(), undef,
+            "... Re-thawed $class object 'name' is undef"
+        );
+    }
+
 }
 
     
