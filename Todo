@@ -2,6 +2,7 @@ TODO list for Perl module Class::InsideOut
 
 # Planned todos around core functionality
 
+- document new tags
 - mutator filter options and validation handling { filter => \&code }
 - error handling and argument checking throughout
 - add checks for XS weaken and add to documentation
