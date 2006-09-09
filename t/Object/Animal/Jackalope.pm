@@ -14,8 +14,7 @@ Class::InsideOut::options( { privacy => 'public' } );
 property kills    => my %kills;
 private  whiskers => my %whiskers; 
 
-our $freezings;
-our $thawings;
+use vars qw( $freezings $thawings );
 
 sub STORABLE_freeze_hook {
     my $self = shift;

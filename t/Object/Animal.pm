@@ -15,10 +15,7 @@ Class::InsideOut::property( species => my %species );
 
 # Globals for testing
 
-our $animal_count;
-our @subclass_errors;
-our $freezings;
-our $thawings;
+use vars qw( $animal_count @subclass_errors $freezings $thawings );
 
 sub new {
     my $class = shift;

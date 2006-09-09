@@ -7,11 +7,15 @@ $|++; # keep stdout and stderr in order on Win32
 
 eval { require IO::File };
 if ( $@ ) {
-    plan skip_all => "IO::File not installed",
+    plan skip_all => "IO::File not installed";
 }
-else {
-    plan tests => 5; 
+
+eval { require File::Spec };
+if ( $@ ) {
+    plan skip_all => "File::Spec not installed";
 }
+
+plan tests => 5; 
 
 #--------------------------------------------------------------------------#
 

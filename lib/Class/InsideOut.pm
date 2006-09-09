@@ -538,6 +538,10 @@ provided:
 
 See the documentation of each for details.
 
+B<Tip>: generated accessors will be slightly slower than a hand-rolled one as
+the generated accessor holds a reference rather than accessing the lexical
+property hash directly.
+     
 =head2 Object construction
 
 C<Class::InsideOut> provides no constructor function as there are many possible

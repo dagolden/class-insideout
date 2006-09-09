@@ -8,9 +8,12 @@ WriteMakefile
           'EXE_FILES' => [],
           'VERSION_FROM' => 'lib/Class/InsideOut.pm',
           'PREREQ_PM' => {
+                           'base' => 0,
+                           'Test::More' => '0.48',
                            'Scalar::Util' => '1.09',
                            'Class::ISA' => 0,
-                           'Test::Simple' => '0.48'
+                           'Exporter' => 0,
+                           'Config' => 0
                          }
         )
 ;

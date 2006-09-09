@@ -31,5 +31,4 @@ t/Object/Hash.pm
 t/Object/Scalar.pm
 t/Object/Synopsis.pm
 t/Object/Trivial.pm
-t/Util.pm
 Todo

@@ -8,8 +8,12 @@ Module::Build->new(
     create_readme       => 1,
     create_makefile_pl  => 'traditional',
     requires        => {
-        Scalar::Util    => 1.09,
+        perl            => 5.005, # says Perl::MinimumVersion
+        base            => 0,
         Class::ISA      => 0, # why reimplement what works
-        Test::Simple    => 0.48,
+        Config          => 0,
+        Exporter        => 0,
+        Test::More      => 0.48,
+        Scalar::Util    => 1.09,
     },
 )->create_build_script;

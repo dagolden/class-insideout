@@ -1,6 +1,6 @@
 Revision history for Perl module Class::InsideOut
 
-0.09 in progress
+0.09 Fri Jan 20 14:55:14 EST 2006
     
     - added basic accessor generation as an option for property declarations;
       added aliases "public" and "private" as shortcuts to property options
