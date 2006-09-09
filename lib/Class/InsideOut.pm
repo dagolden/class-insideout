@@ -1,6 +1,6 @@
 package Class::InsideOut;
 
-$VERSION     = "0.15";
+$VERSION     = "0.15_01";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( ); # nothing by default
 @EXPORT_OK   = qw ( id options private property public register );
@@ -146,16 +146,14 @@ sub _check_options{
     local $Carp::CarpLevel = $Carp::CarpLevel + 1;
 
     croak "Invalid options argument '$opt': must be a hash reference"
-        if $opt && ref $opt ne 'HASH';
+        if ref $opt ne 'HASH';
 
     my @valid_keys = keys %_OPTION_VALIDATION;
     for my $key ( keys %$opt ) {
         croak "Invalid option '$key': unknown option"
             if ! grep { $_ eq $key } @valid_keys;
-        if ( ref $_OPTION_VALIDATION{$key} eq 'CODE' ) {
-            eval { $_OPTION_VALIDATION{$key}->( $opt->{$key} ) };
-            croak "Invalid option '$key': $@" if $@;
-        }
+        eval { $_OPTION_VALIDATION{$key}->( $opt->{$key} ) };
+        croak "Invalid option '$key': $@" if $@;
     }
     
     return;
@@ -289,7 +287,7 @@ sub _gen_STORABLE_freeze {
         my $contents = $type eq 'SCALAR' ? \do{ my $s = $$obj }
                      : $type eq 'ARRAY'  ? [ @$obj ]
                      : $type eq 'HASH'   ? { %$obj }
-                     : undef
+                     : undef    # other types not supported
                      ;
  
         # assemble reference to hand back to Storable
@@ -324,6 +322,7 @@ sub _gen_STORABLE_thaw {
         # restore properties
         for my $c ( @class_isa ) {
             my $properties = $PROP_DATA_FOR{ $c };
+            next unless $properties;
             my @property_vals = @{ $data->{properties}{ $c } };
             for my $prop ( @$properties ) {
                 $prop->{ refaddr $obj } = shift @property_vals;

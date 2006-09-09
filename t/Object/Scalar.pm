@@ -1,4 +1,6 @@
 package t::Object::Scalar;
+@ISA = qw( Bogus::Superclass );
+
 use strict;
 
 use Class::InsideOut qw( property register id );

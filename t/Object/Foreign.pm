@@ -1,21 +1,17 @@
 package t::Object::Foreign;
 use strict;
 
-use Class::InsideOut qw( register property id );
+use Class::InsideOut qw( register public id );
 use base 'IO::File';
 
-property name => my %name;
+public name => my %name;
 
 sub new {
     my ($class, $filename) = @_;
-    my $self = IO::File->new( $filename );
+    my $self = IO::File->new;
+    $self->open( $filename ) if defined $filename && length $filename;
     register( bless $self, $class );
 }
 
-sub name {
-    my $self = shift;
-    $name{ id $self } = shift if @_;
-    return $name{ id $self };
-}
 
 1;

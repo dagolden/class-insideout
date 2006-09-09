@@ -13,6 +13,7 @@ Class::InsideOut::options( { privacy => 'public' } );
 
 property kills    => my %kills;
 private  whiskers => my %whiskers; 
+private  sidekick => my %sidekick, { privacy => 'public' };
 
 use vars qw( $freezings $thawings );
 

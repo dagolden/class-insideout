@@ -26,6 +26,7 @@ my $properties = {
     "t::Object::Animal::Jackalope" => {
        kills    => "public",
        whiskers => "private",
+       sidekick => "private",
     },
 };
 
