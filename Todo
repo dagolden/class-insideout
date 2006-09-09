@@ -2,7 +2,6 @@ TODO list for Perl module Class::InsideOut
 
 # Planned todos around core functionality - 1.0 roadmap
 
-- eval handling for get_hook
 - other error handling(?)
 - cleanup code smells in storable support
 - accessor style options

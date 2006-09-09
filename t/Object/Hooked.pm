@@ -4,7 +4,7 @@ use Class::InsideOut ':std';
 
 # $_ has the first argument in it for convenience
 public integer => my %integer, { 
-    set_hook => sub { /\A\d+\z/ or die "must be an integer" }, # long die
+    set_hook => sub { /\A\d+\z/ or die "must be an integer\n" }, 
 };
 
 # first argument is also available directly
@@ -28,6 +28,10 @@ public reverser => my %reverser, {
     get_hook => sub {  reverse @$_ }
 };
 
+public write_only => my %only_only, {
+    get_hook => sub { die "is write-only\n" }
+};
+    
 sub new {
     register( bless {}, shift );
 }

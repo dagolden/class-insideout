@@ -1,5 +1,12 @@
 Revision history for Perl module Class::InsideOut
 
+0.14 in progress
+
+    - Fixed test bug where thread test wouldn't properly skip for Win32 Perl
+      5.6 (with ithreads enabled for pseudofork but no threads.pm)
+    
+    - Improved handling of "die" in set_hook and get_hook callbacks
+
 0.13 Fri Mar 10 10:32:08 EST 2006
 
     - Test for Scalar::Util::weaken fallback had a bug that would fail on

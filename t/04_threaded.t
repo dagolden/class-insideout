@@ -1,15 +1,33 @@
 use strict;
 use Config;
 
+# keep stdout and stderr in order on Win32
+
 BEGIN {
-    # don't run this at all under Devel::Cover
-    if ( $ENV{HARNESS_PERL_SWITCHES} &&
-         $ENV{HARNESS_PERL_SWITCHES} =~ /Devel::Cover/ ) {
+    $|=1; 
+    my $oldfh = select(STDERR); $| = 1; select($oldfh);
+}
+
+# If running under threads, Test::More must load *after* threads.pm
+# so load Test::More only if needed to bail out or only after loading
+# threads.pm
+
+BEGIN {
+    # don't run without threads configured
+    if ( ! $Config{useithreads} ) {
         require Test::More;
         Test::More::plan( skip_all => 
-            "Devel::Cover not compatible with threads" );
+            "perl ithreads not available" );
     }
     
+    # don't run for Perl prior to 5.8 (with CLONE) (even if
+    # threads *are* configured)
+    if( $] < 5.008 ) {
+        require Test::More;
+        Test::More::plan( skip_all => 
+            "thread support requires perl 5.8" );
+    }
+
     # don't run without Scalar::Util::weaken()
     eval "use Scalar::Util 'weaken'";
     if( $@ =~ /\AWeak references are not implemented/ ) {
@@ -18,30 +36,18 @@ BEGIN {
             "Scalar::Util::weaken() is required for thread-safety" );
     }
 
-    # threads needs to be loaded before Test::More if threads are configured
-    if ( $Config{useithreads} ) {
-        require threads;
+    # don't run this at all under Devel::Cover
+    if ( $ENV{HARNESS_PERL_SWITCHES} &&
+         $ENV{HARNESS_PERL_SWITCHES} =~ /Devel::Cover/ ) {
+        require Test::More;
+        Test::More::plan( skip_all => 
+            "Devel::Cover not compatible with threads" );
     }
+    
 }
 
-use Test::More;
-
-BEGIN {
-    if ( $Config{useithreads} ) {
-        if( $] < 5.008 ) {
-            plan skip_all => "thread support requires perl 5.8";
-        }
-        else {
-            plan tests => 10;
-        }
-    }
-    else {
-        plan skip_all => "perl ithreads not available";
-    }
-}
-
-
-$|++; # keep stdout and stderr in order on Win32
+use threads;
+use Test::More tests => 10;
 
 #--------------------------------------------------------------------------#
 

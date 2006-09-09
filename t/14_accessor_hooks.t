@@ -1,7 +1,12 @@
 use strict;
 use Test::More;
 
-$|++; # keep stdout and stderr in order on Win32
+# keep stdout and stderr in order on Win32
+
+BEGIN {
+    $|=1; 
+    my $oldfh = select(STDERR); $| = 1; select($oldfh);
+}
 
 #--------------------------------------------------------------------------#
 
@@ -13,6 +18,7 @@ my $properties = {
         word      => "public",
         list      => "public",
         reverser  => "public",
+        write_only => "public",
     },
 };
 
@@ -37,7 +43,7 @@ ok( ($o = $class->new()) && $o->isa($class),
 #--------------------------------------------------------------------------#
 
 eval { $o->integer(3.14) };
-like( $@, qr/Argument to integer\(\).*at/,
+like( $@, '/integer\(\) must be an integer at/i',
     "integer(3.14) dies"
 );
 eval { $o->integer(42) };
@@ -51,7 +57,7 @@ is( $o->integer, 42,
 #--------------------------------------------------------------------------#
 
 eval { $o->word("^^^^") };
-like( $@, qr/Argument to word\(\)/,
+like( $@, '/word\(\) must be a Perl word at/i',
     "word(^^^^) dies"
 );
 eval { $o->word("apple") };
@@ -111,5 +117,17 @@ is_deeply( \@got, [qw(bam bar foo)],
 $got = $o->reverser;
 is( $got, 'mabraboof',
     "reverser() in scalar context gives mabraboof"
+);
+
+#--------------------------------------------------------------------------#
+
+eval { $o->write_only( 23 ) };
+is( $@, q{},
+    "write_only lives on write"
+);
+
+eval { $got = $o->write_only() };
+like( $@, '/write_only\(\) is write-only at/i',
+    "write only dies on write (and was caught)"
 );
 

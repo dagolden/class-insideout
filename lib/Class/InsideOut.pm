@@ -1,6 +1,6 @@
 package Class::InsideOut;
 
-$VERSION     = "0.13";
+$VERSION     = "0.14";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( ); # nothing by default
 @EXPORT_OK   = qw ( id options private property public register );
@@ -197,16 +197,24 @@ sub _gen_hook_accessor {
             local *_ = \($args[0]);
             if ($set_hook) {
                 eval { $set_hook->(@args) };
-                if ( $@ ) { croak "Argument to $name() $@" }
+                if ( $@ ) { chomp $@; croak "$name() $@" }
                 $ref->{ $obj_id } = shift @args;
             }
             else {
                 $ref->{ $obj_id } = shift @args;
             }
         }
-        if ($get_hook) {
+        elsif ($get_hook) {
             local $_ = $ref->{ $obj_id };
-            return $get_hook->();
+            my ( $value, @value );
+            if ( wantarray ) {
+                @value = eval { $get_hook->() };
+            }
+            else {
+                $value = eval { $get_hook->() };
+            }
+            if ( $@ ) { chomp $@; croak "$name() $@" }
+            return wantarray ? @value : $value;
         }
         else {
             return $ref->{ $obj_id };
@@ -637,13 +645,15 @@ The hook subroutine receives the entire argument list.  Just before the hook is
 called, {$_} is locally aliased to the first argument for convenience.
 
  public age => my %age, {
-    set_hook => sub { /^\d+$/ or die "must be an integer" }
+    set_hook => sub { /^\d+$/ or die "must be an integer\n" }
  };
 
 If the {set_hook} dies, the error is caught and rethrown with a preamble that
-includes the name of the accessor:
+includes the name of the accessor.  The error should end with a newline to
+prevent {die} in the hook from adding the location of the error.  The
+location will be added later when the error is rethrown:
 
- $obj->age(3.5); # dies with "Argument to age() must be an integer at..."
+ $obj->age(3.5); # dies with "age() must be an integer at..."
 
 When the {set_hook} returns, the property is set equal to {$_}.  This feature
 is useful for on-the-fly modification of the value that will be stored.
@@ -652,8 +662,8 @@ is useful for on-the-fly modification of the value that will be stored.
     set_hook => sub { $_ = [ @_ ] } # stores arguments in a reference
  };
 
-~Note that the return value of the {set_hook} is ignored.~  (This simplifies syntax in
-the more frequent case of validating input versus modifying input.)
+~Note that the return value of the {set_hook} is ignored.~  (This simplifies
+syntax in the more frequent case of validating input versus modifying input.)
 
 The {get_hook} option is called when the accessor is called without an
 argument.  Just before the hook is called, {$_} is set equal to the property
@@ -669,6 +679,19 @@ passed through as the return value of the accessor.~
 Because {$_} is a copy, not an alias, of the property value, it
 can be modified directly, if necessary, without affecting the underlying
 property.
+
+As with {set_hook}, the {get_hook} can die to indicate an error condition and
+errors are handled similarly.  This could be used as a way to implement a
+protected property:
+
+ sub _protected { 
+    die "is protected\n" unless caller(2)->isa(__PACKAGE__)
+ }
+
+ public hidden => my %hidden, {
+    get_hook => \&_protected,
+    set_hook => \&_protected,
+ }
 
 Accessor hooks can be set as a global default with the {options} function,
 though they may still be overridden with options passed to specific properties.
