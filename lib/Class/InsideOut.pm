@@ -16,6 +16,28 @@ my %PROPERTIES_OF;
 my %REGISTRY_OF;
 
 sub CLONE {
+    my $class = shift;
+    my $registry = $REGISTRY_OF{ $class };
+    my $properties = $PROPERTIES_OF{ $class };
+    
+    for my $old_id ( keys %$registry ) {  
+       
+        # look under old_id to find the new, cloned reference
+        my $object = $registry->{ $old_id };
+        my $new_id = refaddr $object;
+
+        # relocate data for all properties
+        for my $prop ( @$properties ) {
+            $prop->{ $new_id } = $prop->{ $old_id };
+            delete $prop->{ $old_id };
+        }
+
+        # update the weak reference to the new, cloned object
+        weaken ( $registry->{ $new_id } = $object );
+        delete $registry->{ $old_id };
+    }
+   
+    return;
 }
 
 sub DESTROY {
