@@ -1,6 +1,8 @@
 Revision history for Perl module Class::InsideOut
 
-0.08 in progress
+0.09 in progress
+
+0.08 Wed Jan 18 10:50:13 EST 2006
 
     - BACKWARDS INCOMPATIBLE CHANGE: property definitions now require a
       label in addition to the property hash

@@ -1,6 +1,6 @@
 package Class::InsideOut;
 
-$VERSION     = "0.08";
+$VERSION     = "0.09";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( );
 @EXPORT_OK   = qw ( property register id );
@@ -13,11 +13,9 @@ use Scalar::Util qw( refaddr reftype weaken );
 use Class::ISA;
 
 my %PROPERTIES_OF;   # class => [ list of properties ]
-my %PROPNAMES_OF;    # class => [ matching list of names ]
-my %OBJECT_REGISTRY; # refaddr => object reference
+my %PROP_NAMES_OF;    # class => [ matching list of names ]
 my %CLASS_ISA;       # class => [ list of self and @ISA tree ]
-
-BEGIN { *id = \&Scalar::Util::refaddr; }
+my %OBJECT_REGISTRY; # refaddr => object reference
 
 sub import {
     my $caller = caller;
@@ -30,8 +28,10 @@ sub import {
     goto &Exporter::import;
 }
 
+BEGIN { *id = \&Scalar::Util::refaddr; }
+
 sub property($\%) {
-    push @{ $PROPNAMES_OF{ scalar caller } }, $_[0];
+    push @{ $PROP_NAMES_OF{ scalar caller } }, $_[0];
     push @{ $PROPERTIES_OF{ scalar caller } }, $_[1];
     return;
 }

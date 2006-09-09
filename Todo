@@ -1,11 +1,9 @@
 TODO list for Perl module Class::InsideOut
 
-- add introspection methods
-- update storable hooks to use new property names
-- "evert" method -- dump/reconstruct to a hash  (??)
-  ( $hash_ref = $obj->evert; $newobj = Class->evert( $hash_ref ) )
-- storable hooks: pre-freeze user hook
-- storable_attach and singleton support (!?)
+# Planned todos around core functionality
+
+- storable hooks: pre-freeze user hook and post-thaw user hook
+- storable_attach and singleton support (!?) (Class::InsideOut::Singleton)
 - ":all" export key
 - accessor creation
 - accessor privacy options
@@ -16,35 +14,13 @@ TODO list for Perl module Class::InsideOut
 - error handling and argument checking
 - expand documentation (tutorial? notes on writing Builders)
 - add checks for XS weaken and add to documentation
-- pre-clone user hook??
 
-#--------------------------------------------------------------------------#
-# Interface brainstorming below
-#--------------------------------------------------------------------------#
+# Possible todos depending on demand
 
-Need to figure out how to best get the accessor name -- can't use PadWalker
-because that's 5.8 specific.  Ideas:
-
-# cumbersome but similar to Class::Std and Object::InsideOut
-property my %name => { get => 'name', set=>'name' };
-
-# simple and avoids needing a privacy option too, which removes
-# need for aliases for property
-property my %rank,  { public => 'rank' } 
-property my %count, { protected => 'count' }
-
-# clearer but requires additionally denoting degree of privacy
-property my %rank => { accessor => 'rank' } 
-
-# functional style: sub public($\%;$)
-public rank => my %rank, { filter = \&validate };
-protected count => my %count;
-
-# question: should 'property' do the same thing (with/without a 'private')
-# alias?  Would help with introspection and dumping to have names for thingsj
-property name => my %name;
-private color => my %color;
-
+- add introspection methods (property list and options?)
+- "evert" method -- dump/reconstruct to a hash  (??)
+  ( $hash_ref = $obj->evert; $newobj = Class->evert( $hash_ref ) )
+- pre-clone user hook?? (waiting for someone to say they need it)
 
 #--------------------------------------------------------------------------#
 # old interface ideas
@@ -63,22 +39,9 @@ Class::InsideOut::options(
   set_returns => 'self' # or 'value' or 'oldvalue'
 );
 
-Class::InsideOut::property ( my %UID, { privacy => 'readonly' });
+Class::InsideOut::property ( "uid", my %UID, { privacy => 'readonly' });
 
-private my %HEIGHT; # alias for properties with privacy => private
-public my %NAME; # sets privacy => public
-public my %AGE, { filter => \&old_enough }; # dies on error
-
-sub new {
-  my $class = shift;
-  my $self = \do { my $s };
-  bless $self, $class;
-  register $self;
-  return $self;
-}
-
-sub dump {
-  my $self = shift;
-  print "name: ", $NAME{ id $self }, "\n";
-}
+private height => my %HEIGHT; # alias for properties with privacy => private
+public name => my %NAME; # sets privacy => public
+public age => my %AGE, { filter => \&old_enough }; # dies on error
 
