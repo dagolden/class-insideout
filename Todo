@@ -2,7 +2,7 @@ TODO list for Perl module Class::InsideOut
 
 # Planned todos around core functionality
 
-- mutator filter options and validation handling { filter => \&code }
+- document hook options -- (note: careful about return values)
 - error handling and argument checking throughout
 - add checks for XS weaken and add to documentation
 - cleanup code smells in storable support
@@ -42,8 +42,8 @@ Class::InsideOut::options(
   set_prefix => 'set_', # maybe don't bother (YAGNI)
   privacy => 'public',  # create accessors for everything given to properties
                        # or 'readonly' or 'protected' or 'private'
-  filter => \&coderef,  # mutator argument filtered through this
-                       # will catch die message for error
+  set_hook => \&coderef,  # mutator argument filtered through this
+                            # will catch die message for error
   set_returns => 'self' # or 'newvalue' or 'oldvalue'
 );
 

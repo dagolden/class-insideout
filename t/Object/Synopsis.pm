@@ -1,47 +1,26 @@
 package t::Object::Synopsis;
 use strict;
  
-use Class::InsideOut qw( property public private register id );
-use Scalar::Util qw( refaddr );
+ use Class::InsideOut ':std'; # public, private, register and id
 
-# declare a lexical property "name" as a lexical hash
-property name => my %name;
-
-# declare a property and generate an accessor for it
-property color => my %color, { privacy => 'public' };
-
-# alias for property() with privacy => 'public'
-public height => my %height;
-
-# alias for property() with privacy => 'private'
-private weight => my %weight;
-
-sub new {
-my $class = shift;
-my $self = \do {my $scalar};
-bless $self, $class;
-
-# register the object for thread-safety
-register( $self );
-}
-
-sub name {
-my $self = shift;
-if ( @_ ) {
-
- # use 'refaddr' to access properties for an object
- $name{ refaddr $self } = shift;
-
- return $self;
-}
-return $name{ refaddr $self };
-}
-
-sub greeting {
-my $self = shift;
-
-# use 'id' as a mnemonic alias for 'refaddr'
-return "Hello, my name is " . $name { id $self };
-}
+ public     name => my %name;       # accessor: name()
+ private    ssn  => my %ssn;        # no accessor
+ 
+ public     age  => my %age, {
+    set_hook => sub { /^\d+$/ or die "must be an integer" }
+ };
+ 
+ public     initials => my %initials, {
+    set_hook => sub { $_ = uc $_ }
+ };
+ 
+ sub new { 
+   register( bless \(my $s), shift ); 
+ }
+ 
+ sub greeting {
+   my $self = shift;
+   return "Hello, my name is $name{ id $self }";
+ }
 
 1;

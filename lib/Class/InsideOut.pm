@@ -53,7 +53,11 @@ sub property($\%;$) {
     my $options = _merge_options( $caller, $opt );
     if ( exists $options->{privacy} && $options->{privacy} eq 'public' ) {
         no strict 'refs';
-        *{ "$caller\::$label" } = _gen_accessor( $hash );
+        *{ "$caller\::$label" } = 
+            ($options->{set_hook} || $options->{get_hook}) 
+                ? _gen_hook_accessor( $hash, $label, $options->{get_hook},
+                                                 $options->{set_hook} )
+                : _gen_accessor( $hash ) ;
         $PUBLIC_PROPS_FOR{ $caller }{ $label } = 1;
     }
     return;
@@ -113,12 +117,38 @@ sub _class_tree {
 }
 
 sub _gen_accessor {
-    my $ref = shift;
+    my ($ref) = @_;
     return sub {
         my $obj = shift;
         my $obj_id = refaddr $obj;
         $ref->{ $obj_id } = shift if (@_);
         return $ref->{ $obj_id };
+    };
+}
+ 
+sub _gen_hook_accessor {
+    my ($ref, $name, $get_hook, $set_hook) = @_;
+    return sub {
+        my ($obj,@args) = @_;
+        my $obj_id = refaddr $obj;
+        if (@args) {
+            local *_ = \($args[0]);
+            if ($set_hook) {
+                eval { $set_hook->(@args) };
+                if ( $@ ) { croak "Argument to $name() $@" }
+                $ref->{ $obj_id } = shift @args;
+            }
+            else {
+                $ref->{ $obj_id } = shift @args;
+            }
+        }
+        if ($get_hook) {
+            local $_ = $ref->{ $obj_id };
+            return $get_hook->();
+        }
+        else {
+            return $ref->{ $obj_id };
+        }
     };
 }
  
@@ -301,47 +331,26 @@ Class::InsideOut - a safe, simple inside-out object construction kit
 
  package My::Class;
  
- use Class::InsideOut qw( property public private register id );
- use Scalar::Util qw( refaddr );
- 
- # declare a lexical property "name" as a lexical hash
- property name => my %name;
- 
- # declare a property and generate an accessor for it
- property color => my %color, { privacy => 'public' };
- 
- # alias for property() with privacy => 'public'
- public height => my %height;
+ use Class::InsideOut ':std'; # public, private, register and id
 
- # alias for property() with privacy => 'private'
- private weight => my %weight;
-
- sub new {
-   my $class = shift;
-   my $self = \do {my $scalar};
-   bless $self, $class;
+ public     name => my %name;       # accessor: name()
+ private    ssn  => my %ssn;        # no accessor
  
-   # register the object for thread-safety
-   register( $self );
- }
+ public     age  => my %age, {
+    set_hook => sub { /^\d+$/ or die "must be an integer" }
+ };
  
- sub name {
-   my $self = shift;
-   if ( @_ ) {
+ public     initials => my %initials, {
+    set_hook => sub { $_ = uc $_ }
+ };
  
-     # use 'refaddr' to access properties for an object
-     $name{ refaddr $self } = shift;
- 
-     return $self;
-   }
-   return $name{ refaddr $self };
+ sub new { 
+   register( bless \(my $s), shift ); 
  }
  
  sub greeting {
    my $self = shift;
- 
-   # use 'id' as a mnemonic alias for 'refaddr'
-   return "Hello, my name is " . $name { id $self };
+   return "Hello, my name is $name{ id $self }";
  }
 
 = LIMITATIONS AND ROADMAP

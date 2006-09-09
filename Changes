@@ -2,9 +2,13 @@ Revision history for Perl module Class::InsideOut
 
 0.10 in progress
 
+    - added "set_hook" and "get_hook" option for custom accessor/mutator
+      manipulations
+
     - added ":all" and ":std" tags
 
-    - cleaned up or reorganized documentation in places
+    - cleaned up or reorganized documentation in places; revised synopsis
+      to be shorter
 
 0.09 Fri Jan 20 14:55:14 EST 2006
     

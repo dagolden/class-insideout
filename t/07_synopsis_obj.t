@@ -11,10 +11,10 @@ plan tests => 12;
 my $class = "t::Object::Synopsis";
 my $properties = {
     "t::Object::Synopsis" => {
-        name    => "private",
-        color   => "public",
-        height  => "public",
-        weight  => "private",
+        name        => "public",
+        ssn         => "private",
+        age         => "public",
+        initials    => "public",
     },
 };
 
