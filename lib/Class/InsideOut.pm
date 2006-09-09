@@ -13,6 +13,7 @@ use Scalar::Util qw( refaddr reftype weaken );
 use Class::ISA;
 
 my %PROPERTIES_OF;   # class => [ list of properties ]
+my %PROPNAMES_OF;    # class => [ matching list of names ]
 my %OBJECT_REGISTRY; # refaddr => object reference
 my %CLASS_ISA;       # class => [ list of self and @ISA tree ]
 
@@ -29,8 +30,9 @@ sub import {
     goto &Exporter::import;
 }
 
-sub property(\%) {
-    push @{ $PROPERTIES_OF{ scalar caller } }, $_[0];
+sub property($\%) {
+    push @{ $PROPNAMES_OF{ scalar caller } }, $_[0];
+    push @{ $PROPERTIES_OF{ scalar caller } }, $_[1];
     return;
 }
 
@@ -99,7 +101,7 @@ sub _gen_DESTROY {
         # XXX this global registry could be deleted repeatedly 
         # in superclasses -- SUPER::DESTROY shouldn't be called by DEMOLISH
         # it should only call SUPER::DEMOLISH if need be; still,
-        # rest of the destructor doens't need the registry, so early deletion
+        # rest of the destructor doesn't need the registry, so early deletion
         # by a subclass should be safe
         delete $OBJECT_REGISTRY{ $obj_id };
 

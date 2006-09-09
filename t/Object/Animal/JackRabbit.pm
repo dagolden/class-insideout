@@ -6,7 +6,7 @@ use Class::InsideOut qw( property id );
 
 # superclass is handling new()
 
-property my %speed;
+property speed => my %speed;
 
 sub speed {
     my $self = shift;

@@ -4,8 +4,8 @@ use strict;
 use Class::InsideOut;
 use Scalar::Util qw( refaddr );
 
-Class::InsideOut::property my %name;
-Class::InsideOut::property my %species;
+Class::InsideOut::property name => my %name;
+Class::InsideOut::property species => my %species;
 
 our $animal_count;
 

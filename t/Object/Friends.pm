@@ -3,8 +3,8 @@ use strict;
 
 use Class::InsideOut qw( property register id );
 
-property my %name; 
-property my %friends;
+property name => my %name; 
+property friends => my %friends;
 
 sub new {
     my ($class, $args) = @_;

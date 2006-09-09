@@ -6,7 +6,7 @@ use Class::InsideOut qw( property id );
 
 # superclass is handling new()
 
-property my %color;
+property color => my %color;
 
 sub color {
     my $self = shift;

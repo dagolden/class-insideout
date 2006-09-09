@@ -4,7 +4,7 @@ use strict;
 use Class::InsideOut qw( register property id );
 use base 'IO::File';
 
-property my %name;
+property name => my %name;
 
 sub new {
     my ($class, $filename) = @_;

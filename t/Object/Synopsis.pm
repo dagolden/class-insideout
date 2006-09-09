@@ -5,7 +5,7 @@ use Class::InsideOut qw( property register id );
 use Scalar::Util qw( refaddr );
 
 # declare a lexical property hash with 'my'
-property my %name; 
+property name => my %name; 
 
 sub new {
     my $class = shift;

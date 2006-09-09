@@ -1,5 +1,6 @@
 TODO list for Perl module Class::InsideOut
 
+- switch property syntax to property name => my %name;
 - add examples showing Class::InsideOut::property my %foo
 - storable hooks: pre-freeze user hook
 - storable_attach and singleton support (!?)

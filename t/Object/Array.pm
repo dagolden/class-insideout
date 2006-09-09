@@ -3,8 +3,8 @@ use strict;
 
 use Class::InsideOut qw( property register id );
 
-property my %name; 
-property my %height;
+property name => my %name; 
+property height => my %height;
 
 sub new {
     my $class = shift;

@@ -2,6 +2,9 @@ Revision history for Perl module Class::InsideOut
 
 0.08 in progress
 
+    - BACKWARDS INCOMPATIBLE CHANGE: property definitions now require a
+      name in addition to the property hash
+
     - Class::ISA results are now cached when first used; also minor
       optimization of reftype switching in STORABLE_* methods (Adam Kennedy)
     

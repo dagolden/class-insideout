@@ -9,7 +9,7 @@ use Class::InsideOut qw( property id );
 
 # superclass is handling new()
 
-property my %kills;
+property kills => my %kills;
 
 sub kills {
     my $self = shift;
