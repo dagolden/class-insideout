@@ -50,35 +50,23 @@ sub options {
 }
  
 sub private($\%;$) {
+    &_check_property;
     $_[2] ||= {};
     $_[2] = { %{$_[2]}, privacy => 'private' };
- 
-    goto &property;
+    goto &_install_property;
 }
 
 sub property($\%;$) {
-    my ($label, $hash, $opt) = @_;
-    my $caller = caller;
-    push @{ $PROP_NAMES_FOR{ $caller } }, $label;
-    push @{ $PROP_DATA_FOR{ $caller } }, $hash;
-    my $options = _merge_options( $caller, $opt );
-    if ( exists $options->{privacy} && $options->{privacy} eq 'public' ) {
-        no strict 'refs';
-        *{ "$caller\::$label" } =
-            ($options->{set_hook} || $options->{get_hook})
-                ? _gen_hook_accessor( $hash, $label, $options->{get_hook},
-                                                 $options->{set_hook} )
-                : _gen_accessor( $hash ) ;
-        $PUBLIC_PROPS_FOR{ $caller }{ $label } = 1;
-    }
-    return;
+    &_check_property;
+    goto &_install_property;
 }
 
+
 sub public($\%;$) {
+    &_check_property;
     $_[2] ||= {};
     $_[2] = { %{$_[2]}, privacy => 'public' };
- 
-    goto &property;
+    goto &_install_property;
 }
 
 sub register {
@@ -119,6 +107,18 @@ sub CLONE {
         weaken ( $OBJECT_REGISTRY{ $new_id } = $object );
         delete $OBJECT_REGISTRY{ $old_id };
     }
+}
+
+sub _check_property {
+    my ($label, $hash, $opt) = @_;
+    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+    croak "Invalid property name '$label': must be a perl identifier"
+        if $label !~ /\A[a-z_]\w*\z/;
+    croak "Invalid property options '$opt': must be a hash reference"
+        if $opt and ref $opt ne 'HASH';
+    croak "Duplicate property name '$label'"
+        if grep /$label/, @{ $PROP_NAMES_FOR{ caller(1) } }; 
+    return;
 }
 
 sub _class_tree {
@@ -283,6 +283,25 @@ sub _gen_STORABLE_thaw {
 
         return;
     };
+}
+
+sub _install_property{
+    my ($label, $hash, $opt) = @_;
+
+    my $caller = caller(0); # we get here via "goto", so caller(0) is right
+    push @{ $PROP_NAMES_FOR{ $caller } }, $label;
+    push @{ $PROP_DATA_FOR{ $caller } }, $hash;
+    my $options = _merge_options( $caller, $opt );
+    if ( exists $options->{privacy} && $options->{privacy} eq 'public' ) {
+        no strict 'refs';
+        *{ "$caller\::$label" } =
+            ($options->{set_hook} || $options->{get_hook})
+                ? _gen_hook_accessor( $hash, $label, $options->{get_hook},
+                                                 $options->{set_hook} )
+                : _gen_accessor( $hash ) ;
+        $PUBLIC_PROPS_FOR{ $caller }{ $label } = 1;
+    }
+    return;
 }
 
 sub _merge_options {

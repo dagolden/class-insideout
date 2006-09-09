@@ -2,10 +2,10 @@ TODO list for Perl module Class::InsideOut
 
 # Planned todos around core functionality
 
+- document checks on property/public/private
+
 - argument checking throughout
-    - property
-    - public/private
-    - options
+    - options (form, valid keys)
     - register
 - error handling
     - where?
@@ -63,3 +63,7 @@ Class::InsideOut::options(
 #--------------------------------------------------------------------------#
 
 * Outside-in pattern
+
+* Property aliasing:  ( should work, but what about Storable? )
+    assets => my %assets;
+    wealth => my %assets;
