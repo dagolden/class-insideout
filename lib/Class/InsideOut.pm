@@ -1,11 +1,12 @@
 package Class::InsideOut;
 
-$VERSION     = "1.00";
+$VERSION     = "1.01";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( ); # nothing by default
-@EXPORT_OK   = qw ( id options private property public register );
+@EXPORT_OK   = qw ( new id options private property public register );
 %EXPORT_TAGS = (
     "std"       => [ qw( id private public register ) ],
+    "new"       => [ qw( new ) ],
     "all"       => [ @EXPORT_OK ],
     "singleton" => [], # just a flag for import()
 );
@@ -87,6 +88,32 @@ sub options {
     return %{ $OPTIONS{ $caller } = _merge_options( $caller, $opt ) };
 }
  
+sub new {
+    my $class = shift;
+    croak "new() must be called as a class method"
+        if ref $class;
+    my $self = register( $class );
+    return $self unless @_;
+    
+    # initialization
+    croak "Arguments to new must be a hash or hash reference"
+        if ( @_ == 1 && ref($_[0]) && reftype($_[0]) ne 'HASH' ) || ( @_ % 2 );
+     
+    my %args = (@_ == 1) ? %{$_[0]} : @_;
+
+    for my $prop ( keys %args ) {
+        for my $c ( _class_tree( $class ) ) {
+            my $properties = $PROP_DATA_FOR{ $c };
+            next unless $properties;
+            if ( exists $properties->{$prop} ) {
+                $properties->{$prop}{ refaddr $self } = $args{$prop};
+            }
+        }
+    }
+
+    return $self;
+}
+
 sub private($\%;$) {
     &_check_property;
     $_[2] ||= {};
@@ -107,9 +134,31 @@ sub public($\%;$) {
 }
 
 sub register {
-    my $obj = shift;
-    croak "Invalid argument '$obj' to register(): must be blessed reference"
-        if ! blessed $obj;
+    my ($obj);
+    if    ( @_ == 0 ) {
+        # register()
+        croak "Invalid call to register(): empty argument list"
+    }
+    elsif ( @_ == 1 ) {
+        # register( OBJECT | CLASSNAME )
+        if    ( blessed $_[0] ) {
+            $obj = shift;
+        }
+        elsif ( ref \$_[0] eq 'SCALAR' ) {
+            $obj = \(my $scalar);
+            bless $obj, shift;
+        }
+        else {
+            croak "Invalid argument '$_[0]' to register(): " .
+                  "must be an object or class name"
+        }
+    }
+    else {
+        # register( REFERENCE/OBJECT, CLASSNAME )
+        $obj = shift;
+        bless $obj, shift; # ok to rebless
+    }
+    
     weaken( $OBJECT_REGISTRY{ refaddr $obj } = $obj );
     return $obj;
 }
@@ -490,7 +539,7 @@ Class::InsideOut - a safe, simple inside-out object construction kit
  public     name => my %name;       # accessor: name()
  private    age  => my %age;        # no accessor
  
- sub new { register( bless \(my $s), shift ) }
+ sub new { register( shift ) }
  
  sub greeting {
    my $self = shift;
@@ -540,7 +589,7 @@ Additional functions may be imported as usual by including them as arguments to
  
  public name => my %name;
  
- sub new { register bless( \(my $s), shift) }
+ sub new { register( shift ) }
  
 As a shortcut, {Class::InsideOut} supports two tags for importing sets of
 functions:
@@ -594,9 +643,10 @@ directly.
  
 == Object construction
 
-{Class::InsideOut} provides no constructor method as there are many possible
-ways of constructing an inside-out object. This avoids constraining users to
-any particular object initialization or superclass initialization methodology. 
+{Class::InsideOut} provides no default constructor method as there are many
+possible ways of constructing an inside-out object. This avoids constraining
+users to any particular object initialization or superclass initialization
+methodology.  
 
 By using the memory address of the object as the index for properties, ~any~
 type of reference may be used as the basis for an inside-out object with
@@ -609,15 +659,23 @@ type of reference may be used as the basis for an inside-out object with
  # my $self = {};                 # anonymous hash
  # my $self = [];                 # anonymous array
  # open my $self, "<", $filename; # filehandle reference
- 
-   register( bless $self, $class );
+   
+   bless $self, $class;
+   register( $self );
  }
 
 However, to ensure that the inside-out object is thread-safe, the {register}
-function ~must~ be called on the newly created object.
+function ~must~ be called on the newly created object.  The {register} 
+function may also be called with just the class name for the common
+case of blessing an anonymous scalar.
 
-A more advanced technique uses another object, usually a superclass object,
-as the object reference.  See "foreign inheritance" in 
+ register( $class ); # same as register( bless \(my $s), $class )
+
+As a convenience, {Class::InsideOut} provides an optional {new} constructor
+for simple objects.
+ 
+A more advanced technique for object construction uses another object, usually
+a superclass object, as the object reference.  See "foreign inheritance" in
 [Class::InsideOut::Manual::Advanced].
 
 == Object destruction
@@ -677,6 +735,15 @@ This is a shorter, mnemonic alias for {Scalar::Util::refaddr}.  It returns the
 memory address of an object (just like {refaddr}) as the index to access
 the properties of an inside-out object.
 
+== {new}
+
+ My::Class->new( name => "Larry", age => 42 );
+
+This simplistic constructor is provided as a convenience and is only exported
+on request.  When called as a class method, it returns a blessed anonymous
+scalar.  Arguments will be used to initialize all matching inside-out class
+properties in the {@ISA} tree.  The argument may be a hash or hash reference.
+
 == {options}
 
  Class::InsideOut::options( \%new_options );
@@ -724,11 +791,15 @@ It will override default options or options passed as an argument.
 
 == {register}
 
- register( bless $object, $class );
+ register( bless( $object, $class ) ); # register the object 
+ register( $reference, $class );       # automatic bless 
+ register( $class );                   # automatic blessed scalar
 
-Registers an object for thread-safety.  This should be called as part of a
+Registers objects for thread-safety.  This should be called as part of a
 constructor on a object blessed into the current package.  Returns the
-object (without modification).
+resulting object.  When called with only a class name, {register} will bless an
+anonymous scalar reference into the given class.  When called with both a
+reference and a class name, {register} will bless the reference into the class.
 
 = OPTIONS
 

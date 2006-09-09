@@ -6,7 +6,6 @@ TODO list for Perl module Class::InsideOut
 - test DDS on other serialization tests
 - document DDS support
 - accessor style options
-- register() sugar
 - write FAQs
 - expand documentation (cookbook? quick-start? notes on writing Builders)
 - document some internal introspection functions (e.g. _evert/_revert)
@@ -17,25 +16,6 @@ TODO list for Perl module Class::InsideOut
 - accessor privacy => "protected" and matching property alias
 - look into support for cloning tied objects(?) in the blessed hash(?)
 - pre-clone user hook?? (waiting for someone to say they need it)
-
-#--------------------------------------------------------------------------#
-# register sugar ?!
-#--------------------------------------------------------------------------#
-
-# if argument is blessed -- just register it
-# (this matches the existing behavior)
-sub new { register( bless {}, shift ) }
-
-# if argument is reference and not blessed, bless into the second 
-# argument (or else the caller's class)
-sub new{ register {}, shift }
-
-# with one argument, not a reference, register should bless an 
-# anonymous scalar into the first argument and return
-sub new { register shift };
-
-# then could provide an optional "new" function which is just the
-# example above
 
 #--------------------------------------------------------------------------#
 # Thoughts about property accessor styles and options

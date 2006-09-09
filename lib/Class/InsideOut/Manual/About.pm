@@ -1,7 +1,7 @@
 package Class::InsideOut::Manual::About;
 # Not really a .pm file, but holds wikidoc which will be
 # turned into .pod by the Build.PL
-$VERSION = "1.00";
+$VERSION = "1.01";
 use strict; # make CPANTS happy
 1;
 __END__
@@ -60,11 +60,12 @@ As a result, only a few things are mandatory:
 * {register} must be called on all new objects
 
 All other implementation details, including constructors, initializers and
-class inheritance management are left to the user.  This does requires some
-additional work, but maximizes freedom.  {Class::InsideOut} is intended to
-be a base class providing only fundamental features.  Subclasses of
-{Class::InsideOut} could be written that build upon it to provide particular
-styles of constructor, destructor and inheritance support.
+class inheritance management are left to the user (though a very simple
+constructor is available as a convenience).  This does requires some additional
+work, but maximizes freedom.  {Class::InsideOut} is intended to be a base class
+providing only fundamental features.  Subclasses of {Class::InsideOut} could be
+written that build upon it to provide particular styles of constructor,
+destructor and inheritance support.
 
 == Other modules on CPAN
 

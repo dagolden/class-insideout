@@ -1,7 +1,7 @@
 package Class::InsideOut::Manual::Advanced;
 # Not really a .pm file, but holds wikidoc which will be
 # turned into .pod by the Build.PL
-$VERSION = "1.00";
+$VERSION = "1.01";
 use strict; # make CPANTS happy
 1;
 __END__
@@ -96,7 +96,7 @@ based on hashes, array, or other types of blessed references.
  
    my $self = IO::File->new( $filename );
  
-   register( bless $self, $class );
+   register( $self, $class );
  }
 
 In the example above, {IO::File} is a superclass.  The object is an

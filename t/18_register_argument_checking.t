@@ -15,14 +15,14 @@ BEGIN {
 
 my @cases = (
     {
-        label   => q{invalid register argument: not a reference},
-        args    => q{ 'abc' },
-        error   => q{invalid argument},
+        label   => q{invalid call to register: no argument},
+        args    => q{},
+        error   => q{empty argument list},
     },
     {
-        label   => q{invalid register argument: reference not blessed},
+        label   => q{invalid register argument: reference with no class name},
         args    => q{ {} },
-        error   => q{invalid argument},
+        error   => q{must be an object or class name},
     },
 );
 

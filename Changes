@@ -1,5 +1,10 @@
 Revision history for Perl module Class::InsideOut
 
+1.01
+    - register() now handle standard cases with "sufficiently advanced
+      technology"
+    - optional simple "new" constructor added
+
 1.00 Fri May 12 21:25:34 EDT 2006
     
     - removed Data::Dump::Streamer support attempts until RT#19060 can

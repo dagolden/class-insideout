@@ -15,6 +15,7 @@
 # Module::Build
 ^Build$
 ^_build
+.bat$
 
 # Test coverage
 ^cover_db
