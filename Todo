@@ -1,6 +1,5 @@
 TODO list for Perl module Class::InsideOut
 
-- references to Perlmonks discussions
 - storable hooks
 - ":all" export key
 - accessor creation
@@ -11,6 +10,7 @@ TODO list for Perl module Class::InsideOut
 - class-wide default options
 - error handling and argument checking
 - expand documentation (tutorial?)
+- add checks for XS weaken and add to documentation
 
 #--------------------------------------------------------------------------#
 # Interface brainstorming below
@@ -48,3 +48,23 @@ sub dump {
   print "name: ", $NAME{ id $self }, "\n";
 }
 
+#--------------------------------------------------------------------------#
+# thoughts on storable
+#--------------------------------------------------------------------------#
+
+I think I need to build a data structure like this:
+
+my %freeze = {
+  object => $unblessed_copy_of_object_contents
+  class  => "My::Class"
+  properties => {
+    "My::Class"      => [ array of properties ],
+    "My::SuperClass" => [ array of properties ],
+  }
+};
+
+Instead of unblessing, probably easier to rebless into a new, bogus package.
+It'll get fixed up during thaw. (Bless into "OBJ" . refaddr( $self ) !)
+
+Have to loop over object class and unique list of superclasses but only store
+properties for classes that have registered properties.

@@ -478,6 +478,40 @@ very weak encapsulation.
 
 =head2 References
 
+Much of the Perl community discussion of inside-out objects has taken place on
+Perlmonks (L<http://perlmonks.org>).  My scratchpad there has a fairly
+comprehensive list of articles
+(L<http://perlmonks.org/index.pl?node_id=360998>).  Some of the more
+informative articles include:
+
+=over
+
+=item *
+
+Abigail-II. "Re: Where/When is OO useful?". July 1, 2002.
+L<http://perlmonks.org/index.pl?node_id=178518>
+
+=item * 
+
+Abigail-II. "Re: Tutorial: Introduction to Object-Oriented Programming".
+December 11, 2002. L<http://perlmonks.org/index.pl?node_id=219131>
+
+=item * 
+
+demerphq. "Yet Another Perl Object Model (Inside Out Objects)". December 14,
+2002. L<http://perlmonks.org/index.pl?node_id=219924>
+
+=item * 
+
+xdg. "Threads and fork and CLONE, oh my!". August 11, 2005.
+L<http://perlmonks.org/index.pl?node_id=483162>
+
+=item * 
+
+jdhedden. "Anti-inside-out-object-ism". December 9, 2005. 
+L<http://perlmonks.org/index.pl?node_id=515650>
+
+=back
 
 =head1 BUGS
 
