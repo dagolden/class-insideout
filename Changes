@@ -1,11 +1,15 @@
 Revision history for Perl module Class::InsideOut
 
 0.15_01 in progress
+
+    - *API CHANGE* renamed serialization hooks to FREEZE and THAW
     - added support for STORABLE_attach for singletons
-    - added support for serialization with Data::Dump::Streamer
     - improved test coverage
     - refactored some of the test classes
     - refactored STORABLE_* code
+    - refactored documentation
+    - added draft (non-working) support for serialization with
+      Data::Dump::Streamer
 
 0.14 Thu Mar 16 23:07:22 EST 2006
 

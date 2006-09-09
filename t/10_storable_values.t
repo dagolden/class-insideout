@@ -3,7 +3,7 @@ use Test::More;
 use Class::InsideOut ();
 use Scalar::Util qw( refaddr reftype );
 
-$|++; # keep stdout and stderr in order on Win32
+$|++; # try to keep stdout and stderr in order on Win32
 
 sub check_version {
     my ($class, $version) = @_;
@@ -11,56 +11,51 @@ sub check_version {
     return $@ eq q{} ? 0 : 1;
 }
     
-my @serializers;
-my @classes;
-my %custom_prop_for_class;
+my @serializers = (
+    {
+        class   => "Storable",
+        version => 3.04,
+        freeze  => sub { Storable::freeze( shift ) },
+        thaw    => sub { Storable::thaw( shift ) },
+    },
+#    {
+#        class   => "Data::Dump::Streamer",
+#        version => 3.02,
+#        freeze  => sub { return Data::Dump::Streamer::Dump( shift )->Names("o")->Out },
+#        thaw    => sub { my $o; eval shift; $o },
+#    },
+);
+
+my @classes = qw(
+    t::Object::Scalar
+    t::Object::Array
+    t::Object::Hash
+    t::Object::Animal::Jackalope
+);
+    
+my %custom_prop_for_class = (
+    "t::Object::Scalar"  => {
+        age => "32" 
+    },
+    "t::Object::Array"   => {
+        height => "72 inches"
+    },
+    "t::Object::Hash"    => { 
+        weight => "190 lbs" 
+    },
+    "t::Object::Animal::Jackalope" => {
+        color => "white",
+        speed => "60 mph",
+        points => 13,
+        kills => 23,
+    },
+);
+
 my $prop_count;
-    
-BEGIN {
-    @serializers = (
-        {
-            class   => "Storable",
-            version => 3.04,
-            freeze  => sub { Storable::freeze( shift ) },
-            thaw    => sub { Storable::thaw( shift ) },
-        },
-        {
-            class   => "Data::Dump::Streamer",
-            version => 3.02,
-            freeze  => sub { return Data::Dump::Streamer::Dump( shift )->Declare(1)->Out },
-            thaw    => sub { my $s = shift; my $o = eval $s or warn "# $@" },
-        },
-    );
+$prop_count++ for map { keys %$_ } values %custom_prop_for_class;
 
-    @classes = qw(
-        t::Object::Scalar
-        t::Object::Array
-        t::Object::Hash
-        t::Object::Animal::Jackalope
-    );
-    
-    %custom_prop_for_class = (
-        "t::Object::Scalar"  => {
-            age => "32" 
-        },
-        "t::Object::Array"   => {
-            height => "72 inches"
-        },
-        "t::Object::Hash"    => { 
-            weight => "190 lbs" 
-        },
-        "t::Object::Animal::Jackalope" => {
-            color => "white",
-            speed => "60 mph",
-            points => 13,
-            kills => 23,
-        },
-    );
+my $tests_per_serializer = ( 1 + (11 * @classes) + (2 * $prop_count) );
 
-    $prop_count++ for map { keys %$_ } values %custom_prop_for_class;
-}
-
-my $tests_per_serializer = ( 1 + 11 * @classes + 2 * $prop_count );
 plan tests => @serializers * $tests_per_serializer;
 
 #--------------------------------------------------------------------------#

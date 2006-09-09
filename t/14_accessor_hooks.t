@@ -27,7 +27,7 @@ my ($o, @got, $got);
 
 #--------------------------------------------------------------------------#
 
-plan tests => 20;
+plan tests => 21;
 
 require_ok( $class );
 
@@ -43,9 +43,16 @@ ok( ($o = $class->new()) && $o->isa($class),
 #--------------------------------------------------------------------------#
 
 eval { $o->integer(3.14) };
-like( $@, '/integer\(\) must be an integer at/i',
+my $err = $@;
+like( $err, '/integer\(\) must be an integer at/i',
     "integer(3.14) dies"
 );
+
+my $at_count = () = $err =~ /at/g;
+is( $at_count, 1,
+    "'at' count correct"
+);
+
 eval { $o->integer(42) };
 is( $@, q{},
     "integer(42) lives"

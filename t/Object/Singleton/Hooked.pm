@@ -11,7 +11,7 @@ sub get_instance {
     return $self;
 }
 
-sub STORABLE_attach_hook {
+sub ATTACH {
     my ($class, $cloning, $data) = @_;
     if ( $self ) {
         return $self;

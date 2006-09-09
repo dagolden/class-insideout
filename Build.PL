@@ -72,6 +72,15 @@ my $builder = $class->new(
         'Scalar::Util'   => 1.09, # refaddr
     },
     add_to_cleanup      => [ 'Class-InsideOut-*' ],
+    meta_add            => { 
+        no_index => { 
+            file => [ qw{ 
+                lib\Class\InsideOut\Manual\About.pm
+                lib\Class\InsideOut\Manual\Advanced.pm 
+            } ] 
+        } 
+    },
+
 );
 
 $builder->create_build_script;

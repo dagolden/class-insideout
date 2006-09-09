@@ -10,315 +10,166 @@ Class::InsideOut - a safe, simple inside-out object construction kit
 
   package My::Class;
  
-  use Class::InsideOut ':std'; # public, private, register and id
+  use Class::InsideOut qw( public private register id );
  
   public     name => my %name;       # accessor: name()
-  private    ssn  => my %ssn;        # no accessor
+  private    age  => my %age;        # no accessor
  
-  public     age  => my %age, {
-     set_hook => sub { /^\d+$/ or die "must be an integer" }
-  };
- 
-  public     initials => my %initials, {
-     set_hook => sub { $_ = uc $_ }
-  };
- 
-  sub new {
-    register( bless \(my $s), shift );
-  }
+  sub new { register( bless \(my $s), shift ) }
  
   sub greeting {
     my $self = shift;
     return "Hello, my name is $name{ id $self }";
   }
 
-=head1 LIMITATIONS AND ROADMAP
-
-This is an B<alpha release> for a work in progress. It is functional but
-unfinished and should not be used for any production purpose.  It has been
-released to solicit peer review and feedback.
-
-Serialization with L<Storable> appears to be working but may have unanticipated
-bugs if an object contains a complicated (i.e. circular) reference structure
-and could use some real-world testing.
-
-I believe API's may have stabilized.  The module will be declared "beta" when
-additional accessor styles are written and singleton support for Storable has
-been added.  Users' feedback would be greatly appreciated.
-
 =head1 DESCRIPTION
 
 This is a simple, safe and streamlined toolkit for building inside-out objects.
 Unlike most other inside-out object building modules already on CPAN, this
-module aims for minimalism and robustness.  It does not require derived classes
-to subclass it; uses no source filters, attributes or CHECK blocks; supports
-any underlying object type including foreign inheritance; does not leak memory;
-is overloading-safe; is thread-safe for Perl 5.8 or better; and should be
-mod_perl compatible.
+module aims for minimalism and robustness:
+
+=over
+
+=item *
+
+Does not require derived classes to subclass it
+
+=item *
+
+Uses no source filters, attributes or C<<< CHECK >>> blocks
+
+=item *
+
+Supports any underlying object type including foreign inheritance
+
+=item *
+
+Does not leak memory on object destruction
+
+=item *
+
+Overloading-safe
+
+=item *
+
+Thread-safe for Perl 5.8 or better
+
+=item *
+
+C<<< mod_perl >>> compatible
+
+=item *
+
+Makes no assumption about inheritance or initializer needs
+
+=back
 
 It provides the minimal support necessary for creating safe inside-out objects
-and generating flexible accessors.  All other implementation details,
-including writing a constructor and managing inheritance, are left to the user
-to maximize flexibility.
+and generating flexible accessors.  
 
-Programmers seeking a more full-featured approach to inside-out objects are
-encouraged to explore L<Object::InsideOut>.  Other implementations are briefly
-noted in the L</"SEE ALSO"> section.
-
-=head2 Inside-out object basics
-
-Inside-out objects use the blessed reference as an index into lexical data
-structures holding object properties, rather than using the blessed reference
-itself as a data structure.
-
-  $self->{ name }        = "Larry"; # classic, hash-based object
-  $name{ refaddr $self } = "Larry"; # inside-out
-
-The inside-out approach offers three major benefits:
+=head2 Additional documentation
 
 =over
 
 =item *
 
-Enforced encapsulation: object properties cannot be accessed directly
-from ouside the lexical scope that declared them
+L<Class::InsideOut::Manual::About> -- Guide to the inside-out 
+technique, the C<<< Class::InsideOut >>> philosophy, and other inside-out 
+implementations
 
 =item *
 
-Making the property name part of a lexical variable rather than a hash-key
-means that typos in the name will be caught as compile-time errors (if
-using L<strict>)
-
-=item *
-
-If the memory address of the blessed reference is used as the index,
-the reference can be of any type
+L<Class::InsideOut::Manual::Advanced> -- Advanced topics including customizing
+accessors, foreign inheritance, serialization and thread safety
 
 =back
-
-In exchange for these benefits, however, robust implementation of inside-out
-objects can be quite complex.  C<<< Class::InsideOut >>> manages that complexity.
-
-=head2 Philosophy of C<<< Class::InsideOut >>>
-
-C<<< Class::InsideOut >>> provides a set of tools for building safe inside-out classes
-with maximum flexibility.
-
-It aims to offer minimal restrictions beyond those necessary for robustness of
-the inside-out technique.  All capabilities necessary for robustness should be
-automatic.  Anything that can be optional should be.  The design should not
-introduce new restrictions unrelated to inside-out objects (such as attributes
-and C<<< CHECK >>> blocks that cause problems for C<<< mod_perl >>> or the use of source
-filters for a new syntax).
-
-As a result, only a few things are mandatory:
-
-=over
-
-=item *
-
-Properties must be based on hashes and declared via C<<< property >>>
-
-=item *
-
-Property hashes must be keyed on the C<<< Scalar::Util::refaddr >>> of the object
-(or the optional C<<< id >>> alias to C<<< Scalar::Util::refaddr >>>).
-
-=item *
-
-C<<< register >>> must be called on all new objects
-
-=back
-
-All other implementation details, including constructors, initializers and
-class inheritance management are left to the user.  This does requires some
-additional work, but maximizes freedom.  C<<< Class::InsideOut >>> is intended to
-be a base class providing only fundamental features.  Subclasses of
-C<<< Class::InsideOut >>> could be written that build upon it to provide particular
-styles of constructor, destructor and inheritance support.
 
 =head1 USAGE
 
 =head2 Importing C<<< Class::InsideOut >>>
 
-  use Class::InsideOut;
+C<<< Class::InsideOut >>> automatically imports several critical methods into the
+calling package, including C<<< DESTROY >>> and support methods for serializing
+objects with C<<< Storable >>>.  These methods are intimately tied to correct
+functioning of inside-out objects and will always be imported regardless
+of whether additional functions are requested. 
 
-No functions are imported by default -- all functions must be called using
-their fully qualified names:
+Additional functions may be imported as usual by including them as arguments to
+C<<< use >>>.  For example:
 
-  Class::InsideOut::property name => my %name;
-  Class::InsideOut::register $self;
-
-Functions can be imported by including them as arguments with C<<< use >>>. For
-example:
-
-  use Class::InsideOut qw( register property );
+  use Class::InsideOut qw( register public );
  
-  property name => my %name;
-  register $self;
+  public name => my %name;
+ 
+  sub new { register bless( \(my $s), shift) }
 
 As a shortcut, C<<< Class::InsideOut >>> supports two tags for importing sets of
 functions:
 
-  use Class::InsideOut ':std'; # id, private, public, register
- 
-  use Class::InsideoUT ':all'; # all functions
+=over
 
-In addition, C<<< Class::InsideOut >>> automatically imports three critical methods
-into the namespace that uses it: C<<< DESTROY >>>, C<<< STORABLE_freeze >>> and
-C<<< STORABLE_thaw >>>.  These methods are intimately tied to correct functioning of
-the inside-out objects.  They will be imported regardless of whether or not any
-other functions are requested with C<<< use >>>.  This can only be avoided by
-explicitly doing no importing, either via C<<< require >>> or passing an empty list to
-C<<< use >>>:
+=item *
 
-  use Class::InsideOut ();
+C<<< :std >>> provides C<<< id >>>, C<<< private >>>, C<<< public >>> and C<<< register >>>
 
-There is almost no circumstance under which this is a good idea.  See
-L</"Object destruction"> and L</"Serialization"> for how to add customized
-behavior to these methods.
+=item *
 
-=head2 Object properties
+C<<< :all >>> imports all functions
 
-Object properties are declared with the C<<< property >>> function (or its special
-aliases C<<< public >>> and C<<< private >>>), which must be passed a label and a lexical
-(i.e. C<<< my >>>) hash.
+=back
 
-  property name => my %name;
-  property age => my %age;
+B<Note>: Automatic imports can be bypassed via C<<< require >>> or by passing an empty
+list to C<<< use Class::InsideOut >>>. There is almost no circumstance in which
+this is a good idea. 
 
-Properties are private by default and no accessors are created.  Users are
-free to create accessors of any style.  See L</"Property accessors"> for
-how to have C<<< Class::InsideOut >>> automatically generate accessors.
+=head2 Object properties and accessors
+
+Object properties are declared with the C<<< public >>> and C<<< private >>>
+functions.  They must be passed a label and the lexical hash that will be
+used to store object properties:
+
+  public name => my %name;
+  private age => my %age;
 
 Properties for an object are accessed through an index into the lexical hash
 based on the memory address of the object.  This memory address I<must> be
-obtained via C<<< Scalar::Util::refaddr >>>.  The alias C<<< id >>> is available for
+obtained via C<<< Scalar::Util::refaddr >>>.  The alias C<<< id >>> may be imported for
 brevity.
 
   $name{ refaddr $self } = "James";
   $age { id      $self } = 32;
 
-B<Tip>: since C<<< refaddr >>> (or C<<< id >>>) are function calls, it may be helpful
-to store the value once at the beginning of a method rather than call it
-repeatedly throughout.  This is particularly true if it would be called
-within a loop.  For example:
+B<Tip>: since C<<< refaddr >>> and C<<< id >>> are function calls, it may be efficient to
+store the value once at the beginning of a method, particularly if it is being
+called repeatedly, e.g. within a loop.
 
-  property dsn => my %dsn;
-  property dbh => my %dbh;
- 
-  sub dbi_connect {
-      my $self = shift;
-      my $id = refaddr $self; # calculate once and store
- 
-      # try up to 20 times
-      for ( 1 .. 20 ) {
-          $dbh{ $id } = DBI->connect( $dsn{ $id } );
-          return if $dbh{ $id };
-      }
-      die "Couldn't connect to $dsn{ $id }";
-  }
+Object properties declared with C<<< public >>> will have an accessor created
+with the same name as the label.  If the accessor is passed an argument, the
+property will be set to the argument.  The accessor always returns the value of
+the property.  
 
-=head2 Property accessors
+  # Outside the class
+  $person = My::Class->new;
+  $person->name( "Larry" );
 
-  property color => my %color, { privacy => 'public' };
- 
-  $obj->color( "red" );
-  print $obj->color(); # prints "red"
+Property accessors may also be hand-written by declaring the property
+C<<< private >>> and writing whatever style of accessor is desired.  For example:
 
-The C<<< property >>> method supports an optional hash reference of options.  If the
-I<privacy> option is equal to I<public>, an accessor will be created with the
-same name as the label.  If the accessor is passed an argument, the property
-will be set to the argument.  The accessor always returns the value of the
-property.  Future versions of C<<< Class::InsideOut >>> will support additional
-accessor styles.
+  sub age     { $age{ id $_[0] } }
+  sub set_age { $age{ id $_[0] } = $_[1] }
 
-Default accessor options may be set using the C<<< options >>> function and will
-affect all subsequent calls to C<<< property >>>.
-
-C<<< Class::InsideOut >>> offers two aliases for C<<< property >>> that additionally
-set the privacy property accordingly, overriding the defaults and any options
-provided:
-
-  public  height => my %height;
-  private weight => my %weight;
-
-See the documentation of each for details.
-
-B<Tip>: generated accessors will be very slightly slower than a hand-rolled one
-as the generated accessor holds a reference rather than accessing the lexical
-property hash directly.
-
-=head2 Accessor hooks
-
-C<<< Class::InsideOut >>> supports custom subroutine hooks to modify the behavior of
-accessors.  Hooks are passed as property options: C<<< set_hook >>> and C<<< get_hook >>>.
-
-The C<<< set_hook >>> option is called when the accessor is called with an argument.
-The hook subroutine receives the entire argument list.  Just before the hook is
-called, C<<< $_ >>> is locally aliased to the first argument for convenience.
-
-  public age => my %age, {
-     set_hook => sub { /^\d+$/ or die "must be an integer\n" }
-  };
-
-If the C<<< set_hook >>> dies, the error is caught and rethrown with a preamble that
-includes the name of the accessor.  The error should end with a newline to
-prevent C<<< die >>> in the hook from adding the location of the error.  The
-location will be added later when the error is rethrown:
-
-  $obj->age(3.5); # dies with "age() must be an integer at..."
-
-When the C<<< set_hook >>> returns, the property is set equal to C<<< $_ >>>.  This feature
-is useful for on-the-fly modification of the value that will be stored.
-
-  public list => my %list, {
-     set_hook => sub { $_ = [ @_ ] } # stores arguments in a reference
-  };
-
-I<Note that the return value of the C<<< set_hook >>> is ignored.>  (This simplifies
-syntax in the more frequent case of validating input versus modifying input.)
-
-The C<<< get_hook >>> option is called when the accessor is called without an
-argument.  Just before the hook is called, C<<< $_ >>> is set equal to the property
-value of the object for convenience. The hook is called in the same context
-(i.e. list versus scalar) as the accessor.  I<The return value of the hook is
-passed through as the return value of the accessor.>  
-
-  public list => my %list, {
-     set_hook => sub { $_ = [ @_ ] }, # stores arguments in a reference
-     get_hook => sub { @$_ }          # return property as a list
-  };
-
-Because C<<< $_ >>> is a copy, not an alias, of the property value, it
-can be modified directly, if necessary, without affecting the underlying
-property.
-
-As with C<<< set_hook >>>, the C<<< get_hook >>> can die to indicate an error condition and
-errors are handled similarly.  This could be used as a way to implement a
-protected property:
-
-  sub _protected { 
-     die "is protected\n" unless caller(2)->isa(__PACKAGE__)
-  }
- 
-  public hidden => my %hidden, {
-     get_hook => \&_protected,
-     set_hook => \&_protected,
-  }
-
-Accessor hooks can be set as a global default with the C<<< options >>> function,
-though they may still be overridden with options passed to specific properties.
+Hand-written accessors will be very slightly faster as generated accessors hold
+a reference to the property hash rather than accessing the property hash
+directly.
 
 =head2 Object construction
 
 C<<< Class::InsideOut >>> provides no constructor method as there are many possible
-ways of constructing an inside-out object.  Additionally, this avoids
-constraining users to any particular object initialization or superclass
-initialization approach.
+ways of constructing an inside-out object. This avoids constraining users to
+any particular object initialization or superclass initialization approach.
 
 By using the memory address of the object as the index for properties, I<any>
-type of reference can be used as the basis for an inside-out object with
+type of reference may be used as the basis for an inside-out object with
 C<<< Class::InsideOut >>>.
 
   sub new {
@@ -332,12 +183,12 @@ C<<< Class::InsideOut >>>.
     register( bless $self, $class );
   }
 
-However, to ensure that the inside-out objects are thread-safe, the C<<< register >>>
-function I<must> be called on the newly created object.  See L</register> for
-details.
+However, to ensure that the inside-out object is thread-safe, the C<<< register >>>
+function I<must> be called on the newly created object.
 
 A more advanced technique uses another object, usually a superclass object,
-as the object reference.  See L</"Foreign inheritance"> for details.
+as the object reference.  See "foreign inheritance" in 
+L<Class::InsideOut::Manual::Advanced> for an example.
 
 =head2 Object destruction
 
@@ -360,7 +211,7 @@ will not be deleted until after C<<< DEMOLISH >>> returns.
     $objects_destroyed++;
   }
 
-C<<< DEMOLISH >>> will only be automatically called if it exists for an object's
+C<<< DEMOLISH >>> will only be called if it exists for an object's actual
 class.  C<<< DEMOLISH >>> will not be inherited and C<<< DEMOLISH >>> will not be called
 automatically for any superclasses.
 
@@ -385,106 +236,6 @@ or may prefer to walk the entire C<<< @ISA >>> tree:
     }
   }
 
-Generally, any class that inherits from another should define its own
-C<<< DEMOLISH >>> method.
-
-=head2 Foreign inheritance
-
-Because inside-out objects built with C<<< Class::InsideOut >>> can use any type of
-reference for the object, inside-out objects can be built using other objects.
-This is useful to extend a superclass without regard for whether the superclass
-implement objects with a hash or array or other reference.
-
-  use base 'IO::File';
- 
-  sub new {
-    my ($class, $filename) = @_;
- 
-    my $self = IO::File->new( $filename );
- 
-    register( bless $self, $class );
-  }
-
-In the example above, C<<< IO::File >>> is a superclass.  The object is an
-C<<< IO::File >>> object, re-blessed into the inside-out class.  The resulting
-object can be used directly anywhere an C<<< IO::File >>> object would be,
-without interfering with any of its own inside-out functionality.
-
-Classes using foreign inheritance should provide a C<<< DEMOLISH >>> function that
-calls the foreign class destructor explicitly.
-
-=head2 Serialization
-
-C<<< Class::InsideOut >>> has support for serialization with L<Storable> by providing
-the C<<< STORABLE_freeze >>> and C<<< STORABLE_thaw >>> methods.  C<<< Storable >>> will use these
-methods to serialize.  They should not be called directly.  Due to limitations
-of C<<< Storable >>>, this serialization will only work for objects based on scalars,
-arrays or hashes.
-
-References to object within the object being frozen will result in clones
-upon thawing unless the other references are included in the same freeze
-operation.  (See C<<< Storable >>> for details.)
-
-   # assume $alice and $bob are objects
-   $alice->friends( $bob );
-   $bob->friends( $alice );
- 
-   $alice2 = Storable::dclone( $alice );
- 
-   # $bob was cloned, too, thanks to the reference
-   die if $alice2->has_friend( $bob );
- 
-   # get alice2's friend
-   ($bob2) = $alice2->friends();
- 
-   # preserved relationship between bob2 and alice2
-   die unless $bob2->has_friend( $alice );
-
-C<<< Class::InsideOut >>> also supports custom freeze and thaw hooks.  When an
-object is frozen, if its class or any superclass provides
-C<<< STORABLE_freeze_hook >>> functions, they are each called with the object as an
-argument I<prior> to the rest of the freezing process.  This allows for
-custom preparation for freezing, such as writing a cache to disk, closing
-network connections, or disconnecting database handles.
-
-Likewise, when a serialized object is thawed, if its class or any
-superclass provides C<<< STORABLE_thaw_hook >>> functions, they are each called
-I<after> the object has been thawed with the thawed object as an argument.
-
-User feedback on serialization needs and limitations is welcome.
-
-=head2 Thread-safety
-
-Because C<<< Class::InsideOut >>> uses memory addresses as indices to object
-properties, special handling is necessary for use with threads.  When a new
-thread is created, the Perl interpreter is cloned, and all objects in the new
-thread will have new memory addresses.  Starting with Perl 5.8, if a C<<< CLONE >>>
-function exists in a package, it will be called when a thread is created to
-provide custom responses to thread cloning.  (See L<perlmod> for details.)
-
-C<<< Class::InsideOut >>> itself has a C<<< CLONE >>> function that automatically fixes up
-properties in a new thread to reflect the new memory addresses for all classes
-created with C<<< Class::InsideOut >>>.  C<<< register >>> must be called on all newly
-constructed inside-out objects to register them for use in
-C<<< Class::InsideOut::CLONE >>>.
-
-Users are strongly encouraged not to define their own C<<< CLONE >>> functions as
-they may interfere with the operation of C<<< Class::InsideOut::CLONE >>> and leave
-objects in an undefined state.  Future versions may support a user-defined
-CLONE hook, depending on demand.
-
-=head3 Limitations
-
-C<<< fork >>> on Perl for Win32 is emulated using threads since Perl 5.6. (See
-L<perlfork>.)  As Perl 5.6 did not support C<<< CLONE >>>, inside-out objects that use 
-memory addresses (e.g. C<<< Class::InsideOut >>>) are not fork-safe for Win32 on
-Perl 5.6.  Win32 Perl 5.8 C<<< fork >>> is supported.
-
-The technique for thread-safety requires creating weak references using
-C<<< Scalar::Util::weaken() >>>, which is implemented in XS.  If the XS-version of
-L<Scalar::Util> is not installed, C<<< Class::InsideOut >>> will issue a warning
-and continue without thread-safety.
-
 =head1 FUNCTIONS
 
 =head2 C<<< id >>>
@@ -500,62 +251,11 @@ the properties of an inside-out object.
   Class::InsideOut::options( \%new_options );
   %current_options = Class::InsideOut::options();
 
-The C<<< options >>> function sets default options for use with all subsquent
-C<<< property >>> calls for the calling package.  If called without arguments, this
+The C<<< options >>> function sets default options for use with all subsquent property
+definitions for the calling package.  If called without arguments, this
 function will return the options currently in effect.  When called with a hash
 reference of options, these will be joined with the existing defaults,
 overriding any options of the same name.
-
-Valid options include:
-
-=over
-
-=item *
-
-C<<< privacy => 'public|private' >>>
-
-=back
-
-  property rank => my %rank, { privacy => 'public' };
-
-If the I<privacy> option is equal to I<public>, an accessor will be created
-with the same name as the label.  If the accessor is passed an argument, the
-property will be set to the argument.  The accessor always returns the value of
-the property.
-
-=over
-
-=item *
-
-C<<< set_hook => \&code_ref >>>
-
-=back
-
-  public age => my %age, {
-     set_hook => sub { /^\d+$/ or die "must be an integer" }
-  };
-
-Defines an accessor hook for when values are set. The hook subroutine receives
-the entire argument list.  C<<< $_ >>> is locally aliased to the first argument for
-convenience.  The property receives the value of C<<< $_ >>>. See L</"Accessor Hooks">
-for details.
-
-=over
-
-=item *
-
-C<<< get_hook => \&code_ref >>>
-
-=back
-
-  public list => my %list, {
-      get_hook => sub { @$_ }
-  };
-
-Defines an accessor hook for when values are retrieved.  C<<< $_ >>> is locally
-aliased to the property value for the object.  I<The return value of the hook is
-passed through as the return value of the accessor.> See L</"Accessor Hooks">
-for details.
 
 =head2 C<<< private >>>
 
@@ -580,8 +280,7 @@ tracked for memory cleanup during object destruction and for proper
 thread-safety.
 
 If a third, optional argument is provided, it must be a reference to a hash
-of options that will be applied to the property.  Valid options are the same
-as listed for the C<<< options >>> function and will override any
+of options that will be applied to the property and will override any
 default options that have been set.
 
 =head2 C<<< public >>>
@@ -600,106 +299,69 @@ Registers an object for thread-safety.  This should be called as part of a
 constructor on a object blessed into the current package.  Returns the
 object (without modification).
 
+=head1 OPTIONS
+
+Options customize how properties are generated.  Options may be set as a
+default with the C<<< options >>> function or passed as a hash reference to 
+C<<< public >>>, C<<< private >>> or C<<< property >>>.  
+
+Valid options include:
+
+=head2 C<<< privacy >>> 
+
+  property rank => my %rank, { privacy => 'public' };
+  property serial => my %serial, { privacy => 'private' };
+
+If the I<privacy> option is set to I<public>, an accessor will be created
+with the same name as the label.  If the accessor is passed an argument, the
+property will be set to the argument.  The accessor always returns the value of
+the property.
+
+=head2 C<<< get_hook >>>
+
+  public list => my %list, {
+      get_hook => sub { @$_ }
+  };
+
+Defines an accessor hook for when values are retrieved.  C<<< $_ >>> is locally
+aliased to the property value for the object.  I<The return value of the hook is
+passed through as the return value of the accessor.> See "Customizing Accessors"
+in L<Class::InsideOut::Manual::Advanced> for details.
+
+=head2 C<<< set_hook >>>
+
+  public age => my %age, {
+     set_hook => sub { /^\d+$/ or die "must be an integer" }
+  };
+
+Defines an accessor hook for when values are set. The hook subroutine receives
+the entire argument list.  C<<< $_ >>> is locally aliased to the first argument for
+convenience.  The property receives the value of C<<< $_ >>>. See "Customizing
+Accessors" in L<Class::InsideOut::Manual::Advanced> for details.
+
 =head1 SEE ALSO
 
-=head2 Other modules on CPAN
+Programmers seeking a more full-featured approach to inside-out objects are
+encouraged to explore L<Object::InsideOut>.  Other implementations are also
+noted in L<Class::InsideOut::Manual::About>.
+
+=head1 ROADMAP
+
+Features slated for after the 1.0 release include:
 
 =over
 
 =item *
 
-L<Object::InsideOut> -- This is perhaps the most full-featured, robust
-implementation of inside-out objects currently on CPAN.  It is highly
-recommended if a more full-featured inside-out object builder is needed.
-Its array-based mode is faster than hash-based implementations, but foreign
-inheritance is handled via delegation, which imposes certain limitations.
-
-=back
-
-=over
+Adding support for L<Data::Dump::Streamer> serialization hooks
 
 =item *
 
-L<Class::Std> -- Despite the name, this does not reflect best practices for
-inside-out objects.  Does not provide thread-safety with CLONE, is not mod_perl
-safe and doesn't support foreign inheritance.
-
-=back
-
-=over
+Adding additional accessor styles (e.g. get_name()E<sol>set_name())
 
 =item *
 
-L<Class::BuildMethods> -- Generates accessors with encapsulated storage using a
-flyweight inside-out variant. Lexicals properties are hidden; accessors must be
-used everywhere. Not thread-safe.
-
-=back
-
-=over
-
-=item *
-
-L<Lexical::Attributes> -- The original inside-out implementation, but missing
-some key features like thread-safety.  Also, uses source filters to provide
-Perl-6-like object syntax. Not thread-safe.
-
-=back
-
-=over
-
-=item *
-
-L<Class::MakeMethods::Templates::InsideOut> -- Not a very robust
-implementation. Not thread-safe.  Not overloading-safe.  Has a steep learning
-curve for the Class::MakeMethods system.
-
-=back
-
-=over
-
-=item *
-
-L<Object::LocalVars> -- My own original thought experiment with 'outside-in'
-objects and local variable aliasing. Not safe for any production use and offers
-very weak encapsulation.
-
-=back
-
-=head2 References
-
-Much of the Perl community discussion of inside-out objects has taken place on
-Perlmonks ([http:E<sol>E<sol>perlmonks.org]).  My scratchpad there has a fairly
-comprehensive list of articles
-([http:E<sol>E<sol>perlmonks.orgE<sol>index.pl?node_id=360998]).  Some of the more
-informative articles include:
-
-=over
-
-=item *
-
-Abigail-II. "Re: WhereE<sol>When is OO useful?". July 1, 2002.
-L<http://perlmonks.org/index.pl?node_id=178518>
-
-=item *
-
-Abigail-II. "Re: Tutorial: Introduction to Object-Oriented Programming".
-December 11, 2002. L<http://perlmonks.org/index.pl?node_id=219131>
-
-=item *
-
-demerphq. "Yet Another Perl Object Model (Inside Out Objects)". December 14,
-2002. L<http://perlmonks.org/index.pl?node_id=219924>
-
-=item *
-
-xdg. "Threads and fork and CLONE, oh my!". August 11, 2005.
-L<http://perlmonks.org/index.pl?node_id=483162>
-
-=item *
-
-jdhedden. "Anti-inside-out-object-ism". December 9, 2005.
-L<http://perlmonks.org/index.pl?node_id=515650>
+Revising and clarifying documentation further
 
 =back
 

@@ -42,3 +42,5 @@ t/Object/Scalar.pm
 t/Object/Synopsis.pm
 t/Object/Trivial.pm
 Todo
+lib/Class/InsideOut/Manual/Advanced.pod
+lib/Class/InsideOut/Manual/About.pod

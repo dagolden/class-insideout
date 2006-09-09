@@ -35,12 +35,12 @@ sub DEMOLISH {
     }
 }
 
-sub STORABLE_freeze_hook {
+sub FREEZE {
     my $self = shift;
     $freezings++;
 }
 
-sub STORABLE_thaw_hook {
+sub THAW {
     my $self = shift;
     $thawings++;
 }

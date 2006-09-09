@@ -66,7 +66,7 @@ sub import {
     my $caller = caller;
     *{ "$caller\::DESTROY" } = _gen_DESTROY( $caller );
     *{ "$caller\::DDS_freeze" } = _gen_DDS_freeze( $caller );
-    *{ "$caller\::DDS_thaw" } = _gen_DDS_thaw( $caller );
+    *{ "$caller\::Frozen::DDS_thaw" } = _gen_DDS_thaw( $caller );
     # check for ":singleton" and do export attach instead of thaw
     # make ":singleton" an empty tag to Exporter doesn't choke on it
     if ( grep { $_ eq ":singleton" } @_ ) {
@@ -274,7 +274,7 @@ sub _gen_DDS_freeze {
             my $hook;
             {
                 no strict 'refs';
-                $hook = *{ "$c\::STORABLE_freeze_hook" }{CODE};
+                $hook = *{ "$c\::FREEZE" }{CODE};
             }
             $hook->($obj) if defined $hook;
         }
@@ -282,30 +282,50 @@ sub _gen_DDS_freeze {
         # Extract properties to save
         my $data = _evert( $obj );
 
+        # Construct proxy object of right type
+        my $proxy;
+        
+        for ($data->{type}) {
+            /SCALAR/    ? do { $proxy = \$data } :
+            /ARRAY/     ? do { $proxy = [ $data ] } :
+            /HASH/      ? do { $proxy = { data => $data } } :
+                          do { $proxy = undef };
+        }
+        
+        bless $proxy, "$class\::Frozen";
+
         # Return DDS proxy and thaw function
-        return $data, "$class\::DDS_thaw()";
+        return $proxy, "$class\::Frozen::DDS_thaw";
     };
 }
 
 sub _gen_DDS_thaw {
     my $class = shift;
     return sub {
-        my ( $data ) = @_;
+        # $_[0] is alias to proxy object
 
-        # restore contents
-        my $obj = _revert( $data );
+        # extract data from proxy
+        my $data;
+        for ( reftype $_[0] ) {
+            /SCALAR/    ? do { $data = $$_[0] } :
+            /ARRAY/     ? do { $data = $_[0][0] } :
+            /HASH/      ? do { $data = $_[0]{data} } :
+                          do {} ;
+        }
+
+        # restore contents and rebless
+        my $obj = _revert( $data, $_[0] );
 
         # Call STORABLE_thaw_hooks in each class if they exists
         for my $c ( _class_tree( ref $obj ) ) {
             my $hook;
             {
                 no strict 'refs';
-                $hook = *{ "$c\::STORABLE_thaw_hook" }{CODE};
+                $hook = *{ "$c\::THAW" }{CODE};
             }
             $hook->($obj) if defined $hook;
         }
-
-        return $obj;
+    return $obj;
     };
 }
 
@@ -351,7 +371,7 @@ sub _gen_STORABLE_attach {
         my $hook;
         {
             no strict 'refs';
-            $hook = *{ "$class\::STORABLE_attach_hook" }{CODE};
+            $hook = *{ "$class\::ATTACH" }{CODE};
         }
 
         # try user hook to recreate, otherwise new(), otherwise give up
@@ -378,7 +398,7 @@ sub _gen_STORABLE_freeze {
             my $hook;
             {
                 no strict 'refs';
-                $hook = *{ "$c\::STORABLE_freeze_hook" }{CODE};
+                $hook = *{ "$c\::FREEZE" }{CODE};
             }
             $hook->($obj) if defined $hook;
         }
@@ -412,7 +432,7 @@ sub _gen_STORABLE_thaw {
             my $hook;
             {
                 no strict 'refs';
-                $hook = *{ "$c\::STORABLE_thaw_hook" }{CODE};
+                $hook = *{ "$c\::THAW" }{CODE};
             }
             $hook->($obj) if defined $hook;
         }
@@ -453,18 +473,20 @@ sub _revert {
     my $contents = $data->{contents};
     if ( defined $obj ) {
         # restore contents to the pregenerated object
-        my $type = reftype $obj;
-        if    ( $type eq 'SCALAR' ) { $$obj = $$contents }
-        elsif ( $type eq 'ARRAY'  ) { @$obj = @$contents }
-        elsif ( $type eq 'HASH'   ) { %$obj = %$contents }
-        else                        { } # leave it empty
+        for ( reftype $obj ) {
+            /SCALAR/    ? do { $$obj = $$contents } :
+            /ARRAY/     ? do { @$obj = @$contents } :
+            /HASH/      ? do { %$obj = %$contents } :
+                          do {} ;
+        }
     }
     else {
         # just use the contents as the reference
         # and bless it back into an object
         $obj = $contents;
-        bless $obj, $data->{class};
     }
+
+    bless $obj, $data->{class};
 
     # restore properties
     for my $c ( _class_tree( ref $obj ) ) {
@@ -530,278 +552,121 @@ Class::InsideOut - a safe, simple inside-out object construction kit
 
  package My::Class;
  
- use Class::InsideOut ':std'; # public, private, register and id
+ use Class::InsideOut qw( public private register id );
 
  public     name => my %name;       # accessor: name()
- private    ssn  => my %ssn;        # no accessor
+ private    age  => my %age;        # no accessor
  
- public     age  => my %age, {
-    set_hook => sub { /^\d+$/ or die "must be an integer" }
- };
- 
- public     initials => my %initials, {
-    set_hook => sub { $_ = uc $_ }
- };
-
- sub new {
-   register( bless \(my $s), shift );
- }
+ sub new { register( bless \(my $s), shift ) }
  
  sub greeting {
    my $self = shift;
    return "Hello, my name is $name{ id $self }";
  }
 
-
 = DESCRIPTION
 
 This is a simple, safe and streamlined toolkit for building inside-out objects.
 Unlike most other inside-out object building modules already on CPAN, this
-module aims for minimalism and robustness.  It does not require derived classes
-to subclass it; uses no source filters, attributes or CHECK blocks; supports
-any underlying object type including foreign inheritance; does not leak memory;
-is overloading-safe; is thread-safe for Perl 5.8 or better; and should be
-mod_perl compatible.
+module aims for minimalism and robustness:
+
+* Does not require derived classes to subclass it
+* Uses no source filters, attributes or {CHECK} blocks
+* Supports any underlying object type including foreign inheritance
+* Does not leak memory on object destruction
+* Overloading-safe
+* Thread-safe for Perl 5.8 or better
+* {mod_perl} compatible
+* Makes no assumption about inheritance or initializer needs
 
 It provides the minimal support necessary for creating safe inside-out objects
-and generating flexible accessors.  All other implementation details,
-including writing a constructor and managing inheritance, are left to the user
-to maximize flexibility.
+and generating flexible accessors.  
 
-Programmers seeking a more full-featured approach to inside-out objects are
-encouraged to explore [Object::InsideOut].  Other implementations are briefly
-noted in the [/"SEE ALSO"] section.
+== Additional documentation
 
-== Inside-out object basics
-
-Inside-out objects use the blessed reference as an index into lexical data
-structures holding object properties, rather than using the blessed reference
-itself as a data structure.
-
- $self->{ name }        = "Larry"; # classic, hash-based object
- $name{ refaddr $self } = "Larry"; # inside-out
-
-The inside-out approach offers three major benefits:
-
-* Enforced encapsulation: object properties cannot be accessed directly
-from ouside the lexical scope that declared them
-* Making the property name part of a lexical variable rather than a hash-key
-means that typos in the name will be caught as compile-time errors (if
-using [strict])
-* If the memory address of the blessed reference is used as the index,
-the reference can be of any type
-
-In exchange for these benefits, however, robust implementation of inside-out
-objects can be quite complex.  {Class::InsideOut} manages that complexity.
-
-== Philosophy of {Class::InsideOut}
-
-{Class::InsideOut} provides a set of tools for building safe inside-out classes
-with maximum flexibility.
-
-It aims to offer minimal restrictions beyond those necessary for robustness of
-the inside-out technique.  All capabilities necessary for robustness should be
-automatic.  Anything that can be optional should be.  The design should not
-introduce new restrictions unrelated to inside-out objects (such as attributes
-and {CHECK} blocks that cause problems for {mod_perl} or the use of source
-filters for a new syntax).
-
-As a result, only a few things are mandatory:
-
-* Properties must be based on hashes and declared via {property}
-* Property hashes must be keyed on the {Scalar::Util::refaddr} of the object
-(or the optional {id} alias to {Scalar::Util::refaddr}).
-* {register} must be called on all new objects
-
-All other implementation details, including constructors, initializers and
-class inheritance management are left to the user.  This does requires some
-additional work, but maximizes freedom.  {Class::InsideOut} is intended to
-be a base class providing only fundamental features.  Subclasses of
-{Class::InsideOut} could be written that build upon it to provide particular
-styles of constructor, destructor and inheritance support.
+* [Class::InsideOut::Manual::About] -- Guide to the inside-out 
+technique, the {Class::InsideOut} philosophy, and other inside-out 
+implementations
+* [Class::InsideOut::Manual::Advanced] -- Advanced topics including customizing
+accessors, foreign inheritance, serialization and thread safety
 
 = USAGE
 
 == Importing {Class::InsideOut}
 
- use Class::InsideOut;
+{Class::InsideOut} automatically imports several critical methods into the
+calling package, including {DESTROY} and support methods for serializing
+objects with {Storable}.  These methods are intimately tied to correct
+functioning of inside-out objects and will always be imported regardless
+of whether additional functions are requested. 
 
-No functions are imported by default -- all functions must be called using
-their fully qualified names:
+Additional functions may be imported as usual by including them as arguments to
+{use}.  For example:
 
- Class::InsideOut::property name => my %name;
- Class::InsideOut::register $self;
-
-Functions can be imported by including them as arguments with {use}. For
-example:
-
- use Class::InsideOut qw( register property );
-
- property name => my %name;
- register $self;
-
+ use Class::InsideOut qw( register public );
+ 
+ public name => my %name;
+ 
+ sub new { register bless( \(my $s), shift) }
+ 
 As a shortcut, {Class::InsideOut} supports two tags for importing sets of
 functions:
 
- use Class::InsideOut ':std'; # id, private, public, register
- 
- use Class::InsideoUT ':all'; # all functions
+* {:std} provides {id}, {private}, {public} and {register}
+* {:all} imports all functions
 
-In addition, {Class::InsideOut} automatically imports three critical methods
-into the namespace that uses it: {DESTROY}, {STORABLE_freeze} and
-{STORABLE_thaw}.  These methods are intimately tied to correct functioning of
-the inside-out objects.  They will be imported regardless of whether or not any
-other functions are requested with {use}.  This can only be avoided by
-explicitly doing no importing, either via {require} or passing an empty list to
-{use}:
+*Note*: Automatic imports can be bypassed via {require} or by passing an empty
+list to {use Class::InsideOut}. There is almost no circumstance in which
+this is a good idea. 
 
- use Class::InsideOut ();
+== Object properties and accessors
 
-There is almost no circumstance under which this is a good idea.  See
-[/"Object destruction"] and [/"Serialization"] for how to add customized
-behavior to these methods.
+Object properties are declared with the {public} and {private}
+functions.  They must be passed a label and the lexical hash that will be
+used to store object properties:
 
-== Object properties
-
-Object properties are declared with the {property} function (or its special
-aliases {public} and {private}), which must be passed a label and a lexical
-(i.e. {my}) hash.
-
- property name => my %name;
- property age => my %age;
-
-Properties are private by default and no accessors are created.  Users are
-free to create accessors of any style.  See [/"Property accessors"] for
-how to have {Class::InsideOut} automatically generate accessors.
+ public name => my %name;
+ private age => my %age;
 
 Properties for an object are accessed through an index into the lexical hash
 based on the memory address of the object.  This memory address ~must~ be
-obtained via {Scalar::Util::refaddr}.  The alias {id} is available for
+obtained via {Scalar::Util::refaddr}.  The alias {id} may be imported for
 brevity.
 
  $name{ refaddr $self } = "James";
  $age { id      $self } = 32;
 
-*Tip*: since {refaddr} (or {id}) are function calls, it may be helpful
-to store the value once at the beginning of a method rather than call it
-repeatedly throughout.  This is particularly true if it would be called
-within a loop.  For example:
+*Tip*: since {refaddr} and {id} are function calls, it may be efficient to
+store the value once at the beginning of a method, particularly if it is being
+called repeatedly, e.g. within a loop.
 
- property dsn => my %dsn;
- property dbh => my %dbh;
+Object properties declared with {public} will have an accessor created
+with the same name as the label.  If the accessor is passed an argument, the
+property will be set to the argument.  The accessor always returns the value of
+the property.  
+
+ # Outside the class
+ $person = My::Class->new;
+ $person->name( "Larry" );
+
+Property accessors may also be hand-written by declaring the property
+{private} and writing whatever style of accessor is desired.  For example:
+
+ sub age     { $age{ id $_[0] } }
+ sub set_age { $age{ id $_[0] } = $_[1] }
+
+Hand-written accessors will be very slightly faster as generated accessors hold
+a reference to the property hash rather than accessing the property hash
+directly.
  
- sub dbi_connect {
-     my $self = shift;
-     my $id = refaddr $self; # calculate once and store
-
-     # try up to 20 times
-     for ( 1 .. 20 ) {
-         $dbh{ $id } = DBI->connect( $dsn{ $id } );
-         return if $dbh{ $id };
-     }
-     die "Couldn't connect to $dsn{ $id }";
- }
-
-== Property accessors
-
- property color => my %color, { privacy => 'public' };
- 
- $obj->color( "red" );
- print $obj->color(); # prints "red"
-
-The {property} method supports an optional hash reference of options.  If the
-~privacy~ option is equal to ~public~, an accessor will be created with the
-same name as the label.  If the accessor is passed an argument, the property
-will be set to the argument.  The accessor always returns the value of the
-property.  Future versions of {Class::InsideOut} will support additional
-accessor styles.
-
-Default accessor options may be set using the {options} function and will
-affect all subsequent calls to {property}.
-
-{Class::InsideOut} offers two aliases for {property} that additionally
-set the privacy property accordingly, overriding the defaults and any options
-provided:
-
- public  height => my %height;
- private weight => my %weight;
-
-See the documentation of each for details.
-
-*Tip*: generated accessors will be very slightly slower than a hand-rolled one
-as the generated accessor holds a reference rather than accessing the lexical
-property hash directly.
- 
-== Accessor hooks
-
-{Class::InsideOut} supports custom subroutine hooks to modify the behavior of
-accessors.  Hooks are passed as property options: {set_hook} and {get_hook}.
-
-The {set_hook} option is called when the accessor is called with an argument.
-The hook subroutine receives the entire argument list.  Just before the hook is
-called, {$_} is locally aliased to the first argument for convenience.
-
- public age => my %age, {
-    set_hook => sub { /^\d+$/ or die "must be an integer\n" }
- };
-
-If the {set_hook} dies, the error is caught and rethrown with a preamble that
-includes the name of the accessor.  The error should end with a newline to
-prevent {die} in the hook from adding the location of the error.  The
-location will be added later when the error is rethrown:
-
- $obj->age(3.5); # dies with "age() must be an integer at..."
-
-When the {set_hook} returns, the property is set equal to {$_}.  This feature
-is useful for on-the-fly modification of the value that will be stored.
-
- public list => my %list, {
-    set_hook => sub { $_ = [ @_ ] } # stores arguments in a reference
- };
-
-~Note that the return value of the {set_hook} is ignored.~  (This simplifies
-syntax in the more frequent case of validating input versus modifying input.)
-
-The {get_hook} option is called when the accessor is called without an
-argument.  Just before the hook is called, {$_} is set equal to the property
-value of the object for convenience. The hook is called in the same context
-(i.e. list versus scalar) as the accessor.  ~The return value of the hook is
-passed through as the return value of the accessor.~  
-
- public list => my %list, {
-    set_hook => sub { $_ = [ @_ ] }, # stores arguments in a reference
-    get_hook => sub { @$_ }          # return property as a list
- };
-
-Because {$_} is a copy, not an alias, of the property value, it
-can be modified directly, if necessary, without affecting the underlying
-property.
-
-As with {set_hook}, the {get_hook} can die to indicate an error condition and
-errors are handled similarly.  This could be used as a way to implement a
-protected property:
-
- sub _protected { 
-    die "is protected\n" unless caller(2)->isa(__PACKAGE__)
- }
-
- public hidden => my %hidden, {
-    get_hook => \&_protected,
-    set_hook => \&_protected,
- }
-
-Accessor hooks can be set as a global default with the {options} function,
-though they may still be overridden with options passed to specific properties.
-
 == Object construction
 
 {Class::InsideOut} provides no constructor method as there are many possible
-ways of constructing an inside-out object.  Additionally, this avoids
-constraining users to any particular object initialization or superclass
-initialization approach.
+ways of constructing an inside-out object. This avoids constraining users to
+any particular object initialization or superclass initialization approach.
 
 By using the memory address of the object as the index for properties, ~any~
-type of reference can be used as the basis for an inside-out object with
+type of reference may be used as the basis for an inside-out object with
 {Class::InsideOut}.
 
  sub new {
@@ -815,12 +680,12 @@ type of reference can be used as the basis for an inside-out object with
    register( bless $self, $class );
  }
 
-However, to ensure that the inside-out objects are thread-safe, the {register}
-function ~must~ be called on the newly created object.  See [/register] for
-details.
+However, to ensure that the inside-out object is thread-safe, the {register}
+function ~must~ be called on the newly created object.
 
 A more advanced technique uses another object, usually a superclass object,
-as the object reference.  See [/"Foreign inheritance"] for details.
+as the object reference.  See "foreign inheritance" in 
+[Class::InsideOut::Manual::Advanced] for an example.
 
 == Object destruction
 
@@ -843,7 +708,7 @@ will not be deleted until after {DEMOLISH} returns.
    $objects_destroyed++;
  }
 
-{DEMOLISH} will only be automatically called if it exists for an object's
+{DEMOLISH} will only be called if it exists for an object's actual
 class.  {DEMOLISH} will not be inherited and {DEMOLISH} will not be called
 automatically for any superclasses.
 
@@ -868,116 +733,6 @@ or may prefer to walk the entire {@ISA} tree:
    }
  }
 
-Generally, any class that inherits from another should define its own
-{DEMOLISH} method.
-
-== Foreign inheritance
-
-Because inside-out objects built with {Class::InsideOut} can use any type of
-reference for the object, inside-out objects can be built using other objects.
-This is useful to extend a superclass without regard for whether the superclass
-implement objects with a hash or array or other reference.
-
- use base 'IO::File';
- 
- sub new {
-   my ($class, $filename) = @_;
- 
-   my $self = IO::File->new( $filename );
- 
-   register( bless $self, $class );
- }
-
-In the example above, {IO::File} is a superclass.  The object is an
-{IO::File} object, re-blessed into the inside-out class.  The resulting
-object can be used directly anywhere an {IO::File} object would be,
-without interfering with any of its own inside-out functionality.
-
-Classes using foreign inheritance should provide a {DEMOLISH} function that
-calls the foreign class destructor explicitly.
-
-== Serialization
-
-{Class::InsideOut} has support for serialization with [Storable] by providing
-the {STORABLE_freeze} and {STORABLE_thaw} methods.  {Storable} will use these
-methods to serialize.  They should not be called directly.  Due to limitations
-of {Storable}, this serialization will only work for objects based on scalars,
-arrays or hashes.
-
-References to objects within the object being frozen will result in clones
-upon thawing unless the other references are included in the same freeze
-operation.  (See {Storable} for details.)
-
-  # assume $alice and $bob are objects
-  $alice->friends( $bob );
-  $bob->friends( $alice );
-
-  $alice2 = Storable::dclone( $alice );
- 
-  # $bob was cloned, too, thanks to the reference
-  die if $alice2->has_friend( $bob );
- 
-  # get alice2's friend
-  ($bob2) = $alice2->friends();
- 
-  # preserved relationship between bob2 and alice2
-  die unless $bob2->has_friend( $alice );
-
-{Class::InsideOut} also supports custom freeze and thaw hooks.  When an
-object is frozen, if its class or any superclass provides
-{STORABLE_freeze_hook} functions, they are each called with the object as an
-argument ~prior~ to the rest of the freezing process.  This allows for
-custom preparation for freezing, such as writing a cache to disk, closing
-network connections, or disconnecting database handles.
-
-Likewise, when a serialized object is thawed, if its class or any
-superclass provides {STORABLE_thaw_hook} functions, they are each called
-~after~ the object has been thawed with the thawed object as an argument.
-
-{Class::InsideOut} also supports serialization of singleton objects for
-recent vesions of {Storable} that support {STORABLE_attach}.  Users must
-signal that {STORABLE_attach} should be used instead of {STORABLE_thaw}
-by adding {:singleton} to their import line as follows:
-
-  use Class::InsideOut qw( :std :singleton );
-
-When attaching, the singleton object will be recreated in one of two ways:
-
-* If the singleton class contains a {STORABLE_attach_hook) function, it 
-will be called with 
-
-== Thread-safety
-
-Because {Class::InsideOut} uses memory addresses as indices to object
-properties, special handling is necessary for use with threads.  When a new
-thread is created, the Perl interpreter is cloned, and all objects in the new
-thread will have new memory addresses.  Starting with Perl 5.8, if a {CLONE}
-function exists in a package, it will be called when a thread is created to
-provide custom responses to thread cloning.  (See [perlmod] for details.)
-
-{Class::InsideOut} itself has a {CLONE} function that automatically fixes up
-properties in a new thread to reflect the new memory addresses for all classes
-created with {Class::InsideOut}.  {register} must be called on all newly
-constructed inside-out objects to register them for use in
-{Class::InsideOut::CLONE}.
-
-Users are strongly encouraged not to define their own {CLONE} functions as
-they may interfere with the operation of {Class::InsideOut::CLONE} and leave
-objects in an undefined state.  Future versions may support a user-defined
-CLONE hook, depending on demand.
-
-*Limitations:* 
-
-{fork} on Perl for Win32 is emulated using threads since Perl
-5.6. (See [perlfork].)  As Perl 5.6 did not support {CLONE}, inside-out objects
-that use memory addresses (e.g. {Class::InsideOut}) are not fork-safe for Win32
-on Perl 5.6.  Win32 Perl 5.8 {fork} is supported.
-
-The technique for thread-safety requires creating weak references using
-{Scalar::Util::weaken()}, which is implemented in XS.  If the XS-version of
-[Scalar::Util] is not installed, {Class::InsideOut} will issue a warning
-and continue without thread-safety.
-
 = FUNCTIONS
 
 == {id}
@@ -993,44 +748,11 @@ the properties of an inside-out object.
  Class::InsideOut::options( \%new_options );
  %current_options = Class::InsideOut::options();
 
-The {options} function sets default options for use with all subsquent
-{property} calls for the calling package.  If called without arguments, this
+The {options} function sets default options for use with all subsquent property
+definitions for the calling package.  If called without arguments, this
 function will return the options currently in effect.  When called with a hash
 reference of options, these will be joined with the existing defaults,
 overriding any options of the same name.
-
-Valid options include:
-
-* {privacy => 'public|private'}
-
- property rank => my %rank, { privacy => 'public' };
-
-If the ~privacy~ option is equal to ~public~, an accessor will be created
-with the same name as the label.  If the accessor is passed an argument, the
-property will be set to the argument.  The accessor always returns the value of
-the property.
-
-* {set_hook => \&code_ref}
-
- public age => my %age, {
-    set_hook => sub { /^\d+$/ or die "must be an integer" }
- };
-
-Defines an accessor hook for when values are set. The hook subroutine receives
-the entire argument list.  {$_} is locally aliased to the first argument for
-convenience.  The property receives the value of {$_}. See [/"Accessor Hooks"]
-for details.
-
-* {get_hook => \&code_ref}
-
- public list => my %list, {
-     get_hook => sub { @$_ }
- };
-
-Defines an accessor hook for when values are retrieved.  {$_} is locally
-aliased to the property value for the object.  ~The return value of the hook is
-passed through as the return value of the accessor.~ See [/"Accessor Hooks"]
-for details.
 
 == {private}
 
@@ -1055,8 +777,7 @@ tracked for memory cleanup during object destruction and for proper
 thread-safety.
 
 If a third, optional argument is provided, it must be a reference to a hash
-of options that will be applied to the property.  Valid options are the same
-as listed for the {options} function and will override any
+of options that will be applied to the property and will override any
 default options that have been set.
 
 == {public}
@@ -1075,62 +796,59 @@ Registers an object for thread-safety.  This should be called as part of a
 constructor on a object blessed into the current package.  Returns the
 object (without modification).
 
+= OPTIONS
+
+Options customize how properties are generated.  Options may be set as a
+default with the {options} function or passed as a hash reference to 
+{public}, {private} or {property}.  
+
+Valid options include:
+
+== {privacy} 
+
+ property rank => my %rank, { privacy => 'public' };
+ property serial => my %serial, { privacy => 'private' };
+
+If the ~privacy~ option is set to ~public~, an accessor will be created
+with the same name as the label.  If the accessor is passed an argument, the
+property will be set to the argument.  The accessor always returns the value of
+the property.
+
+== {get_hook}
+
+ public list => my %list, {
+     get_hook => sub { @$_ }
+ };
+
+Defines an accessor hook for when values are retrieved.  {$_} is locally
+aliased to the property value for the object.  ~The return value of the hook is
+passed through as the return value of the accessor.~ See "Customizing Accessors"
+in [Class::InsideOut::Manual::Advanced] for details.
+
+== {set_hook}
+
+ public age => my %age, {
+    set_hook => sub { /^\d+$/ or die "must be an integer" }
+ };
+
+Defines an accessor hook for when values are set. The hook subroutine receives
+the entire argument list.  {$_} is locally aliased to the first argument for
+convenience.  The property receives the value of {$_}. See "Customizing
+Accessors" in [Class::InsideOut::Manual::Advanced] for details.
+
+= SEE ALSO
+
+Programmers seeking a more full-featured approach to inside-out objects are
+encouraged to explore [Object::InsideOut].  Other implementations are also
+noted in [Class::InsideOut::Manual::About].
+
 = ROADMAP
 
 Features slated for after the 1.0 release include:
 
-* adding support for [Data::Dump::Streamer] serialization hooks
-* adding additional accessor styles (e.g. get_name()/set_name())
-* revising and clarifying documentation
-
-= SEE ALSO
-
-== Other modules on CPAN
-
-* [Object::InsideOut] -- This is perhaps the most full-featured, robust
-implementation of inside-out objects currently on CPAN.  It is highly
-recommended if a more full-featured inside-out object builder is needed.
-Its array-based mode is faster than hash-based implementations, but foreign
-inheritance is handled via delegation, which imposes certain limitations.
-
-* [Class::Std] -- Despite the name, this does not reflect best practices for
-inside-out objects.  Does not provide thread-safety with CLONE, is not mod_perl
-safe and doesn't support foreign inheritance.
-
-* [Class::BuildMethods] -- Generates accessors with encapsulated storage using a
-flyweight inside-out variant. Lexicals properties are hidden; accessors must be
-used everywhere. Not thread-safe.
-
-* [Lexical::Attributes] -- The original inside-out implementation, but missing
-some key features like thread-safety.  Also, uses source filters to provide
-Perl-6-like object syntax. Not thread-safe.
-
-* [Class::MakeMethods::Templates::InsideOut] -- Not a very robust
-implementation. Not thread-safe.  Not overloading-safe.  Has a steep learning
-curve for the Class::MakeMethods system.
-
-* [Object::LocalVars] -- My own original thought experiment with 'outside-in'
-objects and local variable aliasing. Not safe for any production use and offers
-very weak encapsulation.
-
-== References
-
-Much of the Perl community discussion of inside-out objects has taken place on
-Perlmonks ([http://perlmonks.org]).  My scratchpad there has a fairly
-comprehensive list of articles
-([http://perlmonks.org/index.pl?node_id=360998]).  Some of the more
-informative articles include:
-
-* Abigail-II. "Re: Where/When is OO useful?". July 1, 2002.
-[http://perlmonks.org/index.pl?node_id=178518]
-* Abigail-II. "Re: Tutorial: Introduction to Object-Oriented Programming".
-December 11, 2002. [http://perlmonks.org/index.pl?node_id=219131]
-* demerphq. "Yet Another Perl Object Model (Inside Out Objects)". December 14,
-2002. [http://perlmonks.org/index.pl?node_id=219924]
-* xdg. "Threads and fork and CLONE, oh my!". August 11, 2005.
-[http://perlmonks.org/index.pl?node_id=483162]
-* jdhedden. "Anti-inside-out-object-ism". December 9, 2005.
-[http://perlmonks.org/index.pl?node_id=515650]
+* Adding support for [Data::Dump::Streamer] serialization hooks
+* Adding additional accessor styles (e.g. get_name()/set_name())
+* Further documentation revisions and clarification
 
 = BUGS
 
