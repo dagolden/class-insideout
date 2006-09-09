@@ -11,17 +11,23 @@ if ( $ENV{HARNESS_PERL_SWITCHES} &&
         "no_weaken_fallback tests not compatible with Devel::Cover";
 }
 
-# Overload DynaLoader to fake lack of XS for Scalar::Util
+# Overload DynaLoader and XSLoader to fake lack of XS for Scalar::Util
 # (which actually calls List::Util)
 BEGIN {
     require DynaLoader;
+    require XSLoader;
     no strict 'refs';
     local $^W;
+    my $xsload_orig = *{"XSLoader::load"}{CODE};
+    *XSLoader::load = sub {
+        die if $_[0] =~ /(Scalar|List)::Util/;
+        goto $xsload_orig;
+    };
     my $bootstrap_orig = *{"DynaLoader::bootstrap"}{CODE};
     *DynaLoader::bootstrap = sub {
         die if $_[0] =~ /(Scalar|List)::Util/;
         goto $bootstrap_orig;
-    }
+    };
 }
 
 

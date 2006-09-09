@@ -18,7 +18,7 @@ use Scalar::Util qw( refaddr reftype );
 # Check for XS Scalar::Util with weaken() or warn and fallback
 BEGIN {
     eval { Scalar::Util->import( "weaken" ) };
-    if ( $@ =~ /\AWeak references are not implemented/ ) {
+    if ( $@ =~ /\AWeak references/ ) {
         warn "Scalar::Util::weaken unavailable: "
            . "Class::InsideOut will not be thread-safe\n";
         *weaken = sub { shift };
