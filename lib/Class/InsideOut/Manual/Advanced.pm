@@ -1,7 +1,7 @@
 package Class::InsideOut::Manual::Advanced;
 # Not really a .pm file, but holds wikidoc which will be
 # turned into .pod by the Build.PL
-$VERSION = "0.90_01";
+$VERSION = "0.90_02";
 use strict; # make CPANTS happy
 1;
 __END__
@@ -153,7 +153,7 @@ by adding {:singleton} to their import line as follows:
 
 When attaching, the singleton object will be recreated in one of two ways:
 
-1. If the singleton class contains an {ATTACH} METHOD, it will be called with
+1. If the singleton class contains an {ATTACH} method, it will be called with
 three arguments: the class name, a flag for whether this is part of a dclone,
 and a data structure representing the object:
 

@@ -75,8 +75,8 @@ my $builder = $class->new(
     meta_add            => { 
         no_index => { 
             file => [ qw{ 
-                lib\Class\InsideOut\Manual\About.pm
-                lib\Class\InsideOut\Manual\Advanced.pm 
+                lib/Class/InsideOut/Manual/About.pm
+                lib/Class/InsideOut/Manual/Advanced.pm 
             } ] 
         } 
     },

@@ -147,7 +147,7 @@ by adding C<<< :singleton >>> to their import line as follows:
 
 When attaching, the singleton object will be recreated in one of two ways:
 
-1. If the singleton class contains an C<<< ATTACH >>> METHOD, it will be called with
+1. If the singleton class contains an C<<< ATTACH >>> method, it will be called with
 three arguments: the class name, a flag for whether this is part of a dclone,
 and a data structure representing the object:
 

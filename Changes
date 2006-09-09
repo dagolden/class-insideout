@@ -1,5 +1,9 @@
 Revision history for Perl module Class::InsideOut
 
+0.90_02 Thu May  4 00:56:04 EDT 2006
+    
+    - fixed up META.yml and a pod typo
+
 0.90_01 Wed May  3 20:47:34 EDT 2006
 
     - *API CHANGE* renamed serialization hooks to FREEZE and THAW
