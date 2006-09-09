@@ -4,10 +4,14 @@ use strict;
 use Class::InsideOut;
 use Scalar::Util qw( refaddr );
 
-my $opts = { privacy => 'public' };
+Class::InsideOut::options(
+    {
+        privacy => 'public',
+    }
+);
 
-Class::InsideOut::property( name => my %name, $opts );
-Class::InsideOut::property( species => my %species, $opts );
+Class::InsideOut::property( name => my %name );
+Class::InsideOut::property( species => my %species );
 
 # Globals for testing
 

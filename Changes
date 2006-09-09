@@ -1,8 +1,10 @@
 Revision history for Perl module Class::InsideOut
 
 0.09 in progress
+    
+    - added basic accessor generation as an option for property declarations
 
-    - added basic accessor generation as an option
+    - added per-class default options for properties
 
     - added support for user-written freeze and thaw hooks
 

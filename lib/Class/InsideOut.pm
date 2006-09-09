@@ -3,7 +3,7 @@ package Class::InsideOut;
 $VERSION     = "0.09";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( );
-@EXPORT_OK   = qw ( property register id );
+@EXPORT_OK   = qw ( options property register id );
 %EXPORT_TAGS = ( );
 
 use strict;
@@ -13,8 +13,9 @@ use Scalar::Util qw( refaddr reftype weaken );
 use Class::ISA;
 
 my %PROPERTIES_OF;   # class => [ list of properties ]
-my %PROP_NAMES_OF;    # class => [ matching list of names ]
+my %PROP_NAMES_OF;   # class => [ matching list of names ]
 my %CLASS_ISA;       # class => [ list of self and @ISA tree ]
+my %OPTIONS;         # class => { default accessor options  }
 my %OBJECT_REGISTRY; # refaddr => object reference
 
 sub import {
@@ -30,12 +31,26 @@ sub import {
 
 BEGIN { *id = \&Scalar::Util::refaddr; }
 
+sub options {
+    my ($opts) = shift;
+    my $caller = caller;
+    $OPTIONS{ $caller } ||= {};
+    if (defined $opts) {
+        # overwrite current defaults for the calling class
+        $OPTIONS{ $caller } = { %{ $OPTIONS{ $caller } }, %$opts };
+    }
+    return %{ $OPTIONS{ $caller } };
+}
+    
 sub property($\%;$) {
     my ($label, $hash, $opt) = @_;
     my $caller = caller;
     push @{ $PROP_NAMES_OF{ $caller } }, $label;
     push @{ $PROPERTIES_OF{ $caller } }, $hash;
-    if ( exists $opt->{privacy} && $opt->{privacy} eq 'public' ) {
+    $OPTIONS{ $caller } ||= {};
+    $opt ||= {};
+    my %options = ( %{ $OPTIONS{ $caller } }, %$opt );
+    if ( exists $options{privacy} && $options{privacy} eq 'public' ) {
         no strict 'refs';
         *{ $caller . "::" . $label } = _gen_accessor( $hash );
     }
@@ -411,8 +426,8 @@ styles of constructor, destructor and inheritance support.
 By default, C<Class::InsideOut> imports three critical methods into the
 namespace that uses it: C<DESTROY>, C<STORABLE_freeze> and C<STORABLE_thaw>.
 These methods are intimately tied to correct functioning of the inside-out
-objects. No other functions are imported by default.  Additional functions can
-be imported by including them as arguments with C<use>:
+objects. No other functions are imported by default.  Some additional functions
+can be imported by including them as arguments with C<use>:
 
  use Class::InsideOut qw( register property id );
 
@@ -484,6 +499,8 @@ I<privacy> option is equal to I<public>, an accessor will be created with the
 same name as the label.  If the accessor is passed an argument, the property
 will be set to the argument.  The accessor always returns the value of the
 property.
+
+Default accessor options may be set using the C<options> function.
 
 Future versions of C<Class::InsideOut> will support additional accessor 
 styles.
@@ -659,10 +676,46 @@ Perl 5.6.  Win32 Perl 5.8 C<fork> is supported.
 
 =head1 FUNCTIONS
 
+=head2 C<options>
+
+ Class::InsideOut::options( \%new_options );
+ %default_options = Class::InsideOut::options();
+
+The C<options> function sets default options for use 
+with all subsquent C<property> calls for the calling package.  If called
+without arguments, this function will return the options currently in 
+effect.  When called with a hash reference of options, these will be joined
+with the existing defaults, overriding any options of the same name.
+
+Valid options include:
+
+=over
+
+=item *
+
+C<privacy>
+
+ property rank => my %rank, { privacy => 'public' };
+
+If the I<privacy> option is equal to I<public>, an accessor will be created
+with the same name as the label.  If the accessor is passed an argument, the
+property will be set to the argument.  The accessor always returns the value of
+the property.
+
+=back
+
+=head2 C<id>
+
+ $name{ id $object } = "Larry";
+
+This is a shorter, mnemonic alias for C<Scalar::Util::refaddr>.  It returns the
+memory address of an object (just like C<refaddr>) as the index to access
+the properties of an inside-out object.
+
 =head2 C<property>
 
-  property name => my %name;
-  property rank => my %rank, { %options }; 
+ property name => my %name;
+ property rank => my %rank, { %options }; 
 
 Declares an inside-out property.  Two arguments are required and a third is
 optional.  The first is a label for the property; this label will be used for
@@ -674,36 +727,17 @@ tracked for memory cleanup during object destruction and for proper
 thread-safety.
 
 If a third, optional argument is provided, it must be a reference to a hash
-of options that will be applied to the property.  Valid options include:
-
-=over
-
-=item C<privacy>
-
-  property rank => my %rank, { privacy => 'public' };
-
-If the I<privacy> option is equal to I<public>, an accessor will be created
-with the same name as the label.  If the accessor is passed an argument, the
-property will be set to the argument.  The accessor always returns the value of
-the property.
-
-=back
+of options that will be applied to the property.  Valid options are the same
+as listed for the C<options> function and will override any 
+default options that have been set.
 
 =head2 C<register>
 
-  register $object;
+ register $object;
 
 Registers an object for thread-safety.  This should be called as part of a
 constructor on a object blessed into the current package.  Returns the
 object (without modification).
-
-=head2 C<id>
-
-  $name{ id $object } = "Larry";
-
-This is a shorter, mnemonic alias for C<Scalar::Util::refaddr>.  It returns the
-memory address of an object (just like C<refaddr>) as the index to access
-the properties of an inside-out object.
 
 =head1 SEE ALSO
 
