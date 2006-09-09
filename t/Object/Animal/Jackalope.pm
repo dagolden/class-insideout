@@ -17,4 +17,17 @@ sub kills {
     return $kills{ refaddr $self };
 }
 
+our $freezings;
+our $thawings;
+
+sub STORABLE_freeze_hook {
+    my $self = shift;
+    $freezings++;
+}
+
+sub STORABLE_thaw_hook {
+    my $self = shift;
+    $thawings++;
+}
+
 1;

@@ -2,6 +2,8 @@ Revision history for Perl module Class::InsideOut
 
 0.09 in progress
 
+    - added support for user-written freeze and thaw hooks
+
 0.08 Wed Jan 18 10:50:13 EST 2006
 
     - BACKWARDS INCOMPATIBLE CHANGE: property definitions now require a

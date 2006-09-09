@@ -2,16 +2,15 @@ TODO list for Perl module Class::InsideOut
 
 # Planned todos around core functionality
 
-- storable hooks: pre-freeze user hook and post-thaw user hook
-- storable_attach and singleton support (!?) (Class::InsideOut::Singleton)
-- ":all" export key
 - accessor creation
 - accessor privacy options
 - aliases: 'private', 'public', 'protected'
 - accessor style options
+- ":all" export key
 - mutator filter options and validation handling
 - class-wide default options
 - error handling and argument checking
+- STORABLE_attach and singleton support (!?) (Class::InsideOut::Singleton)
 - expand documentation (tutorial? notes on writing Builders)
 - add checks for XS weaken and add to documentation
 

@@ -98,7 +98,7 @@ sub _gen_DESTROY {
             delete $_->{ $obj_id } for @{ $PROPERTIES_OF{ $c } };
         }
 
-        # XXX this global registry could be deleted repeatedly 
+        # XXX this global registry could be deleted repeatedly
         # in superclasses -- SUPER::DESTROY shouldn't be called by DEMOLISH
         # it should only call SUPER::DEMOLISH if need be; still,
         # rest of the destructor doesn't need the registry, so early deletion
@@ -114,10 +114,23 @@ sub _gen_STORABLE_freeze {
     return sub {
         my ( $obj, $cloning ) = @_;
 
-        # extract properties to save
-        my %property_vals;
+        # Setup inheritance array
         $CLASS_ISA{ $class } ||= [ Class::ISA::self_and_super_path( $class ) ];
-        for my $c ( @{ $CLASS_ISA{ $class } } ) {
+        my @class_isa = @{ $CLASS_ISA{ $class } };
+
+        # Call STORABLE_freeze_hooks in each class if they exists
+        for my $c ( @class_isa ) {
+            my $hook;
+            {
+                no strict 'refs';
+                $hook = *{ $c . "::STORABLE_freeze_hook" }{CODE};
+            }
+            $hook->($obj) if defined $hook;
+        }
+
+        # Extract properties to save
+        my %property_vals;
+        for my $c ( @class_isa ) {
             next unless exists $PROPERTIES_OF{ $c };
             my $properties = $PROPERTIES_OF{ $c };
             for my $prop ( @$properties ) {
@@ -153,6 +166,10 @@ sub _gen_STORABLE_thaw {
     return sub {
         my ( $obj, $cloning, $serialized, $data ) = @_;
 
+        # Setup inheritance array
+        $CLASS_ISA{ $class } ||= [ Class::ISA::self_and_super_path( $class ) ];
+        my @class_isa = @{ $CLASS_ISA{ $class } };
+
         # restore contents
         my $contents = $data->{contents};
         my $type = reftype $obj;
@@ -161,13 +178,22 @@ sub _gen_STORABLE_thaw {
         elsif ( $type eq 'HASH'   ) { %$obj = %$contents }
 
         # restore properties
-        $CLASS_ISA{ $class } ||= [ Class::ISA::self_and_super_path( $class ) ];
-        for my $c ( @{ $CLASS_ISA{ $class } } ) {
+        for my $c ( @class_isa ) {
             my $properties = $PROPERTIES_OF{ $c };
             my @property_vals = @{ $data->{properties}{ $c } };
             for my $prop ( @$properties ) {
                 $prop->{ refaddr $obj } = shift @property_vals;
             }
+        }
+
+        # Call STORABLE_thaw_hooks in each class if they exists
+        for my $c ( @class_isa ) {
+            my $hook;
+            {
+                no strict 'refs';
+                $hook = *{ $c . "::STORABLE_thaw_hook" }{CODE};
+            }
+            $hook->($obj) if defined $hook;
         }
 
         return;
@@ -376,7 +402,14 @@ via C<require> or passing an empty list to C<use>:
 
 There is almost no circumstance under which this is a good idea.  Users
 seeking custom destruction behavior should consult L</"Object destruction"> and
-the description of the C<DEMOLISH> method.
+the description of the C<DEMOLISH> method.  Custom serialization hooks are
+likewise described in L</"Serialization">.
+
+If users do not wish to import functions such as C<register>, C<property>, etc.
+they may, of course, be called using a fully qualified syntax:
+
+  Class::InsideOut::property name => my %name;
+  Class::InsideOut::register $self;
 
 =head2 Declaring and accessing object properties
 
@@ -385,11 +418,6 @@ be passed a label and a lexical (i.e. C<my>) hash.
 
   property name => my %name;
   property age => my %age;
-
-If users do not wish to import C<property>, properties may be declared
-using a fully qualified syntax:
-
-  Class::InsideOut::property name => my %name;
 
 Properties are private by default and no accessors are created.  Users are
 free to create accessors of any style.
@@ -536,7 +564,18 @@ operation.  (See C<Storable> for details.)
   # preserved relationship between bob2 and alice2
   die unless $bob2->has_friend( $alice ); 
 
-User feedback on serialization needs and limitations is encouraged.
+C<Class::InsideOut> also supports custom freeze and thaw hooks.  When an
+object is frozen, if its class or any superclass provides
+C<STORABLE_freeze_hook> functions, they are called with the object as an
+argument I<prior> to the rest of the freezing process.  This allows for
+custom preparation for freezing, such as writing a cache to disk, closing
+network connections, or disconnecting database handles.
+
+Likewise, when a serialized object is thawed, if its class or any
+superclass provides C<STORABLE_thaw_hook> functions, they are called
+I<after> the object has been thawed with the thawed object as an argument.
+
+User feedback on serialization needs and limitations is welcome.
 
 =head2 Thread-safety
 
@@ -560,7 +599,7 @@ CLONE hook, depending on demand.
 
 Note: C<fork> on Perl for Win32 is emulated using threads since Perl 5.6. (See
 L<perlfork>.)  As Perl 5.6 did not support C<CLONE>, inside-out objects using
-memory addresses (e.g. C<Class::InsideOut> are not fork-safe for Win32 on 
+memory addresses (e.g. C<Class::InsideOut> are not fork-safe for Win32 on
 Perl 5.6.  Win32 Perl 5.8 C<fork> is supported.
 
 =head1 FUNCTIONS

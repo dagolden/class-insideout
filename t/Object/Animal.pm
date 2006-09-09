@@ -7,7 +7,12 @@ use Scalar::Util qw( refaddr );
 Class::InsideOut::property name => my %name;
 Class::InsideOut::property species => my %species;
 
+# Globals for testing
+
 our $animal_count;
+our @subclass_errors;
+our $freezings;
+our $thawings;
 
 sub new {
     my $class = shift;
@@ -31,7 +36,6 @@ sub species {
     return $species{ refaddr $self };
 }
 
-our @subclass_errors;
 
 sub DEMOLISH {
     my $self = shift;
@@ -39,6 +43,16 @@ sub DEMOLISH {
     if ( ref $self ne "t::Object::Animal" ) {
         push @subclass_errors, ref $self;
     }
+}
+
+sub STORABLE_freeze_hook {
+    my $self = shift;
+    $freezings++;
+}
+
+sub STORABLE_thaw_hook {
+    my $self = shift;
+    $thawings++;
 }
 
 1;

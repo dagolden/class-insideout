@@ -5,9 +5,10 @@ use Scalar::Util qw( refaddr reftype weaken isweak );
 
 $|++; # keep stdout and stderr in order on Win32
 
-eval { require Storable };
+# Need Storable 2.04 ( relatively safe STORABLE_freeze support )
+eval { require Storable and Storable->VERSION( 2.04 ) };
 if ( $@ ) {
-    plan skip_all => "Storable not installed",
+    plan skip_all => "Storable >= 2.04 not installed",
 }
 else {
     plan tests => 56; 
