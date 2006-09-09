@@ -1,6 +1,6 @@
 package Class::InsideOut;
 
-$VERSION     = "0.90_02";
+$VERSION     = "0.90_03";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( ); # nothing by default
 @EXPORT_OK   = qw ( id options private property public register );
@@ -65,8 +65,6 @@ sub import {
     no strict 'refs';
     my $caller = caller;
     *{ "$caller\::DESTROY" } = _gen_DESTROY( $caller );
-    *{ "$caller\::DDS_freeze" } = _gen_DDS_freeze( $caller );
-    *{ "$caller\::Frozen::DDS_thaw" } = _gen_DDS_thaw( $caller );
     # check for ":singleton" and do export attach instead of thaw
     # make ":singleton" an empty tag to Exporter doesn't choke on it
     if ( grep { $_ eq ":singleton" } @_ ) {
@@ -264,71 +262,6 @@ sub _gen_hook_accessor {
     };
 }
  
-sub _gen_DDS_freeze {
-    my $class = shift;
-    return sub {
-        my ( $obj ) = @_;
-
-        # Call STORABLE_freeze_hooks in each class if they exists
-        for my $c ( _class_tree( ref $obj ) ) {
-            my $hook;
-            {
-                no strict 'refs';
-                $hook = *{ "$c\::FREEZE" }{CODE};
-            }
-            $hook->($obj) if defined $hook;
-        }
-
-        # Extract properties to save
-        my $data = _evert( $obj );
-
-        # Construct proxy object of right type
-        my $proxy;
-        
-        for ($data->{type}) {
-            /SCALAR/    ? do { $proxy = \$data } :
-            /ARRAY/     ? do { $proxy = [ $data ] } :
-            /HASH/      ? do { $proxy = { data => $data } } :
-                          do { $proxy = undef };
-        }
-        
-        bless $proxy, "$class\::Frozen";
-
-        # Return DDS proxy and thaw function
-        return $proxy, "$class\::Frozen::DDS_thaw";
-    };
-}
-
-sub _gen_DDS_thaw {
-    my $class = shift;
-    return sub {
-        # $_[0] is alias to proxy object
-
-        # extract data from proxy
-        my $data;
-        for ( reftype $_[0] ) {
-            /SCALAR/    ? do { $data = $$_[0] } :
-            /ARRAY/     ? do { $data = $_[0][0] } :
-            /HASH/      ? do { $data = $_[0]{data} } :
-                          do {} ;
-        }
-
-        # restore contents and rebless
-        my $obj = _revert( $data, $_[0] );
-
-        # Call STORABLE_thaw_hooks in each class if they exists
-        for my $c ( _class_tree( ref $obj ) ) {
-            my $hook;
-            {
-                no strict 'refs';
-                $hook = *{ "$c\::THAW" }{CODE};
-            }
-            $hook->($obj) if defined $hook;
-        }
-    return $obj;
-    };
-}
-
 sub _gen_DESTROY {
     my $class = shift;
     return sub {

@@ -3,8 +3,6 @@ use Test::More;
 use Class::InsideOut ();
 use Scalar::Util qw( refaddr reftype weaken isweak );
 
-$|++; # keep stdout and stderr in order on Win32
-
 sub check_version {
     my ($class, $version) = @_;
     eval { require $class and $class->VERSION($version) };
@@ -18,12 +16,6 @@ my @serializers = (
         freeze  => sub { Storable::freeze( shift ) },
         thaw    => sub { Storable::thaw( shift ) },
     },
-#    {
-#        class   => "Data::Dump::Streamer",
-#        version => 3.02,
-#        freeze  => sub { return Data::Dump::Streamer::Dump( shift )->Names("f")->Out },
-#        thaw    => sub { my $f; eval shift; $f },
-#    },
 );
 
 my $tests_per_serializer = 68;
@@ -179,8 +171,6 @@ for my $s ( @serializers ) {
         ok( $frozen = $s->{freeze}( [ $bob, $alice, $charlie ] ),
             "Freezing Charlie, Bob and Alice together"
         );
-
-diag $frozen if $s->{class} eq "Data::Dump::Streamer";
 
         # thaw object
         ($bob2, $alice2, $charlie2) = @{ $s->{thaw}->( $frozen ) };

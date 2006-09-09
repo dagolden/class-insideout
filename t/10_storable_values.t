@@ -18,12 +18,6 @@ my @serializers = (
         freeze  => sub { Storable::freeze( shift ) },
         thaw    => sub { Storable::thaw( shift ) },
     },
-#    {
-#        class   => "Data::Dump::Streamer",
-#        version => 3.02,
-#        freeze  => sub { return Data::Dump::Streamer::Dump( shift )->Names("o")->Out },
-#        thaw    => sub { my $o; eval shift; $o },
-#    },
 );
 
 my @classes = qw(

@@ -1,5 +1,10 @@
 Revision history for Perl module Class::InsideOut
 
+0.90_03
+
+    - removed Data::Dump::Streamer support until RT#19060 can
+      be addressed
+      
 0.90_02 Thu May  4 00:56:04 EDT 2006
     
     - fixed up META.yml and a pod typo

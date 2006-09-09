@@ -3,7 +3,6 @@ TODO list for Perl module Class::InsideOut
 # Planned todos around core functionality - 1.0 roadmap
 
 - cleanup code detection to use "defined &{"$class\::$fcn"}" style
-- pull DDS code out to separate branch
 
 # Todos after 1.0
 
