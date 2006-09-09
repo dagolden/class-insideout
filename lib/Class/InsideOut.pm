@@ -322,7 +322,7 @@ sub _gen_STORABLE_attach {
             return $class->new();
         }
         else {
-            croak "Error attaching to $class singleton.\n" .
+            die "Error attaching to $class:\n" .
                   "Couldn't find STORABLE_attach_hook() or new() in $class\n";
         }
     };
@@ -388,6 +388,9 @@ sub _gen_STORABLE_thaw {
                 $properties->{$prop}{ refaddr $obj } = $value;
             }
         }
+
+        # register object
+        register( $obj );        
 
         # Call STORABLE_thaw_hooks in each class if they exists
         for my $c ( @class_isa ) {

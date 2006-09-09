@@ -45,7 +45,7 @@ if ( $@ ) {
 }
 else
 {
-    plan tests => 10 * @classes + 2 * $prop_count;
+    plan tests => 11 * @classes + 2 * $prop_count;
 }
 
 #--------------------------------------------------------------------------#
@@ -139,5 +139,10 @@ for my $class ( @classes ) {
     is_deeply( $thawed, $data,
         "... Thawed object contents are correct"
     );
+    
+    my @leaks = Class::InsideOut::_leaking_memory;
+    ok( ! scalar @leaks,
+        "... $class not leaking memory"
+    ) or diag "Leaks in: @leaks";
 };
 

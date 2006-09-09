@@ -1,4 +1,4 @@
-package t::Object::Singleton_AltAPI;
+package t::Object::Singleton::Hooked;
 use strict;
 use Class::InsideOut qw( public register id :singleton );
 

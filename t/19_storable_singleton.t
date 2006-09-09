@@ -7,8 +7,8 @@ use Class::InsideOut ();
 $|++; # keep stdout and stderr in order on Win32 (maybe)
 
 my %constructors_for = ( 
-    't::Object::Singleton' => 'new',
-    't::Object::Singleton_AltAPI' => 'get_instance',
+    't::Object::Singleton::Simple' => 'new',
+    't::Object::Singleton::Hooked' => 'get_instance',
 );
 
 # Need Storable 2.14 ( STORABLE_attach support )
@@ -75,9 +75,9 @@ for my $class ( keys %constructors_for ) {
             "... Destroying $class singleton manually"
         );
         my @leaks = Class::InsideOut::_leaking_memory;
-        ok( ! scalar @leaks,
-            "... $class not leaking memory"
-        ) or diag "Leaks in: @leaks";
+        is( scalar @leaks, 0, 
+            "... $class is not leaking memory"
+        ) or diag "Leaks detected in:\n" . join( "\n", map { q{  } . $_ } @leaks );
     }
 
     # recreate it
@@ -86,7 +86,7 @@ for my $class ( keys %constructors_for ) {
     );
 
     # check it
-    if ( $class eq "t::Object::Singleton_AltAPI" ) {
+    if ( $class eq "t::Object::Singleton::Hooked" ) {
         is( $thawed->name(), $name,
             "... Re-thawed $class object 'name' is '$name'"
         );

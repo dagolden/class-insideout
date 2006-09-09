@@ -1,4 +1,4 @@
-package t::Object::Singleton;
+package t::Object::Singleton::Simple;
 use strict;
 use Class::InsideOut qw( public register :singleton );
 
