@@ -1,6 +1,6 @@
 package Class::InsideOut;
 
-$VERSION     = "1.01";
+$VERSION     = "1.02";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( ); # nothing by default
 @EXPORT_OK   = qw ( new id options private property public register );
