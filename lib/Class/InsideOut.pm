@@ -9,7 +9,7 @@ $VERSION     = "0.06";
 use strict;
 use Carp;
 use Exporter;
-use Scalar::Util qw( refaddr weaken );
+use Scalar::Util qw( refaddr reftype weaken );
 
 my %PROPERTIES_OF;   # class => [ list of properties ]
 my %OBJECT_REGISTRY; # refaddr => object reference
@@ -21,6 +21,8 @@ sub import {
     {
         no strict 'refs';
         *{ $caller . "::DESTROY" } = _gen_DESTROY( $caller );
+        *{ $caller . "::STORABLE_freeze" } = _gen_STORABLE_freeze( $caller );
+        *{ $caller . "::STORABLE_thaw" } = _gen_STORABLE_thaw( $caller );
     }
     goto &Exporter::import;
 }
@@ -84,6 +86,84 @@ sub _gen_DESTROY {
         delete $_->{ $obj_id } for @{ $PROPERTIES_OF{ $class } };
         delete $OBJECT_REGISTRY{ $obj_id };
         return;
+    };
+}
+
+sub _gen_STORABLE_freeze {
+    my $class = shift;
+    return sub {
+        my ( $obj, $cloning ) = @_;
+        my $properties = $PROPERTIES_OF{ $class };
+
+        # extract properties to save
+        my @property_vals;
+        for my $prop ( @$properties ) {
+            my $value = exists $prop->{ refaddr $obj }
+                      ? $prop->{ refaddr $obj }
+                      : undef ;
+            push @property_vals, $value;
+        }
+        
+        # extract object reference contents (by type)
+        my $contents;
+        for ( reftype $obj ) {
+            /SCALAR/ && do { 
+                $contents = \do{ my $s = $$obj }; 
+                last;
+            };
+            /ARRAY/  && do { 
+                $contents = [ @$obj ]; 
+                last;
+            };
+            /HASH/   && do { 
+                $contents = { %$obj }; 
+                last 
+            };
+        }
+
+        # assemble reference to hand back to Storable
+        my $data = {
+            contents => $contents,
+            properties => \@property_vals
+        };
+
+        # return $serialized, @refs
+        # serialized string doesn't matter -- all data has been moved into
+        # the additional ref
+        return 'BOGUS', $data;
+    };
+}
+
+sub _gen_STORABLE_thaw {
+    my $class = shift;
+    return sub {
+        my ( $obj, $cloning, $serialized, $data ) = @_;
+        my $properties = $PROPERTIES_OF{ $class };
+        
+        # restore contents
+        my $contents = $data->{contents};
+        for ( reftype $obj ) {
+            /SCALAR/ && do { 
+                $$obj = $$contents; 
+                last;
+            };
+            /ARRAY/  && do { 
+                @$obj = @$contents; 
+                last;
+            };
+            /HASH/   && do { 
+                %$obj = %$contents; 
+                last 
+            };
+        }
+
+        # restore properties
+        my @property_vals = @{ $data->{properties} };
+        for my $prop ( @$properties ) {
+            $prop->{ refaddr $obj } = shift @property_vals;
+        }
+        
+        return; 
     };
 }
 

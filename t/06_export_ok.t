@@ -5,6 +5,8 @@ my @available;
 BEGIN {
     @available = qw(
       DESTROY
+      STORABLE_freeze
+      STORABLE_thaw
       property
       register
       id

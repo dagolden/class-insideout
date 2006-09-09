@@ -1,19 +1,26 @@
 use strict;
 
-my @api;
+my (@api, @not_api);
 
 BEGIN {
     @api = qw(
       property
       register
+      id
       _property_count
       _object_count
       _leaking_memory
       CLONE
     );
+
+    @not_api = qw(
+        DESTROY
+        STORABLE_freeze 
+        STORABLE_thaw
+    );
 }
 
-use Test::More tests =>  2 + @api ;
+use Test::More tests =>  1 + @api + @not_api ;
 
 $|++; # keep stdout and stderr in order on Win32
 
@@ -21,7 +28,7 @@ BEGIN { use_ok( 'Class::InsideOut' ); }
 
 can_ok( 'Class::InsideOut', $_ ) for @api;
 
-for ( qw( DESTROY ) ) {
+for ( @not_api ) {
     ok( ! Class::InsideOut->can( $_ ), "$_ not part of the API" );
 }
     

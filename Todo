@@ -1,6 +1,7 @@
 TODO list for Perl module Class::InsideOut
 
-- storable hooks
+- storable hooks: inheritance support; diamond support; documentation
+- storable hooks: references; circular references
 - ":all" export key
 - accessor creation
 - accessor privacy options

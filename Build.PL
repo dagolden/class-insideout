@@ -8,7 +8,8 @@ Module::Build->new(
     create_readme       => 1,
     create_makefile_pl  => 'traditional',
     requires        => {
-        Scalar::Util => 1.09,
-        Test::Simple => 0.48,
+        Scalar::Util    => 1.09,
+        Class::ISA      => 0, # why reimplement what works
+        Test::Simple    => 0.48,
     },
 )->create_build_script;
