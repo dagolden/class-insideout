@@ -1,16 +1,45 @@
 package Class::InsideOut;
-use strict;
-use warnings;
-use Carp;
 
-BEGIN {
-    use Exporter ();
-    use vars qw ($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
-    $VERSION     = "0.01";
-    @ISA         = qw (Exporter);
-    @EXPORT      = qw ();
-    @EXPORT_OK   = qw ();
-    %EXPORT_TAGS = ();
+$VERSION     = "0.01";
+@ISA         = qw (Exporter);
+@EXPORT      = qw ( CLONE DESTROY );
+@EXPORT_OK   = qw ();
+%EXPORT_TAGS = ( );
+    
+use strict;
+#use warnings; # not for Perl < 5.6
+use Carp;
+use Exporter;
+use Scalar::Util qw( refaddr weaken );
+
+my %PROPERTIES_OF;
+my %REGISTRY_OF;
+
+sub CLONE {
+}
+
+sub DESTROY {
+    my $obj = shift;
+    delete $REGISTRY_OF{ ref $obj }{ refaddr $obj };
+    return;
+}
+
+sub register {
+    my $obj = shift;
+    weaken( $REGISTRY_OF{ scalar caller }{ refaddr $obj } = $obj );
+    return $obj;
+}
+    
+sub _object_count {
+    my $class = shift;
+    my $registry = $REGISTRY_OF{ $class };
+    return defined $registry ? scalar( keys %$registry ) : 0;
+}
+
+sub _property_count {
+    my $class = shift;
+    my $properties = $PROPERTIES_OF{ $class };
+    return defined $properties ? scalar @$properties : 0;
 }
 
 #--------------------------------------------------------------------------#

@@ -3,3 +3,42 @@ TODO list for Perl module Class::InsideOut
 - Write tests and implement!
 
 
+#--------------------------------------------------------------------------#
+# Interface brainstorming
+#--------------------------------------------------------------------------#
+
+use Class::InsideOut qw( public private register id );
+
+Class::InsideOut::options(
+  accessor_style => 'bimodal', # or eiffel or get_set
+  get_prefix => 'get_',
+  set_prefix => 'set_',
+  privacy => 'public',  # create accessors for everything given to properties
+                       # or 'readonly' or 'protected' or 'private'
+  filter => \&coderef,  # mutator argument filtered through this
+                       # will catch die message for error
+  
+);
+
+Class::InsideOut::properties (
+    my %UID,
+    my %WEIGHT, { privacy => 'readonly' },
+);
+
+private my %HEIGHT; # alias for properties with privacy => private
+public my %NAME; # sets privacy => public
+public my %AGE, { filter => \&old_enough }; # dies on error
+
+sub new {
+  my $class = shift;
+  my $self = \do { my $s };
+  bless $self, $class;
+  register $self;
+  return $self;
+}
+
+sub dump {
+  my $self = shift;
+  print "name: ", $NAME{ id $self }, "\n";
+}
+
