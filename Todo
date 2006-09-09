@@ -9,8 +9,6 @@ TODO list for Perl module Class::InsideOut
     - register
 - error handling
     - where?
-- add checks for XS weaken and add to documentation
-    - use dummy weaken if not available
 - cleanup code smells in storable support
 - accessor style options
 - code coverage: storable for non-scalar/array/hash
