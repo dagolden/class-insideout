@@ -4,7 +4,7 @@ NAME
 SYNOPSIS
      package My::Class;
  
-     use Class::InsideOut qw( property register );
+     use Class::InsideOut qw( property register id );
      use Scalar::Util qw( refaddr );
 
      # declare a lexical property hash with 'my'
@@ -33,7 +33,9 @@ SYNOPSIS
  
      sub greeting {
        my $self = shift;
-       print "Hello, my name is " . $name { refaddr $self } . "\n";
+   
+       # use 'id' as a mnemonic alias for 'refaddr'
+       return "Hello, my name is " . $name { id $self };
      }
 
 DESCRIPTION
@@ -41,9 +43,12 @@ DESCRIPTION
     incomplete implementation of a simple, safe and streamlined toolkit for
     building inside-out objects. Unlike most other inside-out object
     building modules already on CPAN, this module aims for minimalism and
-    robustness. It uses no source filters, no attributes, supports foreign
-    inheritance, does not leak memory, is overloading-safe, is thread-safe
-    for Perl 5.8 or better and should be mod_perl compatible.
+    robustness.
+
+    It uses no source filters, no attributes or CHECK blocks, supports any
+    underlying object type including foreign inheritance, does not leak
+    memory, is overloading-safe, is thread-safe for Perl 5.8 or better and
+    should be mod_perl compatible.
 
     In its current state, it provides the minimal support necessary for safe
     inside-out objects. All other implementation details, including writing
@@ -98,6 +103,14 @@ FUNCTIONS
     a constructor on a object blessed into the current package. Returns the
     object (without modification).
 
+  `id'
+
+      $name{ id $object } = "Larry";
+
+    This is a shorter, mnemonic alias for `Scalar::Util::refaddr'. It
+    returns the memory address of an object (just like `refaddr') as the
+    index to access the properties of an inside-out object.
+
   `CLONE'
 
     `CLONE' is automatically exported to provide thread-safety to modules
@@ -109,15 +122,18 @@ FUNCTIONS
 
     This destructor is automatically exported to modules using
     `Class::InsideOut' to clean up object property memory usage during
-    object destruction. It should never be called directly. In the future,
-    it will be enhanced to support a user supplied `DEMOLISH' method for
-    additional, custom destruction actions.
+    object destruction. It should never be called directly. `DESTROY' will
+    call a user-supplied `DEMOLISH' method if one exists to allow for
+    additional, custom destruction actions such as closing sockets or
+    database handles. `DEMOLISH' is called prior to deleting object
+    properties.
 
 SEE ALSO
     *   Object::InsideOut -- Currently the most full-featured, robust
         implementation of inside-out objects, but foreign inheritance is
         handled via delegation. Highly recommended if a more full-featured
-        inside-out object builder is needed.
+        inside-out object builder is needed. Array-based mode is faster than
+        hash-based implementations.
 
     *   Class::Std -- Despite the name, does not reflect best practices for
         inside-out objects. Does not provide thread-safety with CLONE, is
@@ -125,7 +141,7 @@ SEE ALSO
 
     *   Class::BuildMethods -- Generates accessors with encapsulated storage
         using a flyweight inside-out variant. Lexicals properties are
-        hidden; accessors must be used everywhere.
+        hidden; accessors must be used everywhere. Not thread-safe.
 
     *   Lexical::Attributes -- The original inside-out implementation, but
         missing some key features like thread-safety. Also, uses source
