@@ -9,7 +9,7 @@ Revision history for Perl module Class::InsideOut
     - added support for user-written freeze and thaw hooks
 
     - documentation updates: typo safety requires strict (Steven Lembark);
-      caching refaddr() to minimize overhead;  
+      caching refaddr() to minimize overhead; new features documented 
 
 0.08 Wed Jan 18 10:50:13 EST 2006
 
