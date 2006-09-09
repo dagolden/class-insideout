@@ -8,7 +8,9 @@ TODO list for Perl module Class::InsideOut
 - add checks for XS weaken and add to documentation
 - accessor style options
 - STORABLE_attach and singleton support (write as Class::InsideOut::Singleton)
-- expand documentation (tutorial? notes on writing Builders)
+- write FAQs
+- refactor docs (convert to wikidoc? separate theory from quickstart)
+- expand documentation (cookbook? tutorial? notes on writing Builders)
 - cleanup test objects to use new features like accessor generation
 
 # Possible todos depending on demand
@@ -49,3 +51,16 @@ private height => my %HEIGHT; # alias for properties with privacy => private
 public name => my %NAME; # sets privacy => public
 public age => my %AGE, { filter => \&old_enough }; # dies on error
 
+#--------------------------------------------------------------------------#
+# FAQ ideas
+#--------------------------------------------------------------------------#
+
+* Security (c.f use perl post)
+
+* advisory encapsulation
+
+#--------------------------------------------------------------------------#
+# Cookbook ideas
+#--------------------------------------------------------------------------#
+
+* Outside-in pattern
