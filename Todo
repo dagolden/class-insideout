@@ -1,6 +1,5 @@
 TODO list for Perl module Class::InsideOut
 
-- test foreign inheritance
 - storable hooks
 - ":all" export key
 - accessor creation
