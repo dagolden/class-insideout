@@ -1,0 +1,9 @@
+MANIFEST
+README
+LICENSE
+Todo
+Changes
+MANIFEST.SKIP
+Build.PL
+lib/Class/InsideOut.pm
+t/01_Class_InsideOut.t
