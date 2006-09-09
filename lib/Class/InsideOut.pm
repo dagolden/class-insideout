@@ -524,7 +524,7 @@ within a loop.  For example:
          $dbh{ $id } = DBI->connect( $dsn{ $id } );
          return if $dbh{ $id };
      }
-     die "Couldn't connect to $dbh{ $id }";
+     die "Couldn't connect to $dsn{ $id }";
  }
 
 == Property accessors
