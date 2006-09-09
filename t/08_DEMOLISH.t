@@ -9,7 +9,7 @@ plan tests => 9;
 #--------------------------------------------------------------------------#
 
 my $class    = "t::Object::Animal";
-my $subclass = "t::Object::Animal::Baboon";
+my $subclass = "t::Object::Animal::Antelope";
 
 my ($o, $p);
 

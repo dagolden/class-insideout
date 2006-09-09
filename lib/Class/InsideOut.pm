@@ -10,6 +10,7 @@ use strict;
 use Carp;
 use Exporter;
 use Scalar::Util qw( refaddr reftype weaken );
+use Class::ISA;
 
 my %PROPERTIES_OF;   # class => [ list of properties ]
 my %OBJECT_REGISTRY; # refaddr => object reference
@@ -93,15 +94,18 @@ sub _gen_STORABLE_freeze {
     my $class = shift;
     return sub {
         my ( $obj, $cloning ) = @_;
-        my $properties = $PROPERTIES_OF{ $class };
 
         # extract properties to save
-        my @property_vals;
-        for my $prop ( @$properties ) {
-            my $value = exists $prop->{ refaddr $obj }
-                      ? $prop->{ refaddr $obj }
-                      : undef ;
-            push @property_vals, $value;
+        my %property_vals;
+        for my $c ( Class::ISA::self_and_super_path( $class ) ) {
+            next unless exists $PROPERTIES_OF{ $c };
+            my $properties = $PROPERTIES_OF{ $c };
+            for my $prop ( @$properties ) {
+                my $value = exists $prop->{ refaddr $obj }
+                          ? $prop->{ refaddr $obj }
+                          : undef ;
+                push @{ $property_vals{$c} }, $value;
+            }
         }
         
         # extract object reference contents (by type)
@@ -124,7 +128,7 @@ sub _gen_STORABLE_freeze {
         # assemble reference to hand back to Storable
         my $data = {
             contents => $contents,
-            properties => \@property_vals
+            properties => \%property_vals
         };
 
         # return $serialized, @refs
@@ -138,7 +142,6 @@ sub _gen_STORABLE_thaw {
     my $class = shift;
     return sub {
         my ( $obj, $cloning, $serialized, $data ) = @_;
-        my $properties = $PROPERTIES_OF{ $class };
         
         # restore contents
         my $contents = $data->{contents};
@@ -158,9 +161,12 @@ sub _gen_STORABLE_thaw {
         }
 
         # restore properties
-        my @property_vals = @{ $data->{properties} };
-        for my $prop ( @$properties ) {
-            $prop->{ refaddr $obj } = shift @property_vals;
+        for my $c ( Class::ISA::self_and_super_path( $class ) ) {
+            my $properties = $PROPERTIES_OF{ $c };
+            my @property_vals = @{ $data->{properties}{ $c } };
+            for my $prop ( @$properties ) {
+                $prop->{ refaddr $obj } = shift @property_vals;
+            }
         }
         
         return; 

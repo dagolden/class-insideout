@@ -1,6 +1,6 @@
 TODO list for Perl module Class::InsideOut
 
-- storable hooks: inheritance support; diamond support; documentation
+- storable hooks: documentation
 - storable hooks: references; circular references; deep-clone vs freeze
 - storable hooks: pre-freeze user hook
 - ":all" export key

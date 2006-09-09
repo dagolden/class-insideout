@@ -6,12 +6,35 @@ use Scalar::Util qw( refaddr reftype );
 $|++; # keep stdout and stderr in order on Win32
 
 my @classes;
+my %custom_prop_for_class;
+my $prop_count;
+    
 BEGIN {
     @classes = qw(
         t::Object::Scalar
         t::Object::Array
         t::Object::Hash
+        t::Object::Animal::Jackalope
     );
+    
+    %custom_prop_for_class = (
+        "t::Object::Scalar"  => {
+            age => "32" 
+        },
+        "t::Object::Array"   => {
+            height => "72 inches"
+        },
+        "t::Object::Hash"    => { 
+            weight => "190 lbs" 
+        },
+        "t::Object::Animal::Jackalope" => {
+            color => "white",
+            speed => "60 mph",
+            kills => 23,
+        },
+    );
+
+    $prop_count++ for map { keys %$_ } values %custom_prop_for_class;
 }
 
 eval { require Storable };
@@ -20,7 +43,7 @@ if ( $@ ) {
 }
 else
 {
-    plan tests => 12 * @classes;
+    plan tests => 10 * @classes + 2 * $prop_count;
 }
 
 #--------------------------------------------------------------------------#
@@ -34,15 +57,10 @@ my %content_for_type = (
 );
 
 my %names_for_class = (
-    "t::Object::Scalar"  => "Larry",
-    "t::Object::Array"   => "Moe",
-    "t::Object::Hash"    => "Curly",
-);
-
-my %custom_prop_for_class = (
-    "t::Object::Scalar"  => [ "age", "32" ],
-    "t::Object::Array"   => [ "height", "72 inches" ],
-    "t::Object::Hash"    => [ "weight", "190 lbs" ],
+    "t::Object::Scalar"             => "Larry",
+    "t::Object::Array"              => "Moe",
+    "t::Object::Hash"               => "Curly",
+    "t::Object::Animal::Jackalope"  => "Fred",
 );
 
 #--------------------------------------------------------------------------#
@@ -70,12 +88,14 @@ for my $class ( @classes ) {
         "... Setting 'name' to '$name'"
     );
     
-    # set a class-specific property
-    my ( $prop, $val ) = @{ $custom_prop_for_class{ $class } };
-    $o->$prop( $val );
-    is( $o->$prop(), $val,
-        "... Setting custom '$prop' property to $val"
-    );
+    # set class-specific properties
+    for my $prop ( keys %{ $custom_prop_for_class{ $class } } ) {;
+        my $val = $custom_prop_for_class{ $class }{ $prop };
+        $o->$prop( $val );
+        is( $o->$prop(), $val,
+            "... Setting custom '$prop' property to $val"
+        );
+    }
     
     # store class-specific data in the reference
     my $data = $content_for_type{ $type };
@@ -105,11 +125,14 @@ for my $class ( @classes ) {
         "... Property 'name' for thawed object is correct?"
     );
 
-    # set a class-specific property
-    is( $thawed->$prop(), $val,
-        "... Property '$prop' for thawed objects is correct?"
-    );
-
+    # check class-specific properties
+    for my $prop ( keys %{ $custom_prop_for_class{ $class } } ) {;
+        my $val = $custom_prop_for_class{ $class }{ $prop };
+        is( $thawed->$prop(), $val,
+            "... Property '$prop' for thawed objects is correct?"
+        );
+    }
+    
     # check thawed contents
     is_deeply( $thawed, $data,
         "... Thawed object contents are correct"

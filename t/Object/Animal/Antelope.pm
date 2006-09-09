@@ -1,4 +1,4 @@
-package t::Object::Animal::Baboon;
+package t::Object::Animal::Antelope;
 
 use base 't::Object::Animal';
 

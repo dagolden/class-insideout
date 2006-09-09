@@ -29,7 +29,7 @@ $|++; # keep stdout and stderr in order on Win32
 #--------------------------------------------------------------------------#
 
 my $class    = "t::Object::Animal";
-my $subclass = "t::Object::Animal::Baboon";
+my $subclass = "t::Object::Animal::Antelope";
 my ($o, $p);
 
 #--------------------------------------------------------------------------#
