@@ -1,6 +1,6 @@
 Revision history for Perl module Class::InsideOut
 
-0.14 in progress
+0.14 Thu Mar 16 23:07:22 EST 2006
 
     - Fixed test bug where thread test wouldn't properly skip for Win32 Perl
       5.6 (with ithreads enabled for pseudofork but no threads.pm)
