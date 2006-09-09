@@ -6,26 +6,26 @@ SYNOPSIS
  
      use Class::InsideOut qw( property register id );
      use Scalar::Util qw( refaddr );
-
-     # declare a lexical property hash with 'my'
-     property my %name; 
-
+ 
+     # declare a lexical property "name" as a lexical ("my") hash
+     property name => my %name;
+ 
      sub new {
        my $class = shift;
        my $self = \do {my $scalar};
        bless $self, $class;
-   
+ 
        # register the object for thread-safety
-       register( $self ); 
+       register( $self );
      }
-
+ 
      sub name {
        my $self = shift;
-       if ( @_ ) { 
-   
+       if ( @_ ) {
+ 
          # use 'refaddr' to access properties for an object
          $name{ refaddr $self } = shift;
-     
+ 
          return $self;
        }
        return $name{ refaddr $self };
@@ -33,7 +33,7 @@ SYNOPSIS
  
      sub greeting {
        my $self = shift;
-   
+ 
        # use 'id' as a mnemonic alias for 'refaddr'
        return "Hello, my name is " . $name { id $self };
      }
@@ -42,6 +42,11 @@ LIMITATIONS AND ROADMAP
     This is an alpha release for a work in progress. It is functional but
     incomplete and should not be used for any production purpose. It has
     been released to solicit peer review and feedback.
+
+    WARNING: Version 0.08 introduces a BACKWARDS INCOMPATIBLE syntax change
+    to the `property' method. `property' now requires two arguments,
+    including a label for the property. This label will be used in future
+    versions to better support introspection and accessor creation.
 
     Serialization with Storable appears to be working but may have
     unanticipated bugs and could use some real-world testing. Property
@@ -74,7 +79,7 @@ DESCRIPTION
     data structures holding object properties, rather than using the blessed
     reference itself as a data structure.
 
-      $self->{ name }        = "Larry"; # classic, hash-based object       
+      $self->{ name }        = "Larry"; # classic, hash-based object
       $name{ refaddr $self } = "Larry"; # inside-out
 
     The inside-out approach offers three major benefits:
@@ -103,14 +108,14 @@ DESCRIPTION
     robustness should be automatic. Anything that can be optional should be.
     The design should not introduce new restrictions unrelated to inside-out
     objects (such as attributes and `CHECK' blocks that cause problems for
-    `mod_perl' or the use of source filters for new syntax).
+    `mod_perl' or the use of source filters for a new syntax).
 
     As a result, only a few things are mandatory:
 
     *   Properties must be based on hashes and declared via `property'
 
     *   Property hashes must be keyed on the `Scalar::Util::refaddr' of the
-        object (or the `id' alias to `refaddr').
+        object (or the optional `id' alias to `Scalar::Util::refaddr').
 
     *   `register' must be called on all new objects
 
@@ -127,11 +132,12 @@ USAGE
 
       use Class::InsideOut;
 
-    By default, `Class::InsideOut' imports three critical methods:
-    `DESTROY', `STORABLE_freeze' and `STORABLE_thaw'. These methods are
-    intimately tied to correct functioning of the inside-out objects. No
-    other functions are imported by default. Additional functions can be
-    imported by including them as arguments with `use':
+    By default, `Class::InsideOut' imports three critical methods into the
+    namespace that uses it: `DESTROY', `STORABLE_freeze' and
+    `STORABLE_thaw'. These methods are intimately tied to correct
+    functioning of the inside-out objects. No other functions are imported
+    by default. Additional functions can be imported by including them as
+    arguments with `use':
 
       use Class::InsideOut qw( register property id );
 
@@ -142,16 +148,21 @@ USAGE
       use Class::InsideOut ();
 
     There is almost no circumstance under which this is a good idea. Users
-    seeking custom destruction behavior should see "Object destruction" and
-    the description of the `DEMOLISH' method.
+    seeking custom destruction behavior should consult "Object destruction"
+    and the description of the `DEMOLISH' method.
 
   Declaring and accessing object properties
 
     Object properties are declared with the `property' function, which must
-    be passed a single lexical (i.e. `my') hash.
+    be passed a label and a lexical (i.e. `my') hash.
 
-      property my %name;
-      property my %age;
+      property name => my %name;
+      property age => my %age;
+
+    If users do not wish to import `property', properties may be declared
+    using a fully qualified syntax:
+
+      Class::InsideOut::property name => my %name;
 
     Properties are private by default and no accessors are created. Users
     are free to create accessors of any style.
@@ -180,13 +191,13 @@ USAGE
 
      sub new {
        my $class = shift;
-   
+ 
        my $self = \do{ my $scalar };  # anonymous scalar
      # my $self = {};                 # anonymous hash
      # my $self = [];                 # anonymous array
      # open my $self, "<", $filename; # filehandle reference
-
-       register( bless $self, $class ); 
+ 
+       register( bless $self, $class );
      }
 
     However, to ensure that the inside-out objects are thread-safe, the
@@ -210,6 +221,8 @@ USAGE
     connections. Object properties will not be deleted until after
     `DEMOLISH' returns.
 
+     # Sample DEMOLISH: Count objects demolished (for whatever reason)
+ 
      my $objects_destroyed;
  
      sub DEMOLISH {
@@ -228,13 +241,13 @@ USAGE
     `SUPER::DEMOLISH', or may prefer to walk the entire `@ISA' tree:
 
      use Class::ISA;
-
+ 
      sub DEMOLISH {
        my $self = shift;
        # class specific demolish actions
-
+ 
        # DEMOLISH for all parent classes, but only once
-       my @demolishers = map { $_->can("DEMOLISH") } 
+       my @demolishers = map { $_->can("DEMOLISH") }
                              Class::ISA::super_path( __PACKAGE__ );
        for my $d ( @demolishers  ) {
          $d->($self) if $d;
@@ -256,10 +269,10 @@ USAGE
  
      sub new {
        my ($class, $filename) = @_;
-   
+ 
        my $self = IO::File->new( $filename );
-
-       register( bless $self, $class ); 
+ 
+       register( bless $self, $class );
      }
 
     In the example above, `IO::File' is a superclass. The object is an
@@ -328,13 +341,16 @@ USAGE
 FUNCTIONS
   `property'
 
-      property my %name;
+      property name => my %name;
 
-    Declares an inside-out property. The argument must be a lexical hash,
-    though the `my' keyword can be included as part of the argument rather
-    than as a separate statement. No accessor is created, but the property
-    will be tracked for memory cleanup during object destruction and for
-    proper thread-safety.
+    Declares an inside-out property. Two arguments are required. The first
+    is a label for the property; in a future version, this label will be
+    used for introspection and generating accessors and thus should be a
+    valid perl identifier. The second argument must be the lexical hash that
+    will be used to store data for that property. Note that the `my' keyword
+    can be included as part of the argument rather than as a separate
+    statement. No accessor is created, but the property will be tracked for
+    memory cleanup during object destruction and for proper thread-safety.
 
   `register'
 
@@ -362,9 +378,9 @@ SEE ALSO
         implementations, but foreign inheritance is handled via delegation,
         which imposes certain limitations.
 
-    *   Class::Std -- Despite the name, does not reflect best practices for
-        inside-out objects. Does not provide thread-safety with CLONE, is
-        not mod_perl safe and doesn't support foreign inheritance.
+    *   Class::Std -- Despite the name, this does not reflect best practices
+        for inside-out objects. Does not provide thread-safety with CLONE,
+        is not mod_perl safe and doesn't support foreign inheritance.
 
     *   Class::BuildMethods -- Generates accessors with encapsulated storage
         using a flyweight inside-out variant. Lexicals properties are

@@ -14,7 +14,7 @@ TODO list for Perl module Class::InsideOut
 - mutator filter options and validation handling
 - class-wide default options
 - error handling and argument checking
-- expand documentation (tutorial?)
+- expand documentation (tutorial? notes on writing Builders)
 - add checks for XS weaken and add to documentation
 - pre-clone user hook??
 

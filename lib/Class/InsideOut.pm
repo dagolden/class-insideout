@@ -381,7 +381,7 @@ the description of the C<DEMOLISH> method.
 =head2 Declaring and accessing object properties
 
 Object properties are declared with the C<property> function, which must
-be passed a label and  lexical (i.e. C<my>) hash.
+be passed a label and a lexical (i.e. C<my>) hash.
 
   property name => my %name;
   property age => my %age;

@@ -1,6 +1,6 @@
 ---
 name: Class-InsideOut
-version: 0.07
+version: 0.08
 author:
   - David A. Golden <dagolden@cpan.org>
 abstract: 'a safe, simple inside-out object construction kit'
@@ -14,5 +14,5 @@ requires:
 provides:
   Class::InsideOut:
     file: lib/Class/InsideOut.pm
-    version: 0.07
+    version: 0.08
 generated_by: Module::Build version 0.2703

@@ -16,6 +16,9 @@
 ^Build$
 ^_build
 
+# Test coverage
+^cover_db
+
 # Temp, old, vi and emacs files.
 ~$
 \.old$
