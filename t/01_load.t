@@ -6,6 +6,7 @@ BEGIN {
     @api = qw(
       CLONE
       DESTROY
+      property
       register
       _property_count
       _object_count

@@ -3,7 +3,7 @@ package Class::InsideOut;
 $VERSION     = "0.01";
 @ISA         = qw (Exporter);
 @EXPORT      = qw ( CLONE DESTROY );
-@EXPORT_OK   = qw ();
+@EXPORT_OK   = qw ( );
 %EXPORT_TAGS = ( );
     
 use strict;
@@ -20,7 +20,15 @@ sub CLONE {
 
 sub DESTROY {
     my $obj = shift;
-    delete $REGISTRY_OF{ ref $obj }{ refaddr $obj };
+    my $class = ref $obj;
+    my $obj_id = refaddr $obj;
+    delete $_->{ $obj_id } for @{ $PROPERTIES_OF{ $class } };
+    delete $REGISTRY_OF{ $class }{ $obj_id };
+    return;
+}
+
+sub property(\%) {
+    push @{$PROPERTIES_OF{ scalar caller }}, $_[0];
     return;
 }
 
@@ -42,6 +50,14 @@ sub _property_count {
     return defined $properties ? scalar @$properties : 0;
 }
 
+sub _leaking_memory {
+    my $class = shift;
+    my $obj_count = keys %{ $REGISTRY_OF{ $class } };
+    my $properties = $PROPERTIES_OF{ $class };
+    return scalar grep { $obj_count != scalar keys %$_ } @$properties;
+}
+    
+    
 #--------------------------------------------------------------------------#
 # main pod documentation 
 #--------------------------------------------------------------------------#
