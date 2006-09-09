@@ -77,14 +77,27 @@ sub _gen_DESTROY {
     my $class = shift;
     return sub {
         my $obj = shift;
-        my $obj_id = refaddr $obj;
+        my $obj_id = refaddr $obj; # cache for later property deletes
+
+        # Call a custom DEMOLISH hook if one exists.
         my $demolish;
         {
             no strict 'refs';
             $demolish = *{ $class . "::DEMOLISH" }{CODE};
         }
         $demolish->($obj) if defined $demolish;
-        delete $_->{ $obj_id } for @{ $PROPERTIES_OF{ $class } };
+
+        # In case super class destructors weren't called, be sure to clean
+        # up properties in all Class::InsideOut parents
+        for my $c ( Class::ISA::self_and_super_path( $class ) ) {
+            next unless exists $PROPERTIES_OF{ $c };
+            delete $_->{ $obj_id } for @{ $PROPERTIES_OF{ $c } };
+        }
+
+        # XXX this global registry might be a problem if deleted repeatedly 
+        # in superclasses -- SUPER::DESTROY shouldn't be called by DEMOLISH
+        # it should only call SUPER::DEMOLISH if need be
+
         delete $OBJECT_REGISTRY{ $obj_id };
         return;
     };
@@ -188,16 +201,18 @@ sub _property_count {
 }
 
 sub _leaking_memory {
-    my @properties = map { @$_ } values %PROPERTIES_OF;
-
     my %leaks;
-    for my $prop ( @properties ) {
-        for my $obj_id ( keys %$prop ) {
-            $leaks{ $obj_id }++ if not exists $OBJECT_REGISTRY{ $obj_id };
+    
+    for my $class ( keys %PROPERTIES_OF ) {
+        for my $prop ( @{ $PROPERTIES_OF{ $class } } ) {
+            for my $obj_id ( keys %$prop ) {
+                $leaks{ $class }++ 
+                    if not exists $OBJECT_REGISTRY{ $obj_id };
+            }
         }
     }
 
-    return scalar keys %leaks;
+    return keys %leaks;
 }
 
 1; #this line is important and will help the module return a true value
@@ -251,11 +266,12 @@ This is an B<alpha release> for a work in progress. It is B<functional but
 incomplete> and should not be used for any production purposes.  It has been
 released to solicit peer review and feedback.
 
-Currently, serialization with L<Storable> also has not yet been implemented and
-may result in API changes.  Also, property destruction support for various
-inheritance patterns (e.g. diamond) has not been verified.  There is minimal
-argument checking or other error handling.  A future version will also add very
-basic accessor support.
+Currently, serialization with L<Storable> is experimental and may have
+unanticipated bugs, particularly relating to serializing references to other
+objects. Also, property destruction support for various inheritance patterns
+(e.g. diamond) has not been verified.  There is minimal argument checking or
+other error handling.  A future version will also add very basic accessor
+support.
 
 =head1 DESCRIPTION
 

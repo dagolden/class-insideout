@@ -36,7 +36,7 @@ ok( ! defined $p,
 );
 
 ok( ! scalar @t::Object::Animal::subclass_errors,
-    "Subclass didn't find inherit superclass DEMOLISH"
+    "Subclass shouldn't inherit superclass DEMOLISH"
 ) or do {
     diag "  DEMOLISH improperly called by $_" 
         for @t::Object::Animal::subclass_errors;

@@ -4,19 +4,19 @@ use Class::InsideOut ();
 
 $|++; # keep stdout and stderr in order on Win32
 
-plan tests => 12;
+plan tests => 14;
 
 #--------------------------------------------------------------------------#
 
-my $class = "t::Object::Animal";
+my $class = "t::Object::Animal::Jackalope";
 my ($o, $p);
 
 #--------------------------------------------------------------------------#
 
 require_ok( $class );
 
-is( Class::InsideOut::_property_count( "$class" ), 2,
-    "$class has 2 properties registered"
+is( Class::InsideOut::_property_count( "$class" ), 1,
+    "$class has 1 property registered"
 );
 
 is( Class::InsideOut::_object_count( $class ), 0,
@@ -43,8 +43,16 @@ isnt( $o->name, $p->name,
     "Objects have different names"
 );
 
-is( $o->species( "Camel" ), "Camel",
-    "Setting a species for the first object"
+is( $o->color( "brown" ), "brown",
+    "Setting a color for the first object"
+);
+
+is( $o->speed( "42" ), "42",
+    "Setting a speed for the first object"
+);
+
+is( $o->kills( "23" ), "23",
+    "Setting a kill-count for the second object"
 );
 
 undef $o;
@@ -57,7 +65,8 @@ ok( ! defined $p,
     "Destroying the second object"
 );
 
-ok( ! Class::InsideOut::_leaking_memory( $class ),
+my @leaks = Class::InsideOut::_leaking_memory;
+is( scalar @leaks, 0, 
     "$class is not leaking memory"
-);
+) or diag "Leaks detected in:\n" . join( "\n", map { q{  } . $_ } @leaks );
 
