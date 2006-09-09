@@ -286,15 +286,21 @@ Class::InsideOut - a safe, simple inside-out object construction kit
 
  package My::Class;
  
- use Class::InsideOut qw( property register id );
+ use Class::InsideOut qw( property public private register id );
  use Scalar::Util qw( refaddr );
  
- # declare a lexical property "name" as a lexical ("my") hash
+ # declare a lexical property "name" as a lexical hash
  property name => my %name;
  
  # declare a property and generate an accessor for it
  property color => my %color, { privacy => 'public' };
  
+ # alias for property() with privacy => 'public'
+ public height => my %height;
+
+ # alias for property() with privacy => 'private'
+ private weight => my %weight;
+
  sub new {
    my $class = shift;
    my $self = \do {my $scalar};
@@ -325,17 +331,18 @@ Class::InsideOut - a safe, simple inside-out object construction kit
 
 =head1 LIMITATIONS AND ROADMAP
 
-This is an B<alpha release> for a work in progress. It is B<functional but
-incomplete> and should not be used for any production purpose.  It has been
-released to solicit peer review and feedback.
+This is an B<alpha release> for a work in progress. It is functional but
+unfinished and should not be used for any production purpose as the API may
+still evolve.  It has been released to solicit peer review and feedback.
 
-WARNING: Version 0.08 introduced a B<BACKWARDS INCOMPATIBLE> syntax change to
-the C<property> method.  C<property> now requires two arguments, including a
-label for the property.  This label is used to support accessor creation and 
-introspection.
+NOTICE: Version 0.08 introduced a B<BACKWARDS INCOMPATIBLE> syntax change to
+the C<property> method.  C<property> currently requires two arguments,
+including a label for the property.  This label is used to support accessor
+creation and introspection.
 
 Serialization with L<Storable> appears to be working but may have unanticipated
-bugs and could use some real-world testing.  
+bugs if an object contains a complicated (i.e. circular) reference structure
+and could use some real-world testing.  
 
 Property destruction support for various inheritance patterns (e.g. diamond)
 is in draft form and the API around DEMOLISH may change slightly.  
@@ -352,9 +359,10 @@ any underlying object type including foreign inheritance; does not leak memory;
 is overloading-safe; is thread-safe for Perl 5.8 or better; and should be
 mod_perl compatible.
 
-It provides the minimal support necessary for creating safe inside-out objects.
-All other implementation details, including writing a constructor and managing
-inheritance, are left to the user to maximize flexibility.
+It provides the minimal support necessary for creating safe inside-out objects
+and generating appropriate accessors.  All other implementation details,
+including writing a constructor and managing inheritance, are left to the user
+to maximize flexibility.
 
 Programmers seeking a more full-featured approach to inside-out objects are
 encouraged to explore L<Object::InsideOut>.  Other implementations are briefly
@@ -441,8 +449,8 @@ styles of constructor, destructor and inheritance support.
 By default, C<Class::InsideOut> imports three critical methods into the
 namespace that uses it: C<DESTROY>, C<STORABLE_freeze> and C<STORABLE_thaw>.
 These methods are intimately tied to correct functioning of the inside-out
-objects. No other functions are imported by default.  Some additional functions
-can be imported by including them as arguments with C<use>:
+objects. No other functions are imported by default.  Functions
+can be imported by including them as arguments with C<use>. For example:
 
  use Class::InsideOut qw( register property id );
 
@@ -457,22 +465,24 @@ seeking custom destruction behavior should consult L</"Object destruction"> and
 the description of the C<DEMOLISH> method.  Custom serialization hooks are
 likewise described in L</"Serialization">.
 
-If users do not wish to import functions such as C<register>, C<property>, etc.
-they may, of course, be called using a fully qualified syntax:
+If users do not wish to import functions such as C<register>, C<property>, 
+etc., they may, of course, be called using a fully qualified syntax:
 
  Class::InsideOut::property name => my %name;
  Class::InsideOut::register $self;
 
 =head2 Declaring and accessing object properties
 
-Object properties are declared with the C<property> function, which must
-be passed a label and a lexical (i.e. C<my>) hash.
+Object properties are declared with the C<property> function (or its special
+aliases C<public> and C<private>), which must be passed a label and a lexical
+(i.e. C<my>) hash.
 
  property name => my %name;
  property age => my %age;
 
 Properties are private by default and no accessors are created.  Users are
-free to create accessors of any style.
+free to create accessors of any style.  See L</"Property accessors"> for
+how to have C<Class::InsideOut> automatically generate accessors.
 
 Properties for an object are accessed through an index into the lexical hash
 based on the memory address of the object.  This memory address I<must> be
@@ -513,12 +523,20 @@ The C<property> method supports an optional hash reference of options.  If the
 I<privacy> option is equal to I<public>, an accessor will be created with the
 same name as the label.  If the accessor is passed an argument, the property
 will be set to the argument.  The accessor always returns the value of the
-property.
+property.  Future versions of C<Class::InsideOut> will support additional
+accessor styles.
 
-Default accessor options may be set using the C<options> function.
+Default accessor options may be set using the C<options> function and will 
+affect all subsequent calls to C<property>.
 
-Future versions of C<Class::InsideOut> will support additional accessor 
-styles.
+C<Class::InsideOut> offers two aliases for C<property> that additionally
+set the privacy property accordingly, overriding the defaults and any options
+provided:
+
+ public  height => my %height;
+ private weight => my %weight;
+
+See the documentation of each for details.
 
 =head2 Object construction
 
@@ -691,7 +709,7 @@ Perl 5.6.  Win32 Perl 5.8 C<fork> is supported.
 
 =head1 FUNCTIONS
 
-=head2 C<id>
+=head2 C<id> 
 
  $name{ id $object } = "Larry";
 
@@ -727,6 +745,14 @@ the property.
 
 =back
 
+=head2 C<private>
+
+ private weight => my %weight;
+ private haircolor => my %hair_color, { %options };
+
+This is an alias to C<property> that also sets the privacy option to 'private'.
+It will override default options or options passed as an argument.
+
 =head2 C<property>
 
  property name => my %name;
@@ -745,6 +771,14 @@ If a third, optional argument is provided, it must be a reference to a hash
 of options that will be applied to the property.  Valid options are the same
 as listed for the C<options> function and will override any 
 default options that have been set.
+
+=head2 C<public>
+
+ public height => my %height;
+ public age => my %age, { %options };
+
+This is an alias to C<property> that also sets the privacy option to 'public'.
+It will override default options or options passed as an argument.
 
 =head2 C<register>
 
