@@ -80,19 +80,45 @@ sub _leaking_memory {
 }
     
     
-#--------------------------------------------------------------------------#
-# main pod documentation 
-#--------------------------------------------------------------------------#
 
-# Below is the stub of documentation for your module. You better edit it!
+1; #this line is important and will help the module return a true value
+__END__
 
 =head1 NAME
 
-Class::InsideOut - placeholder for future implementation
+Class::InsideOut - a safe, simple inside-out object construction kit
 
 =head1 SYNOPSIS
 
- use Class::InsideOut;
+ package My::Class;
+ 
+ use Class::InsideOut qw( id property register );
+
+ # declare a lexical property hash with 'my'
+ property my %name; 
+
+ sub new {
+   my $class = shift;
+   my $self = \do {my $scalar};
+   bless $self, $class;
+   # register the object for thread-safety
+   register( $self ); 
+ }
+
+ sub name {
+   my $self = shift;
+   if ( @_ ) { 
+     # use 'id' to access properties for an object
+     $name{ id $self } = shift;
+     return $self;
+   }
+   return $name{ id $self };
+ }
+ 
+ sub greeting {
+   my $self = shift;
+   print "Hello, my name is " . $name { id $self } . "\n";
+ }
 
 =head1 DESCRIPTION
 
@@ -103,15 +129,13 @@ this module will aim towards minimalism.
 In the meantime, I recommend L<Object::InsideOut> as the most robust current
 alternative.
 
-=cut
+=head1 BUGS
 
+Please report bugs using the CPAN Request Tracker at 
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Class-InsideOut>
 
-1; #this line is important and will help the module return a true value
-__END__
-
-#=head1 BUGS
-#
-#Please report bugs using the CPAN Request Tracker at L<http://rt.cpan.org/>
+When submitting a bug or request, please include a test-file or a patch to an
+existing test-file that illustrates the bug or desired feature.
 
 =head1 AUTHOR
 
