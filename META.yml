@@ -1,8 +1,8 @@
 ---
 name: Class-InsideOut
-version: 0.15_01
+version: 0.90_01
 author:
-  - 'David A. Golden <dagolden@cpan.org>'
+  - David A. Golden <dagolden@cpan.org>
 abstract: 'a safe, simple inside-out object construction kit'
 license: perl
 resources:
@@ -18,7 +18,13 @@ requires:
 provides:
   Class::InsideOut:
     file: lib/Class/InsideOut.pm
-    version: 0.15_01
+    version: 0.90_01
+  Class::InsideOut::Manual::About:
+    file: lib/Class/InsideOut/Manual/About.pm
+    version: 0.90_01
+  Class::InsideOut::Manual::Advanced:
+    file: lib/Class/InsideOut/Manual/Advanced.pm
+    version: 0.90_01
 generated_by: Module::Build version 0.28
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html

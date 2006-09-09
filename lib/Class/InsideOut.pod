@@ -361,7 +361,7 @@ Adding additional accessor styles (e.g. get_name()E<sol>set_name())
 
 =item *
 
-Revising and clarifying documentation further
+Further documentation revisions and clarification
 
 =back
 
