@@ -53,8 +53,8 @@ sub property($\%;$) {
     my $options = _merge_options( $caller, $opt );
     if ( exists $options->{privacy} && $options->{privacy} eq 'public' ) {
         no strict 'refs';
-        *{ "$caller\::$label" } = 
-            ($options->{set_hook} || $options->{get_hook}) 
+        *{ "$caller\::$label" } =
+            ($options->{set_hook} || $options->{get_hook})
                 ? _gen_hook_accessor( $hash, $label, $options->{get_hook},
                                                  $options->{set_hook} )
                 : _gen_accessor( $hash ) ;
@@ -343,9 +343,9 @@ Class::InsideOut - a safe, simple inside-out object construction kit
  public     initials => my %initials, {
     set_hook => sub { $_ = uc $_ }
  };
- 
- sub new { 
-   register( bless \(my $s), shift ); 
+
+ sub new {
+   register( bless \(my $s), shift );
  }
  
  sub greeting {
@@ -381,11 +381,10 @@ module aims for minimalism and robustness.  It does not require derived classes
 to subclass it; uses no source filters, attributes or CHECK blocks; supports
 any underlying object type including foreign inheritance; does not leak memory;
 is overloading-safe; is thread-safe for Perl 5.8 or better; and should be
-
 mod_perl compatible.
 
 It provides the minimal support necessary for creating safe inside-out objects
-and generating appropriate accessors.  All other implementation details,
+and generating flexible accessors.  All other implementation details,
 including writing a constructor and managing inheritance, are left to the user
 to maximize flexibility.
 
@@ -417,8 +416,8 @@ objects can be quite complex.  {Class::InsideOut} manages that complexity.
 
 == Philosophy of {Class::InsideOut}
 
-{Class::InsideOut} provides a minimalist set of tools for building
-safe inside-out classes with maximum flexibility.
+{Class::InsideOut} provides a set of tools for building safe inside-out classes
+with maximum flexibility.
 
 It aims to offer minimal restrictions beyond those necessary for robustness of
 the inside-out technique.  All capabilities necessary for robustness should be
@@ -447,7 +446,7 @@ styles of constructor, destructor and inheritance support.
 
  use Class::InsideOut;
 
-No functions are imported by default -- all functions must be called using 
+No functions are imported by default -- all functions must be called using
 their fully qualified names:
 
  Class::InsideOut::property name => my %name;
@@ -478,7 +477,7 @@ explicitly doing no importing, either via {require} or passing an empty list to
 
  use Class::InsideOut ();
 
-There is almost no circumstance under which this is a good idea.  See 
+There is almost no circumstance under which this is a good idea.  See
 [/"Object destruction"] and [/"Serialization"] for how to add customized
 behavior to these methods.
 
@@ -553,6 +552,50 @@ See the documentation of each for details.
 as the generated accessor holds a reference rather than accessing the lexical
 property hash directly.
  
+== Accessor hooks
+
+{Class::InsideOut} supports custom subroutine hooks to modify the behavior of
+accessors.  Hooks are passed as property options: {set_hook} and {get_hook}.
+
+The {set_hook} option is called when the accessor is called with an argument.
+The hook subroutine receives the entire argument list.  Just before the hook is
+called, {$_} is locally aliased to the first argument for convenience.
+
+ public age => my %age, {
+    set_hook => sub { /^\d+$/ or die "must be an integer" }
+ };
+
+If the {set_hook} dies, the error is caught and rethrown with a preamble that
+includes the name of the accessor:
+
+ $obj->age(3.5); # dies with "Argument to age() must be an integer at..."
+
+When the {set_hook} returns, the property is set equal to {$_}.  This feature
+is useful for on-the-fly modification of the value that will be stored.
+
+ public list => my %list, {
+    set_hook => sub { $_ = [ @_ ] } # stores arguments in a reference
+ };
+
+~Note that the return value of the {set_hook} is ignored.~  (This simplifies syntax in
+the more frequent case of validating input versus modifying input.)
+
+The {get_hook} option is called when the accessor is called without an
+argument.  Just before the hook is called, {$_} is locally aliased to the
+property value of the object for convenience.  The hook is called in the same
+context (i.e. list versus scalar) as the accessor.
+
+ public list => my %list, {
+    set_hook => sub { $_ = [ @_ ] }, # stores arguments in a reference
+    get_hook => sub { @$_ }          # return property as a list
+ };
+
+~The return value of the hook is passed through as the return value of the
+accessor.~
+
+Accessor hooks can also be set as a global default with {options}, though
+they can still be overridden for specific properties.
+
 == Object construction
 
 {Class::InsideOut} provides no constructor method as there are many possible
@@ -754,6 +797,27 @@ with the same name as the label.  If the accessor is passed an argument, the
 property will be set to the argument.  The accessor always returns the value of
 the property.
 
+=== {set_hook => \&code_ref}
+
+ public age => my %age, {
+    set_hook => sub { /^\d+$/ or die "must be an integer" }
+ };
+
+Defines an accessor hook for when values are set. The hook subroutine receives
+the entire argument list.  {$_} is locally aliased to the first argument for
+convenience.  The property receives the value of {$_}. See ["/Accessor Hooks"]
+for details.
+
+=== {get_hook => \&code_ref}
+
+ public list => my %list, {
+     get_hook => sub { @$_ }
+ };
+
+Defines an accessor hook for when values are retrieved.  {$_} is locally
+aliased to the property value for the object.  ~The return value of the hook is
+passed through as the return value of the accessor.~ See ["/Accessor Hooks"]
+for details.
 
 == {private}
 
