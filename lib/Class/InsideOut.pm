@@ -212,7 +212,7 @@ It aims to offer minimal restrictions beyond those necessary for robustness of
 the inside-out technique.  All capabilities necessary for robustness should be
 automatic.  Anything that can be optional should be.  The design should not
 introduce new restrictions unrelated to inside-out objects (such as attributes
-and C<CHECK> blocks that cause problems C<mod_perl> or the use of source
+and C<CHECK> blocks that cause problems for C<mod_perl> or the use of source
 filters for new syntax).
 
 As a result, only a few things are mandatory:
@@ -350,7 +350,7 @@ implemented with a hash or array or other reference.
 
 In the example above, C<IO::File> is a superclass.  The object is an
 C<IO::File> object, re-blessed into the inside-out class.  The resulting
-object can be used directly anywhere an c<IO::File> object would be, 
+object can be used directly anywhere an C<IO::File> object would be, 
 without interfering with any of its own inside-out functionality.
 
 =head2 Serialization
