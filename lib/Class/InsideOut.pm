@@ -3,7 +3,7 @@ package Class::InsideOut;
 $VERSION     = "0.03";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( );
-@EXPORT_OK   = qw ( property register );
+@EXPORT_OK   = qw ( property register id );
 %EXPORT_TAGS = ( );
     
 use strict;
@@ -13,6 +13,9 @@ use Scalar::Util qw( refaddr weaken );
 
 my %PROPERTIES_OF;
 my %REGISTRY_OF;
+
+BEGIN { *id = \&Scalar::Util::refaddr; }
+    
 
 sub import {
     my $caller = caller;
@@ -146,7 +149,9 @@ Class::InsideOut - a safe, simple inside-out object construction kit
  
  sub greeting {
    my $self = shift;
-   return "Hello, my name is " . $name { refaddr $self };
+   
+   # use 'id' as a mnemonic alias for 'refaddr'
+   return "Hello, my name is " . $name { id $self };
  }
 
 =head1 DESCRIPTION

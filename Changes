@@ -1,7 +1,9 @@
 Revision history for Perl module Class::InsideOut
 
 0.03 in progress
+    - thread test no longer dies if threads are not configured
     - added DEMOLISH support for custom destruction actions
+    - added id() as optional alias for refaddr
     - documentation tweaks
 
 0.02 Thu Jan  5 00:51:01 EST 2006

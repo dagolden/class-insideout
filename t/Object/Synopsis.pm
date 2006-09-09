@@ -1,7 +1,7 @@
 package t::Object::Synopsis;
 use strict;
 
-use Class::InsideOut qw( property register );
+use Class::InsideOut qw( property register id );
 use Scalar::Util qw( refaddr );
 
 # declare a lexical property hash with 'my'
@@ -30,7 +30,9 @@ sub name {
 
 sub greeting {
     my $self = shift;
-    return "Hello, my name is " . $name { refaddr $self };
+
+    # use 'id' as a mnemonic alias for 'refaddr'
+    return "Hello, my name is " . $name { id $self };
 }
 
 1;
