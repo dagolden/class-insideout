@@ -263,15 +263,15 @@ Class::InsideOut - a safe, simple inside-out object construction kit
 =head1 LIMITATIONS AND ROADMAP
  
 This is an B<alpha release> for a work in progress. It is B<functional but
-incomplete> and should not be used for any production purposes.  It has been
+incomplete> and should not be used for any production purpose.  It has been
 released to solicit peer review and feedback.
 
-Currently, serialization with L<Storable> is experimental and may have
+Currently, serialization with L<Storable> is B<experimental> and may have
 unanticipated bugs, particularly relating to serializing references to other
-objects. Also, property destruction support for various inheritance patterns
-(e.g. diamond) has not been verified.  There is minimal argument checking or
-other error handling.  A future version will also add very basic accessor
-support.
+objects.  Property destruction support for various inheritance patterns (e.g.
+diamond) is B<experimental> and the API may change.  There is minimal argument
+checking or other error handling.  A future version will also add very basic
+accessor support.
 
 =head1 DESCRIPTION
 
@@ -355,8 +355,12 @@ C<register> must be called on all new objects
 
 =back
 
-All other implementation details, including constructors, initializers
-and class inheritance management are left to the user.
+All other implementation details, including constructors, initializers and
+class inheritance management are left to the user.  This does requires some
+additional work, but maximizes freedom.  C<Class::InsideOut> is intended to
+be the base class providing only fundamental features.  Subclasses of
+C<Class::InsideOut> could be written that build upon it to provide particular
+styles of constructor, destructor and inheritance support.
    
 =head1 USAGE
 
@@ -364,14 +368,15 @@ and class inheritance management are left to the user.
 
   use Class::InsideOut;
 
-By default, C<Class::InsideOut> imports one critical method: C<DESTROY>.
-This method is intimately tied to correct functioning of the inside-out
-objects. No other functions are imported by default.  Additional functions can
-be imported by including them as arguments with C<use>:
+By default, C<Class::InsideOut> imports three critical methods: C<DESTROY>,
+C<STORABLE_freeze> and C<STORABLE_thaw>.  These methods are intimately tied to
+correct functioning of the inside-out objects. No other functions are imported
+by default.  Additional functions can be imported by including them as
+arguments with C<use>:
 
   use Class::InsideOut qw( register property id );
 
-Note that C<DESTROY> will still be imported even without an
+Note that C<DESTROY> and C<STORABLE_*> will still be imported even without an
 explicit request.  This can only be avoided by explicitly doing no importing,
 via C<require> or passing an empty list to C<use>:
 
@@ -435,8 +440,9 @@ as the object reference.  See L</"Foreign inheritance"> for details.
 =head2 Object destruction
 
 C<Class::InsideOut> automatically exports a customized C<DESTROY> function.
-This function cleans up object property memory for all declared properties to
-avoid memory leaks or data collision.
+This function cleans up object property memory for all declared properties for
+all C<Class::InsideOut> based classes in the C<@ISA> array to avoid memory
+leaks or data collision.
 
 Additionally, if a user-supplied C<DEMOLISH> function is available in the same
 package, it will be called with the object being destroyed as its argument.
@@ -450,9 +456,33 @@ will not be deleted until after C<DEMOLISH> returns.
    $objects_destroyed++;
  }
 
-C<DEMOLISH> is also the place to manage any necessary calls to superclass 
-destructors.  As with C<new>, implementation details are left to the user
-based on the user's approach to object inheritance.
+C<DEMOLISH> will only be automatically called if it exists for an object's
+class.  C<DEMOLISH> will not be inherited and C<DEMOLISH> will not be called
+automatically for any superclasses.
+
+C<DEMOLISH> should manage any necessary calls to superclass C<DEMOLISH>
+methods.  As with C<new>, implementation details are left to the user based on
+the user's approach to object inheritance.  Depending on how the inheritance
+chain is constructed and how C<DEMOLISH> is being used, users may wish to
+entirely override superclass C<DEMOLISH> methods, rely upon C<SUPER::DEMOLISH>,
+or may prefer to walk the entire C<@ISA> tree:
+
+ use Class::ISA;
+
+ sub DEMOLISH {
+   my $self = shift;
+   # class specific demolish actions
+
+   # DEMOLISH for all parent classes, but only once
+   my @demolishers = map { $_->can("DEMOLISH") } 
+                         Class::ISA::super_path( __PACKAGE__ );
+   for my $d ( @demolishers  ) {
+     $d->($self) if $d;
+   }
+ }
+
+Generally, any class that inherits from another should define its own
+C<DEMOLISH> method.
 
 =head2 Foreign inheritance
 
@@ -477,9 +507,21 @@ C<IO::File> object, re-blessed into the inside-out class.  The resulting
 object can be used directly anywhere an C<IO::File> object would be, 
 without interfering with any of its own inside-out functionality.
 
+Classes using foreign inheritance should provide a C<DEMOLISH> function that
+calls the foreign class' destructor explicitly.
+
 =head2 Serialization
 
-Serialization support with hooks for L<Storable> has not yet been implemented.
+C<Class::InsideOut> has B<experimental> support for serialization with
+L<Storable> by providing the C<STORABLE_freeze> and C<STORABLE_thaw> methods.
+Due to limitations of L<Storable>, this serialization will only work for
+objects based on scalars, arrays or hashes.
+
+Serialization of objects that themselves contain references to objects has
+not yet been tested.  The semantics of a deep cloning C<freeze(thaw(.))> 
+operation has not been fully explored or tested.
+
+User feedback on serialization needs and limiations are encouraged.
 
 =head2 Thread-safety
 
