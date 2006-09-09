@@ -2,7 +2,6 @@ TODO list for Perl module Class::InsideOut
 
 # Planned todos around core functionality
 
-- document new tags
 - mutator filter options and validation handling { filter => \&code }
 - error handling and argument checking throughout
 - add checks for XS weaken and add to documentation
@@ -20,40 +19,33 @@ TODO list for Perl module Class::InsideOut
 
 - look into support for cloning tied objects(?) in the blessed hash(?)
 - accessor privacy => "protected" and matching property alias
-- add introspection methods (property list and options?)
+- add public introspection methods (property list and options?)
 - "evert" method -- dump/reconstruct to a hash  (??)
   ( $hash_ref = $obj->evert; $newobj = Class->evert( $hash_ref ) )
 - pre-clone user hook?? (waiting for someone to say they need it)
 
-#--------------------------------------------------------------------------#
-# interface ideas
-#--------------------------------------------------------------------------#
-
-aliases 'private', etc. for property' should use class defaults, then
-provided options, then force "privacy => 'private'"; similar for 'public'
 
 #--------------------------------------------------------------------------#
-# examples
+# Thoughts about property options
 #--------------------------------------------------------------------------#
 
-use Class::InsideOut qw( property public private register id );
+# have to be careful of interrelationship between style and custom prefixes;
+# maybe don't allow custom prefixes at all
 
 Class::InsideOut::options(
-  accessor_style => 'bimodal', # or combo or eiffel or get_set
-  get_prefix => 'get_',
-  set_prefix => 'set_',
+  accessor_style => 'perl', # default
+        # "combined"; "perl" => foo() and foo(x)
+        # "get_set"; "java"  => get_foo() and set_foo(x)
+        # "eiffel"           => foo() and set_foo(x)
+        
+  get_prefix => 'get_', # maybe don't bother (YAGNI)
+  set_prefix => 'set_', # maybe don't bother (YAGNI)
   privacy => 'public',  # create accessors for everything given to properties
                        # or 'readonly' or 'protected' or 'private'
   filter => \&coderef,  # mutator argument filtered through this
                        # will catch die message for error
-  set_returns => 'self' # or 'value' or 'oldvalue'
+  set_returns => 'self' # or 'newvalue' or 'oldvalue'
 );
-
-Class::InsideOut::property ( "uid", my %UID, { privacy => 'readonly' });
-
-private height => my %HEIGHT; # alias for properties with privacy => private
-public name => my %NAME; # sets privacy => public
-public age => my %AGE, { filter => \&old_enough }; # dies on error
 
 #--------------------------------------------------------------------------#
 # FAQ ideas

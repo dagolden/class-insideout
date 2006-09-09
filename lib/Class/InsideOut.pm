@@ -438,30 +438,40 @@ styles of constructor, destructor and inheritance support.
 
  use Class::InsideOut;
 
-By default, {Class::InsideOut} imports three critical methods into the
-namespace that uses it: {DESTROY}, {STORABLE_freeze} and {STORABLE_thaw}.
-These methods are intimately tied to correct functioning of the inside-out
-objects. No other functions are imported by default.  Functions
-can be imported by including them as arguments with {use}. For example:
-
- use Class::InsideOut qw( register property id );
-
-Note that {DESTROY} and {STORABLE_*} will still be imported even without an
-explicit request.  This can only be avoided by explicitly doing no importing,
-via {require} or passing an empty list to {use}:
-
- use Class::InsideOut ();
-
-There is almost no circumstance under which this is a good idea.  Users
-seeking custom destruction behavior should consult [/"Object destruction"] and
-the description of the {DEMOLISH} method.  Custom serialization hooks are
-likewise described in [/"Serialization"].
-
-If users do not wish to import functions such as {register}, {property},
-etc., they may, of course, be called using a fully qualified syntax:
+No functions are imported by default -- all functions must be called using 
+their fully qualified names:
 
  Class::InsideOut::property name => my %name;
  Class::InsideOut::register $self;
+
+Functions can be imported by including them as arguments with {use}. For
+example:
+
+ use Class::InsideOut qw( register property );
+
+ property name => my %name;
+ register $self;
+
+As a shortcut, {Class::InsideOut} supports two tags for importing sets of
+functions:
+
+ use Class::InsideOut ':std'; # id, private, public, register
+ 
+ use Class::InsideoUT ':all'; # all functions
+
+In addition, {Class::InsideOut} automatically imports three critical methods
+into the namespace that uses it: {DESTROY}, {STORABLE_freeze} and
+{STORABLE_thaw}.  These methods are intimately tied to correct functioning of
+the inside-out objects.  They will be imported regardless of whether or not any
+other functions are requested with {use}.  This can only be avoided by
+explicitly doing no importing, either via {require} or passing an empty list to
+{use}:
+
+ use Class::InsideOut ();
+
+There is almost no circumstance under which this is a good idea.  See 
+[/"Object destruction"] and [/"Serialization"] for how to add customized
+behavior to these methods.
 
 == Declaring and accessing object properties
 
@@ -530,13 +540,13 @@ provided:
 
 See the documentation of each for details.
 
-*Tip*: generated accessors will be slightly slower than a hand-rolled one as
-the generated accessor holds a reference rather than accessing the lexical
+*Tip*: generated accessors will be very slightly slower than a hand-rolled one
+as the generated accessor holds a reference rather than accessing the lexical
 property hash directly.
  
 == Object construction
 
-{Class::InsideOut} provides no constructor function as there are many possible
+{Class::InsideOut} provides no constructor method as there are many possible
 ways of constructing an inside-out object.  Additionally, this avoids
 constraining users to any particular object initialization or superclass
 initialization approach.
@@ -640,11 +650,11 @@ calls the foreign class destructor explicitly.
 
 == Serialization
 
-{Class::InsideOut} has *experimental* support for serialization with
-[Storable] by providing the {STORABLE_freeze} and {STORABLE_thaw} methods.
-{Storable} will use these methods to serialize.  They should not be called
-directly.  Due to limitations of {Storable}, this serialization will only work
-for objects based on scalars, arrays or hashes.
+{Class::InsideOut} has support for serialization with [Storable] by providing
+the {STORABLE_freeze} and {STORABLE_thaw} methods.  {Storable} will use these
+methods to serialize.  They should not be called directly.  Due to limitations
+of {Storable}, this serialization will only work for objects based on scalars,
+arrays or hashes.
 
 References to object within the object being frozen will result in clones
 upon thawing unless the other references are included in the same freeze

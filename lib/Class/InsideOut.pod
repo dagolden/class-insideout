@@ -171,30 +171,40 @@ styles of constructor, destructor and inheritance support.
 
   use Class::InsideOut;
 
-By default, C<<< Class::InsideOut >>> imports three critical methods into the
-namespace that uses it: C<<< DESTROY >>>, C<<< STORABLE_freeze >>> and C<<< STORABLE_thaw >>>.
-These methods are intimately tied to correct functioning of the inside-out
-objects. No other functions are imported by default.  Functions
-can be imported by including them as arguments with C<<< use >>>. For example:
-
-  use Class::InsideOut qw( register property id );
-
-Note that C<<< DESTROY >>> and C<<< STORABLE_* >>> will still be imported even without an
-explicit request.  This can only be avoided by explicitly doing no importing,
-via C<<< require >>> or passing an empty list to C<<< use >>>:
-
-  use Class::InsideOut ();
-
-There is almost no circumstance under which this is a good idea.  Users
-seeking custom destruction behavior should consult L</"Object destruction"> and
-the description of the C<<< DEMOLISH >>> method.  Custom serialization hooks are
-likewise described in L</"Serialization">.
-
-If users do not wish to import functions such as C<<< register >>>, C<<< property >>>,
-etc., they may, of course, be called using a fully qualified syntax:
+No functions are imported by default -- all functions must be called using 
+their fully qualified names:
 
   Class::InsideOut::property name => my %name;
   Class::InsideOut::register $self;
+
+Functions can be imported by including them as arguments with C<<< use >>>. For
+example:
+
+  use Class::InsideOut qw( register property );
+ 
+  property name => my %name;
+  register $self;
+
+As a shortcut, C<<< Class::InsideOut >>> supports two tags for importing sets of
+functions:
+
+  use Class::InsideOut ':std'; # id, private, public, register
+ 
+  use Class::InsideoUT ':all'; # all functions
+
+In addition, C<<< Class::InsideOut >>> automatically imports three critical methods
+into the namespace that uses it: C<<< DESTROY >>>, C<<< STORABLE_freeze >>> and
+C<<< STORABLE_thaw >>>.  These methods are intimately tied to correct functioning of
+the inside-out objects.  They will be imported regardless of whether or not any
+other functions are requested with C<<< use >>>.  This can only be avoided by
+explicitly doing no importing, either via C<<< require >>> or passing an empty list to
+C<<< use >>>:
+
+  use Class::InsideOut ();
+
+There is almost no circumstance under which this is a good idea.  See 
+L</"Object destruction"> and L</"Serialization"> for how to add customized
+behavior to these methods.
 
 =head2 Declaring and accessing object properties
 
@@ -263,13 +273,13 @@ provided:
 
 See the documentation of each for details.
 
-B<Tip>: generated accessors will be slightly slower than a hand-rolled one as
-the generated accessor holds a reference rather than accessing the lexical
+B<Tip>: generated accessors will be very slightly slower than a hand-rolled one
+as the generated accessor holds a reference rather than accessing the lexical
 property hash directly.
 
 =head2 Object construction
 
-C<<< Class::InsideOut >>> provides no constructor function as there are many possible
+C<<< Class::InsideOut >>> provides no constructor method as there are many possible
 ways of constructing an inside-out object.  Additionally, this avoids
 constraining users to any particular object initialization or superclass
 initialization approach.
@@ -373,11 +383,11 @@ calls the foreign class destructor explicitly.
 
 =head2 Serialization
 
-C<<< Class::InsideOut >>> has B<experimental> support for serialization with
-L<Storable> by providing the C<<< STORABLE_freeze >>> and C<<< STORABLE_thaw >>> methods.
-C<<< Storable >>> will use these methods to serialize.  They should not be called
-directly.  Due to limitations of C<<< Storable >>>, this serialization will only work
-for objects based on scalars, arrays or hashes.
+C<<< Class::InsideOut >>> has support for serialization with L<Storable> by providing
+the C<<< STORABLE_freeze >>> and C<<< STORABLE_thaw >>> methods.  C<<< Storable >>> will use these
+methods to serialize.  They should not be called directly.  Due to limitations
+of C<<< Storable >>>, this serialization will only work for objects based on scalars,
+arrays or hashes.
 
 References to object within the object being frozen will result in clones
 upon thawing unless the other references are included in the same freeze
