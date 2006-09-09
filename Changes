@@ -1,5 +1,12 @@
 Revision history for Perl module Class::InsideOut
 
+0.11 in progress
+    
+    - tweaked Build.PL to fix copy/paste error
+
+    - documentation cleanup; fixed links; restructured Pod for options;
+      softened alpha warnings
+
 0.10 Fri Jan 27 01:41:38 EST 2006
 
     - added "set_hook" and "get_hook" option for custom accessor/mutator

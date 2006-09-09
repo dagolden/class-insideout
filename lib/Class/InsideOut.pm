@@ -1,6 +1,6 @@
 package Class::InsideOut;
 
-$VERSION     = "0.10";
+$VERSION     = "0.11";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( ); # nothing by default
 @EXPORT_OK   = qw ( id options private property public register );
@@ -356,10 +356,10 @@ Class::InsideOut - a safe, simple inside-out object construction kit
 = LIMITATIONS AND ROADMAP
 
 This is an *alpha release* for a work in progress. It is functional but
-unfinished and should not be used for any production purpose as the API may
-still evolve.  It has been released to solicit peer review and feedback.
+unfinished and should not be used for any production purpose.  It has been
+released to solicit peer review and feedback.
 
-NOTICE: Version 0.08 introduced a *BACKWARDS INCOMPATIBLE* syntax change to
+NOTICE: Version 0.08 introduced a ~BACKWARDS INCOMPATIBLE~ syntax change to
 the {property} method.  {property} currently requires two arguments,
 including a label for the property.  This label is used to support accessor
 creation and introspection.
@@ -369,9 +369,14 @@ bugs if an object contains a complicated (i.e. circular) reference structure
 and could use some real-world testing.
 
 Property destruction support for various inheritance patterns (e.g. diamond)
-is in draft form and the API around DEMOLISH may change slightly.
+is in draft form.
 
 There is minimal argument checking or other error handling.
+
+I believe API's may have stabilized.  The module will be declared "beta" when
+argument/error checks are added, additional accessor styles are written and
+singleton support for Storable has been added.  Users' feedback would be
+greatly appreciated.
 
 = DESCRIPTION
 
@@ -481,7 +486,7 @@ There is almost no circumstance under which this is a good idea.  See
 [/"Object destruction"] and [/"Serialization"] for how to add customized
 behavior to these methods.
 
-== Declaring and accessing object properties
+== Object properties
 
 Object properties are declared with the {property} function (or its special
 aliases {public} and {private}), which must be passed a label and a lexical
@@ -581,20 +586,22 @@ is useful for on-the-fly modification of the value that will be stored.
 the more frequent case of validating input versus modifying input.)
 
 The {get_hook} option is called when the accessor is called without an
-argument.  Just before the hook is called, {$_} is locally aliased to the
-property value of the object for convenience.  The hook is called in the same
-context (i.e. list versus scalar) as the accessor.
+argument.  Just before the hook is called, {$_} is set equal to the property
+value of the object for convenience. The hook is called in the same context
+(i.e. list versus scalar) as the accessor.  ~The return value of the hook is
+passed through as the return value of the accessor.~  
 
  public list => my %list, {
     set_hook => sub { $_ = [ @_ ] }, # stores arguments in a reference
     get_hook => sub { @$_ }          # return property as a list
  };
 
-~The return value of the hook is passed through as the return value of the
-accessor.~
+Because {$_} is a copy, not an alias, of the property value, it
+can be modified directly, if necessary, without affecting the underlying
+property.
 
-Accessor hooks can also be set as a global default with {options}, though
-they can still be overridden for specific properties.
+Accessor hooks can be set as a global default with the {options} function,
+though they may still be overridden with options passed to specific properties.
 
 == Object construction
 
@@ -610,7 +617,7 @@ type of reference can be used as the basis for an inside-out object with
  sub new {
    my $class = shift;
  
-   my $self = \do{ my $scalar };  # anonymous scalar
+   my $self = \( my $scalar );  # anonymous scalar
  # my $self = {};                 # anonymous hash
  # my $self = [];                 # anonymous array
  # open my $self, "<", $filename; # filehandle reference
@@ -678,9 +685,8 @@ Generally, any class that inherits from another should define its own
 
 Because inside-out objects built with {Class::InsideOut} can use any type of
 reference for the object, inside-out objects can be built using other objects.
-This is of greatest utility when extending a superclass object, without regard
-for whether the superclass object is implemented with a hash or array or other
-reference.
+This is useful to extend a superclass without regard for whether the superclass
+implement objects with a hash or array or other reference.
 
  use base 'IO::File';
  
@@ -729,13 +735,13 @@ operation.  (See {Storable} for details.)
 
 {Class::InsideOut} also supports custom freeze and thaw hooks.  When an
 object is frozen, if its class or any superclass provides
-{STORABLE_freeze_hook} functions, they are called with the object as an
+{STORABLE_freeze_hook} functions, they are each called with the object as an
 argument ~prior~ to the rest of the freezing process.  This allows for
 custom preparation for freezing, such as writing a cache to disk, closing
 network connections, or disconnecting database handles.
 
 Likewise, when a serialized object is thawed, if its class or any
-superclass provides {STORABLE_thaw_hook} functions, they are called
+superclass provides {STORABLE_thaw_hook} functions, they are each called
 ~after~ the object has been thawed with the thawed object as an argument.
 
 User feedback on serialization needs and limitations is welcome.
@@ -761,8 +767,8 @@ objects in an undefined state.  Future versions may support a user-defined
 CLONE hook, depending on demand.
 
 Note: {fork} on Perl for Win32 is emulated using threads since Perl 5.6. (See
-[perlfork].)  As Perl 5.6 did not support {CLONE}, inside-out objects using
-memory addresses (e.g. {Class::InsideOut} are not fork-safe for Win32 on
+[perlfork].)  As Perl 5.6 did not support {CLONE}, inside-out objects that use 
+memory addresses (e.g. {Class::InsideOut}) are not fork-safe for Win32 on
 Perl 5.6.  Win32 Perl 5.8 {fork} is supported.
 
 = FUNCTIONS
@@ -788,7 +794,7 @@ overriding any options of the same name.
 
 Valid options include:
 
-=== {privacy => 'public|private'}
+* {privacy => 'public|private'}
 
  property rank => my %rank, { privacy => 'public' };
 
@@ -797,7 +803,7 @@ with the same name as the label.  If the accessor is passed an argument, the
 property will be set to the argument.  The accessor always returns the value of
 the property.
 
-=== {set_hook => \&code_ref}
+* {set_hook => \&code_ref}
 
  public age => my %age, {
     set_hook => sub { /^\d+$/ or die "must be an integer" }
@@ -805,10 +811,10 @@ the property.
 
 Defines an accessor hook for when values are set. The hook subroutine receives
 the entire argument list.  {$_} is locally aliased to the first argument for
-convenience.  The property receives the value of {$_}. See ["/Accessor Hooks"]
+convenience.  The property receives the value of {$_}. See [/"Accessor Hooks"]
 for details.
 
-=== {get_hook => \&code_ref}
+* {get_hook => \&code_ref}
 
  public list => my %list, {
      get_hook => sub { @$_ }
@@ -816,7 +822,7 @@ for details.
 
 Defines an accessor hook for when values are retrieved.  {$_} is locally
 aliased to the property value for the object.  ~The return value of the hook is
-passed through as the return value of the accessor.~ See ["/Accessor Hooks"]
+passed through as the return value of the accessor.~ See [/"Accessor Hooks"]
 for details.
 
 == {private}
@@ -856,7 +862,7 @@ It will override default options or options passed as an argument.
 
 == {register}
 
- register $object;
+ register( bless $object, $class );
 
 Registers an object for thread-safety.  This should be called as part of a
 constructor on a object blessed into the current package.  Returns the
@@ -916,7 +922,7 @@ December 11, 2002. [http://perlmonks.org/index.pl?node_id=219131]
 Please report bugs or feature requests using the CPAN Request Tracker.
 Bugs can be sent by email to {bug-Class-InsideOut@rt.cpan.org} or
 submitted using the web interface at
-[http://rt.cpan.org/NoAuth/Bugs.html?Dist=Class-InsideOut]
+[http://rt.cpan.org/Public/Dist/Display.html?Name=Class-InsideOut]
 
 When submitting a bug or request, please include a test-file or a patch to an
 existing test-file that illustrates the bug or desired feature.

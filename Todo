@@ -2,6 +2,7 @@ TODO list for Perl module Class::InsideOut
 
 # Planned todos around core functionality
 
+- clean up looping id/cache example
 - error handling and argument checking throughout
 - add checks for XS weaken and add to documentation
 - cleanup code smells in storable support

@@ -71,7 +71,7 @@ my $builder = $class->new(
         'Test::More'     => 0.48,
         'Scalar::Util'   => 1.09,
     },
-    add_to_cleanup      => [ 'ToolSet-*' ],
+    add_to_cleanup      => [ 'Class-InsideOut-*' ],
 );
 
 $builder->create_build_script;
