@@ -2,7 +2,7 @@ package Class::InsideOut;
 
 $VERSION     = "0.03";
 @ISA         = qw ( Exporter );
-@EXPORT      = qw ( CLONE DESTROY );
+@EXPORT      = qw ( );
 @EXPORT_OK   = qw ( property register );
 %EXPORT_TAGS = ( );
     
@@ -15,8 +15,12 @@ my %PROPERTIES_OF;
 my %REGISTRY_OF;
 
 sub import {
-    my $package = shift;
-    unshift @_, $package, @Class::InsideOut::EXPORT;
+    my $caller = caller;
+    {
+        no strict 'refs';
+        *{ $caller . "::CLONE"   } = _gen_CLONE( $caller );
+        *{ $caller . "::DESTROY" } = _gen_DESTROY( $caller );
+    }
     goto &Exporter::import;
 }
     
@@ -31,39 +35,52 @@ sub register {
     return $obj;
 }
 
-sub CLONE {
+#--------------------------------------------------------------------------#
+# private functions for implementation
+#--------------------------------------------------------------------------#
+
+sub _gen_CLONE {
     my $class = shift;
-    my $registry = $REGISTRY_OF{ $class };
-    my $properties = $PROPERTIES_OF{ $class };
-    
-    for my $old_id ( keys %$registry ) {  
-       
-        # look under old_id to find the new, cloned reference
-        my $object = $registry->{ $old_id };
-        my $new_id = refaddr $object;
+    return sub {
+        my $registry = $REGISTRY_OF{ $class };
+        my $properties = $PROPERTIES_OF{ $class };
+        
+        for my $old_id ( keys %$registry ) {  
+           
+            # look under old_id to find the new, cloned reference
+            my $object = $registry->{ $old_id };
+            my $new_id = refaddr $object;
 
-        # relocate data for all properties
-        for my $prop ( @$properties ) {
-            $prop->{ $new_id } = $prop->{ $old_id };
-            delete $prop->{ $old_id };
+            # relocate data for all properties
+            for my $prop ( @$properties ) {
+                $prop->{ $new_id } = $prop->{ $old_id };
+                delete $prop->{ $old_id };
+            }
+
+            # update the weak reference to the new, cloned object
+            weaken ( $registry->{ $new_id } = $object );
+            delete $registry->{ $old_id };
         }
-
-        # update the weak reference to the new, cloned object
-        weaken ( $registry->{ $new_id } = $object );
-        delete $registry->{ $old_id };
-    }
-   
-    return;
+       
+        return;
+    };
 }
 
-sub DESTROY {
-    my $obj = shift;
-    my $class = ref $obj;
-    my $obj_id = refaddr $obj;
-    $obj->DEMOLISH if $obj->can( 'DEMOLISH' );
-    delete $_->{ $obj_id } for @{ $PROPERTIES_OF{ $class } };
-    delete $REGISTRY_OF{ $class }{ $obj_id };
-    return;
+sub _gen_DESTROY {
+    my $class = shift;
+    return sub {
+        my $obj = shift;
+        my $obj_id = refaddr $obj;
+        my $demolish;
+        {
+            no strict 'refs';
+            $demolish = *{ $class . "::DEMOLISH" }{CODE};
+        }
+        $demolish->($obj) if defined $demolish;
+        delete $_->{ $obj_id } for @{ $PROPERTIES_OF{ $class } };
+        delete $REGISTRY_OF{ $class }{ $obj_id };
+        return;
+    };
 }
 
 #--------------------------------------------------------------------------#

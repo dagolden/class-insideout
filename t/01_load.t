@@ -4,8 +4,6 @@ my @api;
 
 BEGIN {
     @api = qw(
-      CLONE
-      DESTROY
       property
       register
       _property_count
@@ -14,10 +12,15 @@ BEGIN {
     );
 }
 
-use Test::More tests =>  1 + @api ;
+use Test::More tests =>  3 + @api ;
 
 $|++; # keep stdout and stderr in order on Win32
 
 BEGIN { use_ok( 'Class::InsideOut' ); }
 
 can_ok( 'Class::InsideOut', $_ ) for @api;
+
+for ( qw( CLONE DESTROY ) ) {
+    ok( ! Class::InsideOut->can( $_ ), "$_ not part of the API" );
+}
+    
