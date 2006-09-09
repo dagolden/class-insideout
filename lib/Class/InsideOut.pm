@@ -1,6 +1,6 @@
 package Class::InsideOut;
 
-$VERSION     = "0.02";
+$VERSION     = "0.03";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( CLONE DESTROY );
 @EXPORT_OK   = qw ( property register );

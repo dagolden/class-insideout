@@ -1,5 +1,8 @@
 Revision history for Perl module Class::InsideOut
 
+0.03 in progress
+    - documentation tweaks
+
 0.02 Thu Jan  5 00:51:01 EST 2006
     - basic property and object registration with automatic CLONE and DESTROY
 
