@@ -1,13 +1,24 @@
 TODO list for Perl module Class::InsideOut
 
-- Write tests and implement!
-
+- CLONE for threads and pseudoforks
+- DEMOLISH during DESTROY
+- SUPER::DESTROY during DESTROY
+- foreign inheritance
+- accessor creation
+- accessor privacy options
+- aliases: 'private', 'public', 'protected'
+- optional exporting while always exporting CLONE and DESTROY
+- ":all" export key
+- storeable hooks
+- accessor style options
+- mutator filter options and validation handling
+- class-wide default options
 
 #--------------------------------------------------------------------------#
-# Interface brainstorming
+# Interface brainstorming below
 #--------------------------------------------------------------------------#
 
-use Class::InsideOut qw( public private register id );
+use Class::InsideOut qw( property public private register id );
 
 Class::InsideOut::options(
   accessor_style => 'bimodal', # or eiffel or get_set
@@ -20,10 +31,7 @@ Class::InsideOut::options(
   
 );
 
-Class::InsideOut::properties (
-    my %UID,
-    my %WEIGHT, { privacy => 'readonly' },
-);
+Class::InsideOut::property ( my %UID, { privacy => 'readonly' });
 
 private my %HEIGHT; # alias for properties with privacy => private
 public my %NAME; # sets privacy => public
