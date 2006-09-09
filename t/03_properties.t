@@ -15,7 +15,7 @@ my ($o, $p);
 
 require_ok( $class );
 
-is( Class::InsideOut::_property_count( "$class" ), 1,
+is_deeply( [ Class::InsideOut::_properties( "$class" ) ], [ 'kills' ],
     "$class has 1 property registered"
 );
 

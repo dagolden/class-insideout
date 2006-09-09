@@ -2,7 +2,6 @@ TODO list for Perl module Class::InsideOut
 
 # Planned todos around core functionality
 
-- rename options to default_options
 - aliases: 'private', 'public'
 - accessor privacy => "protected" and matching property alias
 - accessor style options
@@ -24,8 +23,6 @@ TODO list for Perl module Class::InsideOut
 #--------------------------------------------------------------------------#
 # interface ideas
 #--------------------------------------------------------------------------#
-
-property should use class defaults and then provided options
 
 aliases 'private', etc. for property' should use class defaults, then
 provided options, then force "privacy => 'private'"; similar for 'public'

@@ -8,7 +8,7 @@ BEGIN {
         property
         register
         id
-        _property_count
+        _properties
         _object_count
         _leaking_memory
         CLONE

@@ -15,7 +15,8 @@ my ($o, $p);
 
 require_ok( $class );
 
-is( Class::InsideOut::_property_count( "$class" ), 2,
+is_deeply( [ sort( Class::InsideOut::_properties( "$class" ) ) ], 
+           [ sort( qw( name color ) ) ],
     "$class has 2 properties registered"
 );
 

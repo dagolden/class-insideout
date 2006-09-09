@@ -239,10 +239,11 @@ sub _object_count {
     return scalar( keys %OBJECT_REGISTRY );
 }
 
-sub _property_count {
+sub _properties {
     my $class = shift;
-    my $properties = $PROPERTIES_OF{ $class };
-    return defined $properties ? scalar @$properties : 0;
+    $PROP_NAMES_OF{ $class } ||= [];
+    my @properties = ( @{ $PROP_NAMES_OF{ $class } } );
+    return @properties;
 }
 
 sub _leaking_memory {
@@ -277,7 +278,7 @@ Class::InsideOut - a safe, simple inside-out object construction kit
  # declare a lexical property "name" as a lexical ("my") hash
  property name => my %name;
  
- # declare a property and generate an accessor
+ # declare a property and generate an accessor for it
  property color => my %color, { privacy => 'public' };
  
  sub new {
@@ -486,7 +487,7 @@ within a loop.  For example:
      }
      die "Couldn't connect to $dbh{ $id }";
  }
-          
+
 =head2 Property accessors
 
  property color => my %color, { privacy => 'public' };
@@ -676,16 +677,24 @@ Perl 5.6.  Win32 Perl 5.8 C<fork> is supported.
 
 =head1 FUNCTIONS
 
+=head2 C<id>
+
+ $name{ id $object } = "Larry";
+
+This is a shorter, mnemonic alias for C<Scalar::Util::refaddr>.  It returns the
+memory address of an object (just like C<refaddr>) as the index to access
+the properties of an inside-out object.
+
 =head2 C<options>
 
  Class::InsideOut::options( \%new_options );
- %default_options = Class::InsideOut::options();
+ %current_options = Class::InsideOut::options();
 
-The C<options> function sets default options for use 
-with all subsquent C<property> calls for the calling package.  If called
-without arguments, this function will return the options currently in 
-effect.  When called with a hash reference of options, these will be joined
-with the existing defaults, overriding any options of the same name.
+The C<options> function sets default options for use with all subsquent
+C<property> calls for the calling package.  If called without arguments, this
+function will return the options currently in effect.  When called with a hash
+reference of options, these will be joined with the existing defaults,
+overriding any options of the same name.
 
 Valid options include:
 
@@ -703,14 +712,6 @@ property will be set to the argument.  The accessor always returns the value of
 the property.
 
 =back
-
-=head2 C<id>
-
- $name{ id $object } = "Larry";
-
-This is a shorter, mnemonic alias for C<Scalar::Util::refaddr>.  It returns the
-memory address of an object (just like C<refaddr>) as the index to access
-the properties of an inside-out object.
 
 =head2 C<property>
 
