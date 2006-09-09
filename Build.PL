@@ -68,7 +68,7 @@ my $builder = $class->new(
         'Class::ISA'     => 0, # why reimplement what works
         'Config'         => 0,
         'Exporter'       => 0,
-        'Test::More'     => 0.48,
+        'Test::More'     => 0.45,
         'Scalar::Util'   => 1.09,
     },
     add_to_cleanup      => [ 'Class-InsideOut-*' ],

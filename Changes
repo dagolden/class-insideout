@@ -1,11 +1,13 @@
 Revision history for Perl module Class::InsideOut
 
 0.11 in progress
-    
-    - tweaked Build.PL to fix copy/paste error
+
+    - tweaked Build.PL; dropped Test::More dependency to 0.45 to help pass
+      ActiveState automated tests (0.45 first to offer thread safety and in the
+      5.008 core); fixed copy/paste error for cleanup
 
     - documentation cleanup; fixed links; restructured Pod for options;
-      softened alpha warnings
+      softened alpha warnings as we get closer to a stable API
 
 0.10 Fri Jan 27 01:41:38 EST 2006
 
@@ -18,16 +20,16 @@ Revision history for Perl module Class::InsideOut
       to be shorter
 
 0.09 Fri Jan 20 14:55:14 EST 2006
-    
+
     - added basic accessor generation as an option for property declarations;
       added aliases "public" and "private" as shortcuts to property options
-      
+
     - added per-class default options for properties
 
     - added support for user-written freeze and thaw hooks
 
     - documentation updates: typo safety requires strict (Steven Lembark);
-      caching refaddr() to minimize overhead; new features documented 
+      caching refaddr() to minimize overhead; new features documented
 
 0.08 Wed Jan 18 10:50:13 EST 2006
 
@@ -36,57 +38,57 @@ Revision history for Perl module Class::InsideOut
 
     - Class::ISA results are now cached when first used; also minor
       optimization of reftype switching in STORABLE_* methods (Adam Kennedy)
-    
+
     - foreign inheritance test now checks for IO::File or skips
-    
+
     - documentation cleanup and trailing whitespace removal (Ron Savage)
 
 0.07 Mon Jan  9 09:48:46 EST 2006
-    
+
     - Storable support tested with references, grouped references and circular
       references; references external to the freeze are cloned
-    
+
     - documentation cleanup
 
 0.06 Sun Jan  8 23:07:22 EST 2006
-    
+
     - DESTROY cleans up all Class::InsideOut properties in the @ISA tree;
-      updated documentation on object destruction for clarity; fixes 
+      updated documentation on object destruction for clarity; fixes
       diamond-pattern inheritance memory leaks without requiring a DEMOLISH
       method
-    
+
     - added first-draft support of serialization with Storable for objects
-      based on scalars, arrays and hashes; tested on data values only; not 
+      based on scalars, arrays and hashes; tested on data values only; not
       yet tested on values with references or objects, particularly circular
       reference chains
-      
+
     - CLONE no longer exported; all refaddr index cleanup handled globally in
       Class::InsideOut::CLONE rather than in class-specific methods
 
 0.05 Fri Jan  6 09:07:07 EST 2006
-    
+
     - added caveats on usage and current limitations
-    
+
     - more documentation tweaks
 
 0.04 Thu Jan  5 21:44:30 EST 2006
-    
+
     - major documentation update
 
 0.03 Thu Jan  5 18:41:05 EST 2006
-    
+
     - thread test no longer dies if threads are not configured
-    
+
     - added DEMOLISH support for custom destruction actions
-    
+
     - added id() as optional alias for refaddr
-    
+
     - documentation tweaks
 
 0.02 Thu Jan  5 00:51:01 EST 2006
-    
+
     - basic property and object registration with automatic CLONE and DESTROY
 
 0.01 Wed Jan  4 12:06:51 EST 2006
-    
+
     - placeholder
