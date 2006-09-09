@@ -30,6 +30,7 @@ BEGIN {
         "t::Object::Animal::Jackalope" => {
             color => "white",
             speed => "60 mph",
+            points => 13,
             kills => 23,
         },
     );
