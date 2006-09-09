@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-Class::InsideOut::Manual::Advanced - Guide to advanced topics
+Class::InsideOut::Manual::Advanced - guide to advanced usage
 
 =head1 DESCRIPTION
 

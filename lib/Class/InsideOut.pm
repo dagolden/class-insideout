@@ -1,6 +1,6 @@
 package Class::InsideOut;
 
-$VERSION     = "0.90_03";
+$VERSION     = "1.00";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( ); # nothing by default
 @EXPORT_OK   = qw ( id options private property public register );
@@ -596,7 +596,7 @@ directly.
 
 {Class::InsideOut} provides no constructor method as there are many possible
 ways of constructing an inside-out object. This avoids constraining users to
-any particular object initialization or superclass initialization approach.
+any particular object initialization or superclass initialization methodology. 
 
 By using the memory address of the object as the index for properties, ~any~
 type of reference may be used as the basis for an inside-out object with
@@ -605,7 +605,7 @@ type of reference may be used as the basis for an inside-out object with
  sub new {
    my $class = shift;
  
-   my $self = \( my $scalar );  # anonymous scalar
+   my $self = \( my $scalar );    # anonymous scalar
  # my $self = {};                 # anonymous hash
  # my $self = [];                 # anonymous array
  # open my $self, "<", $filename; # filehandle reference
@@ -618,11 +618,11 @@ function ~must~ be called on the newly created object.
 
 A more advanced technique uses another object, usually a superclass object,
 as the object reference.  See "foreign inheritance" in 
-[Class::InsideOut::Manual::Advanced] for an example.
+[Class::InsideOut::Manual::Advanced].
 
 == Object destruction
 
-{Class::InsideOut} automatically exports a customized {DESTROY} function.
+{Class::InsideOut} automatically exports a special {DESTROY} function.
 This function cleans up object property memory for all declared properties the
 class and for all {Class::InsideOut} based classes in the {@ISA} array to
 avoid memory leaks or data collision.
@@ -659,10 +659,11 @@ or may prefer to walk the entire {@ISA} tree:
    # class specific demolish actions
  
    # DEMOLISH for all parent classes, but only once
-   my @demolishers = map { $_->can("DEMOLISH") }
-                         Class::ISA::super_path( __PACKAGE__ );
-   for my $d ( @demolishers  ) {
-     $d->($self) if $d;
+   my @parents = Class::ISA::super_path( __PACKAGE__ );
+   my %called;
+   for my $p ( @parents  ) {
+     my $demolish = $p->can('DEMOLISH');
+     $demolish->($self) if not $called{ $demolish }++;
    }
  }
 

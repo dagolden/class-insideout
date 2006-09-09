@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-Class::InsideOut::Manual::About - Guide to this and other implementations of the
+Class::InsideOut::Manual::About - guide to this and other implementations of the
 inside-out technique
 
 =head1 DESCRIPTION

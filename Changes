@@ -1,8 +1,8 @@
 Revision history for Perl module Class::InsideOut
 
-0.90_03
-
-    - removed Data::Dump::Streamer support until RT#19060 can
+1.00 Fri May 12 21:25:34 EDT 2006
+    
+    - removed Data::Dump::Streamer support attempts until RT#19060 can
       be addressed
       
 0.90_02 Thu May  4 00:56:04 EDT 2006
