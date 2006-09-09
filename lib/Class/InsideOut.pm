@@ -161,27 +161,33 @@ Class::InsideOut - a safe, simple inside-out object construction kit
 
 =head1 LIMITATIONS AND ROADMAP
  
-This is an B<alpha release> for a work in progress. It is a B<functional but
-incomplete> implementation and should not be used for any production purposes.
-It has been released to solicit peer review and feedback.
+This is an B<alpha release> for a work in progress. It is B<functional but
+incomplete> and should not be used for any production purposes.  It has been
+released to solicit peer review and feedback.
 
-Currently, there are still some substantial gaps in inheritance support as
-relates to thread-safety and the API to facilitate this may change.
-Serialization with L<Storable> also has not yet been implemented and may result
-in API changes.  A future version will also add very basic accessor support.
+Currently, serialization with L<Storable> also has not yet been implemented and
+may result in API changes.  Also, property destruction support for various
+inheritance patterns (e.g. diamond) has not been verified.  There is minimal
+argument checking or other error handling.  A future version will also add very
+basic accessor support.
 
 =head1 DESCRIPTION
 
 This is a simple, safe and streamlined toolkit for building inside-out objects.
 Unlike most other inside-out object building modules already on CPAN, this
-module aims for minimalism and robustness.  It uses no source filters, no
-attributes or CHECK blocks, supports any underlying object type including
-foreign inheritance, does not leak memory, is overloading-safe, will be
-thread-safe for Perl 5.8 or better and should be mod_perl compatible.
+module aims for minimalism and robustness.  It does not require derived classes
+to subclass it; uses no source filters, attributes or CHECK blocks; supports
+any underlying object type including foreign inheritance; does not leak memory;
+is overloading-safe; is thread-safe for Perl 5.8 or better; and should be
+mod_perl compatible.
 
-It provides the minimal support necessary for safe
-inside-out objects.  All other implementation details, including writing a
-constructor and managing inheritance, are left to the user. 
+It provides the minimal support necessary for creating safe inside-out objects.
+All other implementation details, including writing a constructor and managing
+inheritance, are left to the user. 
+
+Programmers seeking a more full-featured approach to inside-out objects are
+encouraged to explore L<Object::InsideOut>.  Other implementations are briefly
+noted in the L</"See Also"> section.
 
 =head2 Inside-out object basics
 
@@ -239,7 +245,7 @@ Properties must be based on hashes and declared via C<property>
 =item *
 
 Property hashes must be keyed on the C<Scalar::Util::refaddr> of the object 
-(or the C<id> alias).
+(or the C<id> alias to C<refaddr>).
 
 =item *
 
@@ -247,7 +253,8 @@ C<register> must be called on all new objects
 
 =back
 
-All other implementation details, including constructors, are left to the user.
+All other implementation details, including constructors, initializers
+and class inheritance management are left to the user.
    
 =head1 USAGE
 
@@ -255,25 +262,27 @@ All other implementation details, including constructors, are left to the user.
 
   use Class::InsideOut;
 
-By default, C<Class::InsideOut> imports two critical methods, C<CLONE> and
-C<DESTROY>.  These methods are intimately tied to correct functioning of the
-inside-out objects. No other functions are imported by default.  Additional
-functions can be imported by including them as arguments with C<use>:
+By default, C<Class::InsideOut> imports one critical method: C<DESTROY>.
+This method is intimately tied to correct functioning of the inside-out
+objects. No other functions are imported by default.  Additional functions can
+be imported by including them as arguments with C<use>:
 
   use Class::InsideOut qw( register property id );
 
-Note that C<CLONE> and C<DESTROY> will still be imported even without an
-explicit request.  They can only be avoided by explicitly doing no importing,
+Note that C<DESTROY> will still be imported even without an
+explicit request.  This can only be avoided by explicitly doing no importing,
 via C<require> or passing an empty list to C<use>:
 
   use Class::InsideOut ();
 
-There is almost no circumstance under which this is a good idea.
+There is almost no circumstance under which this is a good idea.  Users 
+seeking custom destruction behavior should see L</"Object destruction"> and
+the description of the C<DEMOLISH> method.
 
 =head2 Declaring and accessing object properties
 
 Object properties are declared with the C<property> function, which must
-be passed a single lexical (C<my>) hash.  
+be passed a single lexical (i.e. C<my>) hash.  
 
   property my %name;
   property my %age;
@@ -296,7 +305,7 @@ in various styles.
 
 C<Class::InsideOut> provides no constructor function as there are many possible
 ways of constructing an inside-out object.  Additionally, this avoids
-constraining users into any particular object initialization or superclass
+constraining users to any particular object initialization or superclass
 initialization approach.
 
 By using the memory address of the object as the index for properties, I<any>
@@ -315,17 +324,17 @@ C<Class::InsideOut>.
  }
 
 However, to ensure that the inside-out objects are thread-safe, the C<register>
-function I<must> be called on the newly created object.  See L<register> for
+function I<must> be called on the newly created object.  See L</register> for
 details.
 
 A more advanced technique uses another object, usually a superclass object,
-as the object reference.  See L<Foreign inheritance> for details.
+as the object reference.  See L</"Foreign inheritance"> for details.
 
 =head2 Object destruction
 
-C<Class::InsideOut> provides a C<DESTROY> function.  This function cleans up
-object property memory for all declared properties to avoid memory leaks or
-data collision.
+C<Class::InsideOut> automatically exports a customized C<DESTROY> function.
+This function cleans up object property memory for all declared properties to
+avoid memory leaks or data collision.
 
 Additionally, if a user-supplied C<DEMOLISH> function is available in the same
 package, it will be called with the object being destroyed as its argument.
@@ -347,9 +356,9 @@ based on the user's approach to object inheritance.
 
 Because inside-out objects built with C<Class::InsideOut> can use any type of
 reference for the object, inside-out objects can be built using other objects.
-This is of greatest utility when extending a superclass object.  Most
-importantly, this works regardless of whether the superclass object is
-implemented with a hash or array or other reference.
+This is of greatest utility when extending a superclass object, without regard
+for whether the superclass object is implemented with a hash or array or other
+reference.
 
  use base 'IO::File';
  
@@ -377,16 +386,22 @@ properties, special handling is necessary for use with threads.  When a new
 thread is created, the Perl interpreter is cloned, and all objects in the new
 thread will have new memory addresses.  Starting with Perl 5.8, if a C<CLONE>
 function exists in a package, it will be called when a thread is created to
-provide custom responses to thread cloning.
+provide custom responses to thread cloning.  (See L<perlmod> for details.)
 
-C<Class::InsideOut> provides a C<CLONE> function that automatically fixes up 
-properties in a new thread to reflect the new memory addresses.  C<register>
-must be called on all newly constructed inside-out objects to register them
-for use in C<CLONE>.
+C<Class::InsideOut> itself has a C<CLONE> function that automatically fixes up
+properties in a new thread to reflect the new memory addresses for all classes
+created with C<Class::InsideOut>.  C<register> must be called on all newly
+constructed inside-out objects to register them for use in
+C<Class::InsideOut::CLONE>.
 
-Additionally, C<fork> on Perl for Win32 is emulated using threads since
-Perl 5.6. (See L<perlfork>.)  As Perl 5.6 did not support C<CLONE>, 
-inside-out objects using memory addresses are not fork-safe for Win32.
+Users are strongly encouraged not to define their own C<CLONE> functions as
+they may interfere with the operation of C<Class::InsideOut::CLONE> and leave
+objects in an undefined state.  Future versions may support a user-defined
+CLONE hook, depending on demand.
+
+Note: C<fork> on Perl for Win32 is emulated using threads since Perl 5.6. (See
+L<perlfork>.)  As Perl 5.6 did not support C<CLONE>, inside-out objects using
+memory addresses (e.g. C<Class::InsideOut> are not fork-safe for Win32.
 
 =head1 FUNCTIONS
 
@@ -415,33 +430,19 @@ This is a shorter, mnemonic alias for C<Scalar::Util::refaddr>.  It returns the
 memory address of an object (just like C<refaddr>) as the index to access
 the properties of an inside-out object.
 
-=head2 C<CLONE>
-
-C<CLONE> is automatically exported to provide thread-safety to modules using
-C<Class::InsideOut>.  See L<perlmod> for details.  It will be called
-automatically by Perl if threads are in use and a new interpreter thread is
-created.  It should never be called directly.
-
-=head2 C<DESTROY>
-
-This destructor is automatically exported to modules using C<Class::InsideOut>
-to clean up object property memory usage during object destruction.  It should
-never be called directly.  C<DESTROY> will call a user-supplied C<DEMOLISH>
-method if one exists to allow for additional, custom destruction actions such
-as closing sockets or database handles.  C<DEMOLISH> is called prior to
-deleting object properties.
-
 =head1 SEE ALSO
 
+=head2 Other modules on CPAN
+   
 =over
 
 =item *
 
 L<Object::InsideOut> -- This is perhaps the most full-featured, robust
-implementation of inside-out objects, but foreign inheritance is handled via
-delegation.  Highly recommended if a more full-featured inside-out object
-builder is needed.  Its array-based mode is faster than hash-based
-implementations.
+implementation of inside-out objects currently on CPAN.  It is highly
+recommended if a more full-featured inside-out object builder is needed.
+Its array-based mode is faster than hash-based implementations, but foreign
+inheritance is handled via delegation, which imposes certain limitations.
 
 =item *
 
@@ -459,7 +460,7 @@ used everywhere. Not thread-safe.
 
 L<Lexical::Attributes> -- The original inside-out implementation, but missing
 some key features like thread-safety.  Also, uses source filters to provide
-Perl-6-like object syntax.
+Perl-6-like object syntax. Not thread-safe.
 
 =item *
 
@@ -470,14 +471,19 @@ curve for the Class::MakeMethods system.
 =item *
 
 L<Object::LocalVars> -- My own original thought experiment with 'outside-in'
-objects and local variable aliasing. Not production-safe and offers very weak
-encapsulation.
+objects and local variable aliasing. Not safe for any production use and offers
+very weak encapsulation.
 
 =back
 
+=head2 References
+
+
 =head1 BUGS
 
-Please report bugs using the CPAN Request Tracker at 
+Please report bugs or feature requests using the CPAN Request Tracker.
+Bugs can be sent by email to C<bug-Class-InsideOut@rt.cpan.org> or
+submitted using the web interface at
 L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Class-InsideOut>
 
 When submitting a bug or request, please include a test-file or a patch to an
@@ -491,15 +497,37 @@ dagolden@cpan.org
 
 http://dagolden.com/
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
 Copyright (c) 2006 by David A. Golden
 
-This program is free software; you can redistribute
-it and/or modify it under the same terms as Perl itself.
+This program is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
 
-The full text of the license can be found in the
-LICENSE file included with this module.
+The full text of the license can be found in the LICENSE file included with
+this module.
 
+=head1 DISCLAIMER OF WARRANTY
+
+BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
+FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
+OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
+PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
+EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
+ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
+YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
+NECESSARY SERVICING, REPAIR, OR CORRECTION.
+
+IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
+WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
+REDISTRIBUTE THE SOFTWARE AS PERMITTED BY THE ABOVE LICENCE, BE
+LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL,
+OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE
+THE SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
+RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
+FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
+SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGES.
 
 =cut

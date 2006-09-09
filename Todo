@@ -1,6 +1,6 @@
 TODO list for Perl module Class::InsideOut
 
-- document changes to CLONE and thread safety
+- references to Perlmonks discussions
 - storable hooks
 - ":all" export key
 - accessor creation
@@ -11,7 +11,6 @@ TODO list for Perl module Class::InsideOut
 - class-wide default options
 - error handling and argument checking
 - expand documentation (tutorial?)
-- references to Perlmonks discussions
 
 #--------------------------------------------------------------------------#
 # Interface brainstorming below
