@@ -1,6 +1,5 @@
 TODO list for Perl module Class::InsideOut
 
-- storable hooks: references; circular references; deep-clone vs freeze
 - storable hooks: pre-freeze user hook
 - ":all" export key
 - accessor creation
@@ -13,6 +12,8 @@ TODO list for Perl module Class::InsideOut
 - expand documentation (tutorial?)
 - add checks for XS weaken and add to documentation
 - pre-clone user hook??
+- "evert" method -- dump/reconstruct to a hash  (??)
+  ( $hash_ref = $obj->evert; $newobj = Class->evert( $hash_ref ) )
 
 #--------------------------------------------------------------------------#
 # Interface brainstorming below

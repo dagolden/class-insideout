@@ -87,18 +87,19 @@ sub _gen_DESTROY {
         }
         $demolish->($obj) if defined $demolish;
 
-        # In case super class destructors weren't called, be sure to clean
-        # up properties in all Class::InsideOut parents
+        # Clean up properties in all Class::InsideOut parents
         for my $c ( Class::ISA::self_and_super_path( $class ) ) {
             next unless exists $PROPERTIES_OF{ $c };
             delete $_->{ $obj_id } for @{ $PROPERTIES_OF{ $c } };
         }
 
-        # XXX this global registry might be a problem if deleted repeatedly 
+        # XXX this global registry could be deleted repeatedly 
         # in superclasses -- SUPER::DESTROY shouldn't be called by DEMOLISH
-        # it should only call SUPER::DEMOLISH if need be
-
+        # it should only call SUPER::DEMOLISH if need be; still,
+        # rest of the destructor doens't need the registry, so early deletion
+        # by a subclass should be safe
         delete $OBJECT_REGISTRY{ $obj_id };
+
         return;
     };
 }
@@ -266,12 +267,11 @@ This is an B<alpha release> for a work in progress. It is B<functional but
 incomplete> and should not be used for any production purpose.  It has been
 released to solicit peer review and feedback.
 
-Currently, serialization with L<Storable> is B<experimental> and may have
-unanticipated bugs, particularly relating to serializing references to other
-objects.  Property destruction support for various inheritance patterns (e.g.
-diamond) is B<experimental> and the API may change.  There is minimal argument
-checking or other error handling.  A future version will also add very basic
-accessor support.
+Serialization with L<Storable> appears to be working but may have unanticipated
+bugs and could use some real-world testing.  Property destruction support for
+various inheritance patterns (e.g.  diamond) is B<experimental> and the API may
+change.  There is minimal argument checking or other error handling.  A future
+version will also add very basic accessor support.
 
 =head1 DESCRIPTION
 
@@ -358,7 +358,7 @@ C<register> must be called on all new objects
 All other implementation details, including constructors, initializers and
 class inheritance management are left to the user.  This does requires some
 additional work, but maximizes freedom.  C<Class::InsideOut> is intended to
-be the base class providing only fundamental features.  Subclasses of
+be a base class providing only fundamental features.  Subclasses of
 C<Class::InsideOut> could be written that build upon it to provide particular
 styles of constructor, destructor and inheritance support.
    
@@ -440,9 +440,9 @@ as the object reference.  See L</"Foreign inheritance"> for details.
 =head2 Object destruction
 
 C<Class::InsideOut> automatically exports a customized C<DESTROY> function.
-This function cleans up object property memory for all declared properties for
-all C<Class::InsideOut> based classes in the C<@ISA> array to avoid memory
-leaks or data collision.
+This function cleans up object property memory for all declared properties the
+class and for all C<Class::InsideOut> based classes in the C<@ISA> array to
+avoid memory leaks or data collision.
 
 Additionally, if a user-supplied C<DEMOLISH> function is available in the same
 package, it will be called with the object being destroyed as its argument.
@@ -508,20 +508,36 @@ object can be used directly anywhere an C<IO::File> object would be,
 without interfering with any of its own inside-out functionality.
 
 Classes using foreign inheritance should provide a C<DEMOLISH> function that
-calls the foreign class' destructor explicitly.
+calls the foreign class destructor explicitly.
 
 =head2 Serialization
 
 C<Class::InsideOut> has B<experimental> support for serialization with
 L<Storable> by providing the C<STORABLE_freeze> and C<STORABLE_thaw> methods.
-Due to limitations of L<Storable>, this serialization will only work for
-objects based on scalars, arrays or hashes.
+C<Storable> will use these methods to serialize.  They should not be called
+directly.  Due to limitations of C<Storable>, this serialization will only work
+for objects based on scalars, arrays or hashes.
 
-Serialization of objects that themselves contain references to objects has
-not yet been tested.  The semantics of a deep cloning C<freeze(thaw(.))> 
-operation has not been fully explored or tested.
+References to object within the object being frozen will result in clones
+upon thawing unless the other references are included in the same freeze
+operation.  (See C<Storable> for details.)
 
-User feedback on serialization needs and limitations are encouraged.
+  # assume $alice and $bob are objects
+  $alice->friends( $bob );
+  $bob->friends( $alice );
+
+  $alice2 = Storable::dclone( $alice );
+ 
+  # $bob was cloned, too, thanks to the reference 
+  die if $alice2->has_friend( $bob ); 
+  
+  # get alice2's friend
+  ($bob2) = $alice2->friends(); 
+  
+  # preserved relationship between bob2 and alice2
+  die unless $bob2->has_friend( $alice ); 
+
+User feedback on serialization needs and limitations is encouraged.
 
 =head2 Thread-safety
 
@@ -545,7 +561,8 @@ CLONE hook, depending on demand.
 
 Note: C<fork> on Perl for Win32 is emulated using threads since Perl 5.6. (See
 L<perlfork>.)  As Perl 5.6 did not support C<CLONE>, inside-out objects using
-memory addresses (e.g. C<Class::InsideOut> are not fork-safe for Win32.
+memory addresses (e.g. C<Class::InsideOut> are not fork-safe for Win32 on 
+Perl 5.6.  Win32 Perl 5.8 C<fork> is supported.
 
 =head1 FUNCTIONS
 
