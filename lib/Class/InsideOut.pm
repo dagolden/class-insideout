@@ -153,22 +153,29 @@ Class::InsideOut - a safe, simple inside-out object construction kit
    return "Hello, my name is " . $name { id $self };
  }
 
+=head1 LIMITATIONS AND ROADMAP
+ 
+This is an B<alpha release> for a work in progress. It is a B<functional but
+incomplete> implementation and should not be used for any production purposes.
+It has been released to solicit peer review and feedback.
+
+Currently, there are still some substantial gaps in inheritance support as
+relates to thread-safety and the API to facilitate this may change.
+Serialization with L<Storable> also has not yet been implemented and may result
+in API changes.  A future version will also add very basic accessor support.
+
 =head1 DESCRIPTION
 
-This is an alpha release for a work in progress. It is a functional but
-incomplete implementation of a simple, safe and streamlined toolkit for
-building inside-out objects.  Unlike most other inside-out object building
-modules already on CPAN, this module aims for minimalism and robustness.  
+This is a simple, safe and streamlined toolkit for building inside-out objects.
+Unlike most other inside-out object building modules already on CPAN, this
+module aims for minimalism and robustness.  It uses no source filters, no
+attributes or CHECK blocks, supports any underlying object type including
+foreign inheritance, does not leak memory, is overloading-safe, will be
+thread-safe for Perl 5.8 or better and should be mod_perl compatible.
 
-It uses no source filters, no attributes or CHECK blocks, supports any
-underlying object type including foreign inheritance, does not leak memory, is
-overloading-safe, is thread-safe for Perl 5.8 or better and should be mod_perl
-compatible.
-
-In its current state, it provides the minimal support necessary for safe
+It provides the minimal support necessary for safe
 inside-out objects.  All other implementation details, including writing a
-constructor and accessors, are left to the user.  Future versions will add
-basic accessor support and serialization support.
+constructor and managing inheritance, are left to the user. 
 
 =head2 Inside-out object basics
 
@@ -332,7 +339,7 @@ based on the user's approach to object inheritance.
 
 =head2 Foreign inheritance
 
-Because inside-out objects build with C<Class::InsideOut> can use any type of
+Because inside-out objects built with C<Class::InsideOut> can use any type of
 reference for the object, inside-out objects can be built using other objects.
 This is of greatest utility when extending a superclass object.  Most
 importantly, this works regardless of whether the superclass object is

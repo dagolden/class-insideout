@@ -1,5 +1,7 @@
 TODO list for Perl module Class::InsideOut
 
+- fix CLONE to use a global object registry instead of a per-class
+  one to avoid needing to register all classes
 - storable hooks
 - ":all" export key
 - accessor creation

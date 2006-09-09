@@ -1,7 +1,8 @@
 Revision history for Perl module Class::InsideOut
 
-0.05 in progress
-    - documentation tweaks
+0.05 Fri Jan  6 09:07:07 EST 2006
+    - added caveats on usage and current limitations
+    - more documentation tweaks
 
 0.04 Thu Jan  5 21:44:30 EST 2006
     - major documentation update
