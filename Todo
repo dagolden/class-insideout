@@ -2,7 +2,6 @@ TODO list for Perl module Class::InsideOut
 
 # Planned todos around core functionality - 1.0 roadmap
 
-- refactor thaw into _evert private function
 - document storable singleton support
 
 # Todos after 1.0

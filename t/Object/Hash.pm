@@ -6,6 +6,6 @@ use Class::InsideOut qw( public register );
 public name => my %name; 
 public weight => my %weight;
 
-sub new { register( bless \(my $s), shift ) }
+sub new { register( bless {}, shift ) }
 
 1;

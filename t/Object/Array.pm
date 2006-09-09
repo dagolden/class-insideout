@@ -6,6 +6,6 @@ use Class::InsideOut qw( public register );
 public name => my %name; 
 public height => my %height;
 
-sub new { register( bless \(my $s), shift ) }
+sub new { register( bless [], shift ) }
 
 1;

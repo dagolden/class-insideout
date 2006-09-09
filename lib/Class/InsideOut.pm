@@ -184,45 +184,37 @@ sub _class_tree {
     return @{ $CLASS_ISA{ $class } };
 }
 
+# turn object into hash -- see _revert()
 sub _evert {
-    my ($class, $obj, $data) = @_;
-    
-    # Setup inheritance array
-    my @class_isa = _class_tree( $class );
-    
-    if ( ref $data eq 'HASH' ) { # reload hash to object
-
-    }
-    else { # turn object into hash
+    my ( $obj ) = @_;
         
-        # Extract properties to save
-        my %property_vals;
-        for my $c ( @class_isa ) {
-            next unless exists $PROP_DATA_FOR{ $c };
-            my $properties = $PROP_DATA_FOR{ $c };
-            for my $prop ( keys %$properties ) {
-                my $value = exists $properties->{$prop}{ refaddr $obj }
-                          ? $properties->{$prop}{ refaddr $obj }
-                          : undef ;
-                $property_vals{$c}{$prop} = $value;
-            }
+    # Extract properties to save
+    my %property_vals;
+    for my $c ( _class_tree( ref $obj) ) {
+        next unless exists $PROP_DATA_FOR{ $c };
+        my $properties = $PROP_DATA_FOR{ $c };
+        for my $prop ( keys %$properties ) {
+            my $value = exists $properties->{$prop}{ refaddr $obj }
+                      ? $properties->{$prop}{ refaddr $obj }
+                      : undef ;
+            $property_vals{$c}{$prop} = $value;
         }
-
-        # extract object reference contents (by type)
-        my $type = reftype $obj;
-        my $contents = $type eq 'SCALAR' ? \do{ my $s = $$obj }
-                     : $type eq 'ARRAY'  ? [ @$obj ]
-                     : $type eq 'HASH'   ? { %$obj }
-                     : undef    # other types not supported
-                     ;
- 
-        # assemble reference to hand back
-        return {
-            type => $type,
-            contents => $contents,
-            properties => \%property_vals
-        };
     }
+
+    # extract object reference contents (by type)
+    my $type = reftype $obj;
+    my $contents = $type eq 'SCALAR' ? \do{ my $s = $$obj }
+                 : $type eq 'ARRAY'  ? [ @$obj ]
+                 : $type eq 'HASH'   ? { %$obj }
+                 : undef    # other types not supported
+                 ;
+
+    # assemble reference to hand back
+    return {
+        type => $type,
+        contents => $contents,
+        properties => \%property_vals
+    };
 }
 
 sub _gen_accessor {
@@ -333,11 +325,8 @@ sub _gen_STORABLE_freeze {
     return sub {
         my ( $obj, $cloning ) = @_;
 
-        # Setup inheritance array
-        my @class_isa = _class_tree( $class );
-
         # Call STORABLE_freeze_hooks in each class if they exists
-        for my $c ( @class_isa ) {
+        for my $c ( _class_tree( ref $obj ) ) {
             my $hook;
             {
                 no strict 'refs';
@@ -347,7 +336,7 @@ sub _gen_STORABLE_freeze {
         }
 
         # Extract properties to save
-        my $data = _evert( $class, $obj );
+        my $data = _evert( $obj );
 
         if ( $singleton ) {
             # can't return refs, so freeze data as string and return
@@ -368,32 +357,10 @@ sub _gen_STORABLE_thaw {
     return sub {
         my ( $obj, $cloning, $serialized, $data ) = @_;
 
-        # Setup inheritance array
-        my @class_isa = _class_tree( $class );
-
-        # restore contents
-        my $contents = $data->{contents};
-        my $type = reftype $obj;
-        if    ( $type eq 'SCALAR' ) { $$obj = $$contents }
-        elsif ( $type eq 'ARRAY'  ) { @$obj = @$contents }
-        elsif ( $type eq 'HASH'   ) { %$obj = %$contents }
-        else                        { } # leave it empty
- 
-        # restore properties
-        for my $c ( @class_isa ) {
-            my $properties = $PROP_DATA_FOR{ $c };
-            next unless $properties;
-            for my $prop ( keys %$properties ) {
-                my $value = $data->{properties}{ $c }{ $prop };
-                $properties->{$prop}{ refaddr $obj } = $value;
-            }
-        }
-
-        # register object
-        register( $obj );        
+        _revert( $obj, $data );
 
         # Call STORABLE_thaw_hooks in each class if they exists
-        for my $c ( @class_isa ) {
+        for my $c ( _class_tree( ref $obj ) ) {
             my $hook;
             {
                 no strict 'refs';
@@ -432,6 +399,31 @@ sub _merge_options {
     return { @merged };
 }
  
+sub _revert {
+    my ( $obj, $data ) = @_;
+
+    # restore contents
+    my $contents = $data->{contents};
+    my $type = reftype $obj;
+    if    ( $type eq 'SCALAR' ) { $$obj = $$contents }
+    elsif ( $type eq 'ARRAY'  ) { @$obj = @$contents }
+    elsif ( $type eq 'HASH'   ) { %$obj = %$contents }
+    else                        { } # leave it empty
+
+    # restore properties
+    for my $c ( _class_tree( ref $obj ) ) {
+        my $properties = $PROP_DATA_FOR{ $c };
+        next unless $properties;
+        for my $prop ( keys %$properties ) {
+            my $value = $data->{properties}{ $c }{ $prop };
+            $properties->{$prop}{ refaddr $obj } = $value;
+        }
+    }
+
+    # register object
+    register( $obj );
+}
+
 #--------------------------------------------------------------------------#
 # private functions for use in testing
 #--------------------------------------------------------------------------#
@@ -445,7 +437,7 @@ sub _properties {
     my %properties;
     for my $c ( _class_tree( $class ) ) {
         next if not exists $PROP_DATA_FOR{ $c };
-        for my $p ( sort keys %{ $PROP_DATA_FOR{ $c } } ) {
+        for my $p ( keys %{ $PROP_DATA_FOR{ $c } } ) {
             $properties{$c}{$p} = exists $PUBLIC_PROPS_FOR{$c}{$p}
                                 ? "public" : "private";
         }

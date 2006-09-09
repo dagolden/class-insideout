@@ -1,9 +1,10 @@
 Revision history for Perl module Class::InsideOut
 
 0.15_01 in progress
-    - added initial rough support for STORABLE_attach for singletons
+    - added support for STORABLE_attach for singletons
     - improved test coverage
     - refactored some of the test classes
+    - refactored STORABLE_* code
 
 0.14 Thu Mar 16 23:07:22 EST 2006
 
