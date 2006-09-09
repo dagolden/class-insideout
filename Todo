@@ -11,6 +11,7 @@ TODO list for Perl module Class::InsideOut
 - class-wide default options
 - error handling and argument checking
 - documentation
+- references to Perlmonks discussions
 
 #--------------------------------------------------------------------------#
 # Interface brainstorming below

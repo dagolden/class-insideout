@@ -1,6 +1,6 @@
 package Class::InsideOut;
 
-$VERSION     = "0.03";
+$VERSION     = "0.04";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( );
 @EXPORT_OK   = qw ( property register id );
@@ -172,33 +172,208 @@ basic accessor support and serialization support.
 
 =head2 Inside-out object basics
 
-To be written.
+Inside-out objects use the blessed reference as an index into lexical data
+structures holding object properties, rather than using the blessed reference
+itself as a data structure.
 
+  $self->{ name }        = "Larry"; # classic, hash-based object       
+  $name{ refaddr $self } = "Larry"; # inside-out
+
+The inside-out approach offers three major benefits:
+
+=over
+
+=item *
+
+Enforced encapsulation: object properties cannot be accessed directly
+from ouside the lexical scope that declared them
+
+=item *
+
+Making the property name part of a lexical variable rather than a hash-key
+means that typos in the name will be caught as compile-time errors
+
+=item *
+
+If the memory address of the blessed reference is used as the index,
+the reference can be of any type
+
+=back
+
+In exchange for these benefits, however, robust implementation of inside-out 
+objects can be quite complex.  C<Class::InsideOut> manages that complexity.
+
+=head2 Philosophy of C<Class::InsideOut>
+
+C<Class::InsideOut> provides a minimalist set of tools for building
+safe inside-out classes with maximum flexibility.
+
+It aims to offer minimal restrictions beyond those necessary for robustness of
+the inside-out technique.  All capabilities necessary for robustness should be
+automatic.  Anything that can be optional should be.  The design should not
+introduce new restrictions unrelated to inside-out objects (such as attributes
+and C<CHECK> blocks that cause problems C<mod_perl> or the use of source
+filters for new syntax).
+
+As a result, only a few things are mandatory:
+
+=over
+
+=item *
+
+Properties must be based on hashes and declared via C<property>
+
+=item *
+
+Property hashes must be keyed on the C<Scalar::Util::refaddr> of the object 
+(or the C<id> alias).
+
+=item *
+
+C<register> must be called on all new objects
+
+=back
+
+All other implementation details, including constructors, are left to the user.
+   
 =head1 USAGE
 
 =head2 Importing C<Class::InsideOut>
 
-To be written.
+  use Class::InsideOut;
+
+By default, C<Class::InsideOut> imports two critical methods, C<CLONE> and
+C<DESTROY>.  These methods are intimately tied to correct functioning of the
+inside-out objects. No other functions are imported by default.  Additional
+functions can be imported by including them as arguments with C<use>:
+
+  use Class::InsideOut qw( register property id );
+
+Note that C<CLONE> and C<DESTROY> will still be imported even without an
+explicit request.  They can only be avoided by explicitly doing no importing,
+via C<require> or passing an empty list to C<use>:
+
+  use Class::InsideOut ();
+
+There is almost no circumstance under which this is a good idea.
 
 =head2 Declaring and accessing object properties
 
-To be written.
+Object properties are declared with the C<property> function, which must
+be passed a single lexical (C<my>) hash.  
+
+  property my %name;
+  property my %age;
+
+Properties are private by default and no accessors are created.  Users are
+free to create accessors of any style.
+
+Properties for an object are accessed through an index into the lexical hash
+based on the memory address of the object.  This memory address I<must> be
+obtained via C<Scalar::Util::refaddr>.  The alias C<id> is available for
+brevity.
+
+  $name{ refaddr $self } = "James";
+  $age { id      $self } = 32;
+
+In the future, additional options will be supported to create accessors
+in various styles.
+
+=head2 Object construction
+
+C<Class::InsideOut> provides no constructor function as there are many possible
+ways of constructing an inside-out object.  Additionally, this avoids
+constraining users into any particular object initialization or superclass
+initialization approach.
+
+By using the memory address of the object as the index for properties, I<any>
+type of reference can be used as the basis for an inside-out object with
+C<Class::InsideOut>.  
+
+ sub new {
+   my $class = shift;
+   
+   my $self = \do{ my $scalar };  # anonymous scalar
+ # my $self = {};                 # anonymous hash
+ # my $self = [];                 # anonymous array
+ # open my $self, "<", $filename; # filehandle reference
+
+   register( bless $self, $class ); 
+ }
+
+However, to ensure that the inside-out objects are thread-safe, the C<register>
+function I<must> be called on the newly created object.  See L<register> for
+details.
+
+A more advanced technique uses another object, usually a superclass object,
+as the object reference.  See L<Foreign inheritance> for details.
 
 =head2 Object destruction
 
-To be written.
+C<Class::InsideOut> provides a C<DESTROY> function.  This function cleans up
+object property memory for all declared properties to avoid memory leaks or
+data collision.
+
+Additionally, if a user-supplied C<DEMOLISH> function is available in the same
+package, it will be called with the object being destroyed as its argument.
+C<DEMOLISH> can be used for custom destruction behavior such as updating class
+properties, closing sockets or closing database connections.  Object properties
+will not be deleted until after C<DEMOLISH> returns.
+
+ my $objects_destroyed;
+ 
+ sub DEMOLISH {
+   $objects_destroyed++;
+ }
+
+C<DEMOLISH> is also the place to manage any necessary calls to superclass 
+destructors.  As with C<new>, implementation details are left to the user
+based on the user's approach to object inheritance.
 
 =head2 Foreign inheritance
 
-To be written.
+Because inside-out objects build with C<Class::InsideOut> can use any type of
+reference for the object, inside-out objects can be built using other objects.
+This is of greatest utility when extending a superclass object.  Most
+importantly, this works regardless of whether the superclass object is
+implemented with a hash or array or other reference.
+
+ use base 'IO::File';
+ 
+ sub new {
+   my ($class, $filename) = @_;
+   
+   my $self = IO::File->new( $filename );
+
+   register( bless $self, $class ); 
+ }
+
+In the example above, C<IO::File> is a superclass.  The object is an
+C<IO::File> object, re-blessed into the inside-out class.  The resulting
+object can be used directly anywhere an c<IO::File> object would be, 
+without interfering with any of its own inside-out functionality.
 
 =head2 Serialization
 
-To be written.
+Serialization support with hooks for L<Storable> has not yet been implemented.
 
 =head2 Thread-safety
 
-To be written.
+Because C<Class::InsideOut> uses memory addresses as indices to object
+properties, special handling is necessary for use with threads.  When a new
+thread is created, the Perl interpreter is cloned, and all objects in the new
+thread will have new memory addresses.  Starting with Perl 5.8, if a C<CLONE>
+function exists in a package, it will be called when a thread is created to
+provide custom responses to thread cloning.
+
+C<Class::InsideOut> provides a C<CLONE> function that automatically fixes up 
+properties in a new thread to reflect the new memory addresses.  C<register>
+must be called on all newly constructed inside-out objects to register them
+for use in C<CLONE>.
+
+Additionally, C<fork> on Perl for Win32 is emulated using threads since
+Perl 5.6. (See L<perlfork>.)  As Perl 5.6 did not support C<CLONE>, 
+inside-out objects using memory addresses are not fork-safe for Win32.
 
 =head1 FUNCTIONS
 
@@ -249,10 +424,11 @@ deleting object properties.
 
 =item *
 
-L<Object::InsideOut> -- Currently the most full-featured, robust implementation
-of inside-out objects, but foreign inheritance is handled via delegation.
-Highly recommended if a more full-featured inside-out object builder is
-needed.  Array-based mode is faster than hash-based implementations.
+L<Object::InsideOut> -- This is perhaps the most full-featured, robust
+implementation of inside-out objects, but foreign inheritance is handled via
+delegation.  Highly recommended if a more full-featured inside-out object
+builder is needed.  Its array-based mode is faster than hash-based
+implementations.
 
 =item *
 

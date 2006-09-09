@@ -1,5 +1,8 @@
 Revision history for Perl module Class::InsideOut
 
+0.04 in progress
+    - major documentation update
+
 0.03 Thu Jan  5 18:41:05 EST 2006
     - thread test no longer dies if threads are not configured
     - added DEMOLISH support for custom destruction actions
