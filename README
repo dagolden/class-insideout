@@ -1,13 +1,30 @@
-If this is still here it means the programmer was too lazy to create the readme file.
+NAME
+    Class::InsideOut - placeholder for future implementation
 
-You can create it now by using the command shown below from this directory:
+SYNOPSIS
+     use Class::InsideOut;
 
-pod2text Class::InsideOut > README
+DESCRIPTION
+    This is a placeholder for a coming implementation of a streamlined,
+    simple toolkit for building inside-out objects. Unlike most other kits
+    out there, this module will aim towards minimalism.
 
-At the very least you should be able to use this set of instructions
-to install the module...
-perl Build.PL
-perl Build
-perl Build test
-perl Build install
-If you are on a windows box you should use 'nmake' rather than 'make'.
+    In the meantime, I recommend Object::InsideOut as the most robust
+    current alternative.
+
+AUTHOR
+    David A. Golden (DAGOLDEN)
+
+    dagolden@cpan.org
+
+    http://dagolden.com/
+
+COPYRIGHT
+    Copyright (c) 2006 by David A. Golden
+
+    This program is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+
+    The full text of the license can be found in the LICENSE file included
+    with this module.
+

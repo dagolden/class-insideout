@@ -1,0 +1,17 @@
+---
+name: Class-InsideOut
+version: 0.01
+author:
+  - David A. Golden <dagolden@cpan.org>
+abstract: placeholder for future implementation
+license: perl
+resources:
+  license: http://dev.perl.org/licenses/
+requires:
+  Scalar::Util: 1.09
+  Test::Simple: 0.48
+provides:
+  Class::InsideOut:
+    file: lib/Class/InsideOut.pm
+    version: 0.01
+generated_by: Module::Build version 0.2703

@@ -9,6 +9,6 @@ Module::Build->new(
     create_makefile_pl  => 'traditional',
     requires        => {
         Scalar::Util => 1.09,
-        Test::Simple => 0.44,
+        Test::Simple => 0.48,
     },
 )->create_build_script;

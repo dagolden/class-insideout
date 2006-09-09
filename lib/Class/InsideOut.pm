@@ -6,7 +6,7 @@ use Carp;
 BEGIN {
     use Exporter ();
     use vars qw ($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
-    $VERSION     = "0.10";
+    $VERSION     = "0.01";
     @ISA         = qw (Exporter);
     @EXPORT      = qw ();
     @EXPORT_OK   = qw ();
@@ -21,20 +21,20 @@ BEGIN {
 
 =head1 NAME
 
-Class::InsideOut - Put abstract here 
+Class::InsideOut - placeholder for future implementation
 
 =head1 SYNOPSIS
 
  use Class::InsideOut;
- blah blah blah
 
 =head1 DESCRIPTION
 
-Description...
+This is a placeholder for a coming implementation of a streamlined, simple 
+toolkit for building inside-out objects.  Unlike most other kits out there,
+this module will aim towards minimalism.
 
-=head1 USAGE
-
-Usage...
+In the meantime, I recommend L<Object::InsideOut> as the most robust current
+alternative.
 
 =cut
 
@@ -42,9 +42,9 @@ Usage...
 1; #this line is important and will help the module return a true value
 __END__
 
-=head1 BUGS
-
-Please report bugs using the CPAN Request Tracker at L<http://rt.cpan.org/>
+#=head1 BUGS
+#
+#Please report bugs using the CPAN Request Tracker at L<http://rt.cpan.org/>
 
 =head1 AUTHOR
 
