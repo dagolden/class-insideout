@@ -14,22 +14,24 @@ if ( $ENV{HARNESS_PERL_SWITCHES} &&
 # Overload DynaLoader and XSLoader to fake lack of XS for Scalar::Util
 # (which actually calls List::Util)
 BEGIN {
-    require DynaLoader;
-    require XSLoader;
     no strict 'refs';
     local $^W;
-    my $xsload_orig = *{"XSLoader::load"}{CODE};
-    *XSLoader::load = sub {
-        die if $_[0] =~ /(Scalar|List)::Util/;
-        goto $xsload_orig;
-    };
+    require DynaLoader;
     my $bootstrap_orig = *{"DynaLoader::bootstrap"}{CODE};
     *DynaLoader::bootstrap = sub {
         die if $_[0] =~ /(Scalar|List)::Util/;
         goto $bootstrap_orig;
     };
+    # XSLoader entered Core in Perl 5.6
+    if ( $] >= 5.006 ) {
+        require XSLoader;
+        my $xsload_orig = *{"XSLoader::load"}{CODE};
+        *XSLoader::load = sub {
+            die if $_[0] =~ /(Scalar|List)::Util/;
+            goto $xsload_orig;
+        };
+    }
 }
-
 
 plan tests => 2;
 

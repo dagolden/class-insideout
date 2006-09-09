@@ -1,5 +1,10 @@
 Revision history for Perl module Class::InsideOut
 
+0.13 Fri Mar 10 10:32:08 EST 2006
+
+    - Test for Scalar::Util::weaken fallback had a bug that would fail on
+      Perl versions prior to 5.6.  Fixed to be fully backwards compatible. 
+    
 0.12 Wed Mar  8 21:58:58 EST 2006
     
     - Added workaround for unavailable Scalar::Util::weaken; gives warning
