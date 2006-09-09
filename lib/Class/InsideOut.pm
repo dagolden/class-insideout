@@ -440,24 +440,13 @@ This is an *alpha release* for a work in progress. It is functional but
 unfinished and should not be used for any production purpose.  It has been
 released to solicit peer review and feedback.
 
-NOTICE: Version 0.08 introduced a ~BACKWARDS INCOMPATIBLE~ syntax change to
-the {property} method.  {property} currently requires two arguments,
-including a label for the property.  This label is used to support accessor
-creation and introspection.
-
 Serialization with [Storable] appears to be working but may have unanticipated
 bugs if an object contains a complicated (i.e. circular) reference structure
 and could use some real-world testing.
 
-Property destruction support for various inheritance patterns (e.g. diamond)
-is in draft form.
-
-There is minimal argument checking or other error handling.
-
 I believe API's may have stabilized.  The module will be declared "beta" when
-argument/error checks are added, additional accessor styles are written and
-singleton support for Storable has been added.  Users' feedback would be
-greatly appreciated.
+additional accessor styles are written and singleton support for Storable has
+been added.  Users' feedback would be greatly appreciated.
 
 = DESCRIPTION
 
