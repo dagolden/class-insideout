@@ -6,6 +6,7 @@ TODO list for Perl module Class::InsideOut
 - mutator filter options and validation handling { filter => \&code }
 - error handling and argument checking throughout
 - add checks for XS weaken and add to documentation
+- cleanup code smells in storable support
 - accessor style options
 - STORABLE_attach and singleton support (write as Class::InsideOut::Singleton)
 - write FAQs
@@ -15,6 +16,7 @@ TODO list for Perl module Class::InsideOut
 
 # Possible todos depending on demand
 
+- look into support for cloning tied objects(?) in the blessed hash(?)
 - accessor privacy => "protected" and matching property alias
 - add introspection methods (property list and options?)
 - "evert" method -- dump/reconstruct to a hash  (??)
