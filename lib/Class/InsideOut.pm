@@ -4,7 +4,10 @@ $VERSION     = "0.09";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( );
 @EXPORT_OK   = qw ( id options private property public register );
-%EXPORT_TAGS = ( );
+%EXPORT_TAGS = ( 
+    "std"  => [ qw( id private public register ) ],
+    "all"  => [ @EXPORT_OK ],
+);
 
 use strict;
 use Carp;
