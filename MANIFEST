@@ -22,6 +22,8 @@ t/11_storable_refs.t
 t/12_storable_hooks.t
 t/13_options.t
 t/14_accessor_hooks.t
+t/98_pod.t
+t/99_pod_coverage.t
 t/data/testdata.txt
 t/Object/Animal.pm
 t/Object/Animal/Antelope.pm

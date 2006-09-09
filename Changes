@@ -1,5 +1,9 @@
 Revision history for Perl module Class::InsideOut
 
+0.12 in progress
+    
+    - added optional pod/pod_coverage tests (skipped by default)
+
 0.11 Sat Jan 28 11:09:50 EST 2006
 
     - tweaked Build.PL; dropped Test::More dependency to 0.45 to help pass
