@@ -153,8 +153,26 @@ by adding {:singleton} to their import line as follows:
 
 When attaching, the singleton object will be recreated in one of two ways:
 
-* If the singleton class contains an {ATTACH} METHOD, it will be called with
-*XXX DETAILS NEEDED*
+1. If the singleton class contains an {ATTACH} METHOD, it will be called with
+three arguments: the class name, a flag for whether this is part of a dclone,
+and a data structure representing the object:
+
+    $data = {
+        class => ref $obj,              # class name
+        type => $type,                  # object reference type
+        contents => $contents,          # object reference contents
+        properties => \%property_vals,  # HoH of classes and properties
+    }
+
+{contents} is a reference of the same type as {type}.  {properties} is a
+multi-level hash, with the names of the class and any superclasses as top-level
+keys and property labels as second-level keys.  This data may be used to
+reconstruct or reattach to the singleton.  The {ATTACH} method should return
+the singleton.
+
+2. If no {ATTACH} routine is found, but the class has or inherits a {new}
+method, then {new} will be called with no arguments and the result will be
+returned as the singleton.
 
 == Thread-safety
 
