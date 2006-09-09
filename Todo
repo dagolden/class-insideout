@@ -1,13 +1,11 @@
 TODO list for Perl module Class::InsideOut
 
-- decide if DEMOLISH should be an inheritable method(!!)
-- SUPER::DESTROY during DESTROY
 - test foreign inheritance
+- storable hooks
+- ":all" export key
 - accessor creation
 - accessor privacy options
 - aliases: 'private', 'public', 'protected'
-- ":all" export key
-- storeable hooks
 - accessor style options
 - mutator filter options and validation handling
 - class-wide default options
