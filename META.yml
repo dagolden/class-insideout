@@ -1,9 +1,9 @@
 ---
 name: Class-InsideOut
-version: 0.01
+version: 0.02
 author:
   - David A. Golden <dagolden@cpan.org>
-abstract: placeholder for future implementation
+abstract: 'a safe, simple inside-out object construction kit'
 license: perl
 resources:
   license: http://dev.perl.org/licenses/
@@ -13,5 +13,5 @@ requires:
 provides:
   Class::InsideOut:
     file: lib/Class/InsideOut.pm
-    version: 0.01
+    version: 0.02
 generated_by: Module::Build version 0.2703
