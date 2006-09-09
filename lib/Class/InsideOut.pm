@@ -12,8 +12,19 @@ $VERSION     = "0.12";
 use strict;
 use Carp;
 use Exporter;
-use Scalar::Util qw( refaddr reftype weaken );
 use Class::ISA;
+use Scalar::Util qw( refaddr reftype );
+
+# Check for XS Scalar::Util with weaken() or warn and fallback
+BEGIN {
+    eval { Scalar::Util->import( "weaken" ) };
+    if ( $@ =~ /\AWeak references are not implemented/ ) {
+        warn "Scalar::Util::weaken unavailable: "
+           . "Class::InsideOut will not be thread-safe\n";
+        *weaken = sub { shift };
+    }
+}
+
 
 my %PROP_DATA_FOR;      # class => [ list of property hashrefs ]
 my %PROP_NAMES_FOR;     # class => [ matching list of names ]
@@ -766,10 +777,16 @@ they may interfere with the operation of {Class::InsideOut::CLONE} and leave
 objects in an undefined state.  Future versions may support a user-defined
 CLONE hook, depending on demand.
 
-Note: {fork} on Perl for Win32 is emulated using threads since Perl 5.6. (See
+=== Limitations
+{fork} on Perl for Win32 is emulated using threads since Perl 5.6. (See
 [perlfork].)  As Perl 5.6 did not support {CLONE}, inside-out objects that use 
 memory addresses (e.g. {Class::InsideOut}) are not fork-safe for Win32 on
 Perl 5.6.  Win32 Perl 5.8 {fork} is supported.
+
+The technique for thread-safety requires creating weak references using
+{Scalar::Util::weaken()}, which is implemented in XS.  If the XS-version of
+[Scalar::Util] is not installed, {Class::InsideOut} will issue a warning
+and continue without thread-safety.
 
 = FUNCTIONS
 

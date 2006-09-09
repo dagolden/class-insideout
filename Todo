@@ -2,8 +2,15 @@ TODO list for Perl module Class::InsideOut
 
 # Planned todos around core functionality
 
-- error handling and argument checking throughout
+- argument checking throughout
+    - property
+    - public/private
+    - options
+    - register
+- error handling
+    - where?
 - add checks for XS weaken and add to documentation
+    - use dummy weaken if not available
 - cleanup code smells in storable support
 - accessor style options
 - code coverage: storable for non-scalar/array/hash
@@ -22,7 +29,6 @@ TODO list for Perl module Class::InsideOut
 - "evert" method -- dump/reconstruct to a hash  (??)
   ( $hash_ref = $obj->evert; $newobj = Class->evert( $hash_ref ) )
 - pre-clone user hook?? (waiting for someone to say they need it)
-
 
 #--------------------------------------------------------------------------#
 # Thoughts about property options

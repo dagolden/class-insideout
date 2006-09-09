@@ -2,6 +2,10 @@ Revision history for Perl module Class::InsideOut
 
 0.12 in progress
     
+    - Added workaround for unavailable Scalar::Util::weaken; gives warning
+      about not running thread-safe; added missing weaken skips to thread/fork
+      test files
+
     - added optional pod/pod_coverage tests (skipped by default)
 
 0.11 Sat Jan 28 11:09:50 EST 2006

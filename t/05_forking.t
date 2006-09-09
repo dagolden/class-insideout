@@ -5,23 +5,34 @@ $|++; # try to keep stdout and stderr in order on Win32
 
 #--------------------------------------------------------------------------#
 
-    # don't run this at all under Devel::Cover
-if ( $^O eq 'MSWin32' && $ENV{HARNESS_PERL_SWITCHES} &&
-     $ENV{HARNESS_PERL_SWITCHES} =~ /Devel::Cover/ ) {
-    require Test::More;
-    Test::More::plan( skip_all => 
-        "Devel::Cover not compatible with Win32 pseudo-fork" );
-}
-    
-#--------------------------------------------------------------------------#
+# If Win32, fork() is done with threads, so we need various things
+if ( $^O eq 'MSWin32' ) {
 
-# Win32 fork is done with threads, so we need at least perl 5.8
-if ( $^O eq 'MSWin32' && $Config{useithreads} &&  $] < 5.008 ) {
-    plan skip_all => "Win32 fork() support requires perl 5.8";
+    # don't run this at all under Devel::Cover
+    if ( $ENV{HARNESS_PERL_SWITCHES} &&
+         $ENV{HARNESS_PERL_SWITCHES} =~ /Devel::Cover/ ) {
+        plan skip_all => "Devel::Cover not compatible with Win32 pseudo-fork";
+    }
+   
+    # skip if threads not available for some reasons
+    if ( ! $Config{useithreads} ) { 
+        plan skip_all => "Win32 fork() support requires threads";
+    }
+
+    # skip if perl < 5.8
+    if ( $] < 5.008 ) {
+        plan skip_all => "Win32 fork() support requires perl 5.8";
+    }
+
+    # skip if Scalar::Util::weaken isn't available
+    eval "use Scalar::Util 'weaken'";
+    if( $@ =~ /\AWeak references are not implemented/ ) {
+        plan skip_all => "Win32 fork() support requires Scalar::Util::weaken()";
+    }
 }
-else {
-    plan tests => 10;
-}
+
+# Otherwise, we're going to run the tests.
+plan tests => 10;
 
 #--------------------------------------------------------------------------#
 

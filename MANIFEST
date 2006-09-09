@@ -22,6 +22,7 @@ t/11_storable_refs.t
 t/12_storable_hooks.t
 t/13_options.t
 t/14_accessor_hooks.t
+t/15_no_weaken_fallback.t
 t/98_pod.t
 t/99_pod_coverage.t
 t/data/testdata.txt

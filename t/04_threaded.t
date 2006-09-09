@@ -10,6 +10,14 @@ BEGIN {
             "Devel::Cover not compatible with threads" );
     }
     
+    # don't run without Scalar::Util::weaken()
+    eval "use Scalar::Util 'weaken'";
+    if( $@ =~ /\AWeak references are not implemented/ ) {
+        require Test::More;
+        Test::More::plan( skip_all =>
+            "Scalar::Util::weaken() is required for thread-safety" );
+    }
+
     # threads needs to be loaded before Test::More if threads are configured
     if ( $Config{useithreads} ) {
         require threads;
@@ -31,6 +39,7 @@ BEGIN {
         plan skip_all => "perl ithreads not available";
     }
 }
+
 
 $|++; # keep stdout and stderr in order on Win32
 
