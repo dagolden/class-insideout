@@ -6,6 +6,10 @@
 
 Class::InsideOut - a safe, simple inside-out object construction kit
 
+=head1 VERSION
+
+This documentation refers to version 1.01
+
 =head1 SYNOPSIS
 
   package My::Class;
@@ -40,7 +44,7 @@ Uses no source filters, attributes or C<<< CHECK >>> blocks
 
 =item *
 
-Supports any underlying object type including foreign inheritance
+Supports any underlying object type including black-box inheritance
 
 =item *
 
@@ -80,7 +84,7 @@ implementations
 =item *
 
 L<Class::InsideOut::Manual::Advanced> -- Advanced topics including customizing
-accessors, foreign inheritance, serialization and thread safety
+accessors, black-box inheritance, serialization and thread safety
 
 =back
 
@@ -114,7 +118,7 @@ C<<< :std >>> provides C<<< id >>>, C<<< private >>>, C<<< public >>> and C<<< r
 
 =item *
 
-C<<< :all >>> imports all functions
+C<<< :all >>> imports all functions (including an optional constructor)
 
 =back
 
@@ -196,7 +200,7 @@ As a convenience, C<<< Class::InsideOut >>> provides an optional C<<< new >>> co
 for simple objects.
 
 A more advanced technique for object construction uses another object, usually
-a superclass object, as the object reference.  See "foreign inheritance" in
+a superclass object, as the object reference.  See "black-box inheritance" in
 L<Class::InsideOut::Manual::Advanced>.
 
 =head2 Object destruction

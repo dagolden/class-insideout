@@ -530,6 +530,10 @@ __END__
 
 Class::InsideOut - a safe, simple inside-out object construction kit
 
+= VERSION
+
+This documentation refers to version %%VERSION%%
+
 = SYNOPSIS
 
  package My::Class;
@@ -554,7 +558,7 @@ module aims for minimalism and robustness:
 
 * Does not require derived classes to subclass it
 * Uses no source filters, attributes or {CHECK} blocks
-* Supports any underlying object type including foreign inheritance
+* Supports any underlying object type including black-box inheritance
 * Does not leak memory on object destruction
 * Overloading-safe
 * Thread-safe for Perl 5.8 or better
@@ -570,7 +574,7 @@ and generating flexible accessors.
 technique, the {Class::InsideOut} philosophy, and other inside-out 
 implementations
 * [Class::InsideOut::Manual::Advanced] -- Advanced topics including customizing
-accessors, foreign inheritance, serialization and thread safety
+accessors, black-box inheritance, serialization and thread safety
 
 = USAGE
 
@@ -595,7 +599,7 @@ As a shortcut, {Class::InsideOut} supports two tags for importing sets of
 functions:
 
 * {:std} provides {id}, {private}, {public} and {register}
-* {:all} imports all functions
+* {:all} imports all functions (including an optional constructor)
 
 *Note*: Automatic imports can be bypassed via {require} or by passing an empty
 list to {use Class::InsideOut}. There is almost no circumstance in which
@@ -675,7 +679,7 @@ As a convenience, {Class::InsideOut} provides an optional {new} constructor
 for simple objects.
  
 A more advanced technique for object construction uses another object, usually
-a superclass object, as the object reference.  See "foreign inheritance" in
+a superclass object, as the object reference.  See "black-box inheritance" in
 [Class::InsideOut::Manual::Advanced].
 
 == Object destruction

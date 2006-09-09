@@ -13,6 +13,10 @@ __END__
 Class::InsideOut::Manual::About - guide to this and other implementations of the
 inside-out technique
 
+= VERSION
+
+This documentation refers to version %%VERSION%%
+
 = DESCRIPTION
 
 This manual provides an overview of the inside-out technique and its
@@ -72,12 +76,12 @@ destructor and inheritance support.
 * [Object::InsideOut] -- This is perhaps the most full-featured, robust
 implementation of inside-out objects currently on CPAN.  It is highly
 recommended if a more full-featured inside-out object builder is needed.
-Its array-based mode is faster than hash-based implementations, but foreign
+Its array-based mode is faster than hash-based implementations, but black-box
 inheritance is handled via delegation, which imposes certain limitations.
 
 * [Class::Std] -- Despite the name, this does not reflect currently known best
 practices for inside-out objects.  Does not provide thread-safety with CLONE
-and doesn't support foreign inheritance.  Has a robust
+and doesn't support black-box inheritance.  Has a robust
 inheritance/initialization system.
 
 * [Class::BuildMethods] -- Generates accessors with encapsulated storage using

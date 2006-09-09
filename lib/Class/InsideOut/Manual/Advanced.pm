@@ -12,6 +12,10 @@ __END__
 
 Class::InsideOut::Manual::Advanced - guide to advanced usage
 
+= VERSION
+
+This documentation refers to version %%VERSION%%
+
 = DESCRIPTION
 
 This manual provides further documentation for advanced usage of
@@ -82,7 +86,7 @@ protected property:
 Accessor hooks can be set as a global default with the {options} function,
 though they may still be overridden with options passed to specific properties.
 
-== Foreign inheritance
+== Black-box inheritance
 
 Because inside-out objects built with {Class::InsideOut} can use any type of
 reference for the object, inside-out objects can be built from other objects.
@@ -104,8 +108,8 @@ In the example above, {IO::File} is a superclass.  The object is an
 object can be used directly anywhere an {IO::File} object would be,
 without interfering with any of its own inside-out functionality.
 
-Classes using foreign inheritance should consider providing a {DEMOLISH}
-function that calls the foreign class destructor explicitly.
+Classes using black-box inheritance should consider providing a {DEMOLISH}
+function that calls the black-box class destructor explicitly.
 
 == Serialization
 

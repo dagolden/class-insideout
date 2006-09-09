@@ -6,6 +6,10 @@
 
 Class::InsideOut::Manual::Advanced - guide to advanced usage
 
+=head1 VERSION
+
+This documentation refers to version 1.01
+
 =head1 DESCRIPTION
 
 This manual provides further documentation for advanced usage of
@@ -76,7 +80,7 @@ protected property:
 Accessor hooks can be set as a global default with the C<<< options >>> function,
 though they may still be overridden with options passed to specific properties.
 
-=head2 Foreign inheritance
+=head2 Black-box inheritance
 
 Because inside-out objects built with C<<< Class::InsideOut >>> can use any type of
 reference for the object, inside-out objects can be built from other objects.
@@ -98,8 +102,8 @@ C<<< IO::File >>> object, re-blessed into the inside-out class.  The resulting
 object can be used directly anywhere an C<<< IO::File >>> object would be,
 without interfering with any of its own inside-out functionality.
 
-Classes using foreign inheritance should consider providing a C<<< DEMOLISH >>>
-function that calls the foreign class destructor explicitly.
+Classes using black-box inheritance should consider providing a C<<< DEMOLISH >>>
+function that calls the black-box class destructor explicitly.
 
 =head2 Serialization
 
