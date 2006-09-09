@@ -1,5 +1,8 @@
 Revision history for Perl module Class::InsideOut
 
+0.07 in progress
+    
+
 0.06 Sun Jan  8 23:07:22 EST 2006
     
     - DESTROY cleans up all Class::InsideOut properties in the @ISA tree;

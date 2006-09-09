@@ -1,7 +1,5 @@
 TODO list for Perl module Class::InsideOut
 
-- documentation: DEMOLISH chaining and property destruction
-- storable hooks: documentation
 - storable hooks: references; circular references; deep-clone vs freeze
 - storable hooks: pre-freeze user hook
 - ":all" export key
