@@ -1,10 +1,10 @@
 package t::Object::Friends;
 use strict;
 
-use Class::InsideOut qw( property register id );
+use Class::InsideOut qw( public private register id );
 
-property name => my %name; 
-property friends => my %friends;
+public name => my %name; 
+private friends => my %friends;
 
 sub new {
     my ($class, $args) = @_;
@@ -24,15 +24,6 @@ sub new {
     }
     # register the object for thread-safety
     register( $self ); 
-}
-
-sub name {
-    my $self = shift;
-    if ( @_ ) { 
-        $name{ id $self } = shift;
-        return $self;
-    }
-    return $name{ id $self };
 }
 
 # pass undef as first arg to clear the list

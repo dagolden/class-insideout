@@ -65,6 +65,8 @@ sub import {
     no strict 'refs';
     my $caller = caller;
     *{ "$caller\::DESTROY" } = _gen_DESTROY( $caller );
+    # XXX check for ":singleton" and do export attach instead of thaw
+    # make ":singleton" an empty tag to Exporter doesn't choke on it
     *{ "$caller\::STORABLE_freeze" } = _gen_STORABLE_freeze( $caller );
     *{ "$caller\::STORABLE_thaw" } = _gen_STORABLE_thaw( $caller );
     goto &Exporter::import;

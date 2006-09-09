@@ -4,9 +4,7 @@ use strict;
 use Class::InsideOut;
 
 sub new {
-    my $class = shift;
-    my $self = bless \do {my $s}, $class;
-    Class::InsideOut::register($self);
+    Class::InsideOut::register( bless \(my $s), shift);
 }
 
 1;
