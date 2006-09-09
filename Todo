@@ -1,18 +1,19 @@
 TODO list for Perl module Class::InsideOut
 
-- CLONE for threads and pseudoforks
-- DEMOLISH during DESTROY
+- optional exporting while always exporting CLONE and DESTROY
 - SUPER::DESTROY during DESTROY
+- DEMOLISH during DESTROY
 - foreign inheritance
 - accessor creation
 - accessor privacy options
 - aliases: 'private', 'public', 'protected'
-- optional exporting while always exporting CLONE and DESTROY
 - ":all" export key
 - storeable hooks
 - accessor style options
 - mutator filter options and validation handling
 - class-wide default options
+- error handling and argument checking
+- documentation
 
 #--------------------------------------------------------------------------#
 # Interface brainstorming below

@@ -1,19 +1,29 @@
 package Class::InsideOut;
 
 $VERSION     = "0.02";
-@ISA         = qw (Exporter);
+@ISA         = qw ( Exporter );
 @EXPORT      = qw ( CLONE DESTROY );
 @EXPORT_OK   = qw ( );
 %EXPORT_TAGS = ( );
     
 use strict;
-#use warnings; # not for Perl < 5.6
 use Carp;
 use Exporter;
 use Scalar::Util qw( refaddr weaken );
 
 my %PROPERTIES_OF;
 my %REGISTRY_OF;
+
+sub property(\%) {
+    push @{ $PROPERTIES_OF{ scalar caller } }, $_[0];
+    return;
+}
+
+sub register {
+    my $obj = shift;
+    weaken( $REGISTRY_OF{ scalar caller }{ refaddr $obj } = $obj );
+    return $obj;
+}
 
 sub CLONE {
     my $class = shift;
@@ -49,16 +59,9 @@ sub DESTROY {
     return;
 }
 
-sub property(\%) {
-    push @{$PROPERTIES_OF{ scalar caller }}, $_[0];
-    return;
-}
-
-sub register {
-    my $obj = shift;
-    weaken( $REGISTRY_OF{ scalar caller }{ refaddr $obj } = $obj );
-    return $obj;
-}
+#--------------------------------------------------------------------------#
+# private functions for use in testing
+#--------------------------------------------------------------------------#
     
 sub _object_count {
     my $class = shift;
@@ -78,8 +81,6 @@ sub _leaking_memory {
     my $properties = $PROPERTIES_OF{ $class };
     return scalar grep { $obj_count != scalar keys %$_ } @$properties;
 }
-    
-    
 
 1; #this line is important and will help the module return a true value
 __END__
@@ -92,7 +93,8 @@ Class::InsideOut - a safe, simple inside-out object construction kit
 
  package My::Class;
  
- use Class::InsideOut qw( id property register );
+ use Class::InsideOut qw( property register );
+ use Scalar::Util qw( refaddr );
 
  # declare a lexical property hash with 'my'
  property my %name; 
@@ -101,6 +103,7 @@ Class::InsideOut - a safe, simple inside-out object construction kit
    my $class = shift;
    my $self = \do {my $scalar};
    bless $self, $class;
+   
    # register the object for thread-safety
    register( $self ); 
  }
@@ -108,26 +111,140 @@ Class::InsideOut - a safe, simple inside-out object construction kit
  sub name {
    my $self = shift;
    if ( @_ ) { 
-     # use 'id' to access properties for an object
-     $name{ id $self } = shift;
+   
+     # use 'refaddr' to access properties for an object
+     $name{ refaddr $self } = shift;
+     
      return $self;
    }
-   return $name{ id $self };
+   return $name{ refaddr $self };
  }
  
  sub greeting {
    my $self = shift;
-   print "Hello, my name is " . $name { id $self } . "\n";
+   print "Hello, my name is " . $name { refaddr $self } . "\n";
  }
 
 =head1 DESCRIPTION
 
-This is a placeholder for a coming implementation of a streamlined, simple 
-toolkit for building inside-out objects.  Unlike most other kits out there,
-this module will aim towards minimalism.
+This is an alpha release for a work in progress. It is a functional but
+incomplete implementation of a simple, safe and streamlined toolkit for
+building inside-out objects.  Unlike most other inside-out object building
+modules already on CPAN, this module aims for minimalism and robustness.  It
+uses no source filters, no attributes, supports foreign inheritance, does not
+leak memory, is overloading-safe, is thread-safe for Perl 5.8 or better and
+should be mod_perl compatible.
 
-In the meantime, I recommend L<Object::InsideOut> as the most robust current
-alternative.
+In its current state, it provides the minimal support necessary for safe
+inside-out objects.  All other implementation details, including writing a
+constructor and accessors, are left to the user.  Future versions will add
+basic accessor support and serialization support.
+
+=head2 Inside-out object basics
+
+To be written.
+
+=head1 USAGE
+
+=head2 Importing C<Class::InsideOut>
+
+To be written.
+
+=head2 Declaring and accessing object properties
+
+To be written.
+
+=head2 Object destruction
+
+To be written.
+
+=head2 Foreign inheritance
+
+To be written.
+
+=head2 Serialization
+
+To be written.
+
+=head2 Thread-safety
+
+To be written.
+
+=head1 FUNCTIONS
+
+=head2 C<property>
+
+  property my %name;
+
+Declares an inside-out property.  The argument must be a lexical hash, though
+the C<my> keyword can be included as part of the argument rather than as a
+separate statement.  No accessor is created, but the property will be tracked
+for memory cleanup during object destruction and for proper thread-safety.
+
+=head2 C<register>
+
+  register $object;
+
+Registers an object for thread-safety.  This should be called as part of a
+constructor on a object blessed into the current package.  Returns the
+object (without modification).
+
+=head2 C<CLONE>
+
+C<CLONE> is automatically exported to provide thread-safety to modules using
+C<Class::InsideOut>.  See L<perlmod> for details.  It will be called
+automatically by Perl if threads are in use and a new interpreter thread is
+created.  It should never be called directly.
+
+=head2 C<DESTROY>
+
+This destructor is automatically exported to modules using C<Class::InsideOut>
+to clean up object property memory usage during object destruction.  It should
+never be called directly.  In the future, it will be enhanced to support a user
+supplied C<DEMOLISH> method for additional, custom destruction actions.
+
+=head1 SEE ALSO
+
+=over
+
+=item *
+
+L<Object::InsideOut> -- Currently the most full-featured, robust implementation
+of inside-out objects, but foreign inheritance is handled via delegation.
+Highly recommended if a more full-featured inside-out object builder is
+needed.
+
+=item *
+
+L<Class::Std> -- Despite the name, does not reflect best practices for
+inside-out objects.  Does not provide thread-safety with CLONE, is not mod_perl
+safe and doesn't support foreign inheritance.
+
+=item *
+
+L<Class::BuildMethods> -- Generates accessors with encapsulated storage using a
+flyweight inside-out variant. Lexicals properties are hidden; accessors must be
+used everywhere.
+
+=item *
+
+L<Lexical::Attributes> -- The original inside-out implementation, but missing
+some key features like thread-safety.  Also, uses source filters to provide
+Perl-6-like object syntax.
+
+=item *
+
+L<Class::MakeMethods::Templates::InsideOut> -- Not a very robust
+implementation. Not thread-safe.  Not overloading-safe.  Has a steep learning
+curve for the Class::MakeMethods system.
+
+=item *
+
+L<Object::LocalVars> -- My own original thought experiment with 'outside-in'
+objects and local variable aliasing. Not production-safe and offers very weak
+encapsulation.
+
+=back
 
 =head1 BUGS
 
