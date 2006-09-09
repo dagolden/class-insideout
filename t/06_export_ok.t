@@ -4,10 +4,12 @@ my (@export_ok, @additional);
 
 BEGIN {
     @export_ok = qw(
-      options
-      id
-      property
-      register
+        id
+        options
+        private
+        property
+        public
+        register
     );
     @additional = qw(
       DESTROY

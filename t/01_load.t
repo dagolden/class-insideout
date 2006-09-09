@@ -5,7 +5,9 @@ my (@api, @not_api);
 BEGIN {
     @api = qw(
         options
+        private
         property
+        public
         register
         id
         _properties

@@ -4,7 +4,7 @@ use Class::InsideOut ();
 
 $|++; # keep stdout and stderr in order on Win32
 
-plan tests => 14;
+plan tests => 16;
 
 #--------------------------------------------------------------------------#
 
@@ -15,8 +15,13 @@ my ($o, $p);
 
 require_ok( $class );
 
-is_deeply( [ Class::InsideOut::_properties( "$class" ) ], [ 'kills' ],
-    "$class has 1 property registered"
+is_deeply( [sort( Class::InsideOut::_properties( "$class" )) ], 
+           [sort( 'kills', 'whiskers' )],
+    "$class has 2 properties registered"
+);
+
+is( $class->can("whiskers"), undef,
+    "private() property shouldn't define an accessor"
 );
 
 is( Class::InsideOut::_object_count( $class ), 0,
@@ -51,7 +56,11 @@ is( $o->speed( "42" ), "42",
     "Setting a speed for the first object"
 );
 
-is( $o->kills( "23" ), "23",
+is( $o->points( 13 ), 13,
+    "Setting points for the first object"
+);
+
+is( $p->kills( "23" ), "23",
     "Setting a kill-count for the second object"
 );
 

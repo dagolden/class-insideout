@@ -2,7 +2,7 @@ TODO list for Perl module Class::InsideOut
 
 # Planned todos around core functionality
 
-- aliases: 'private', 'public'
+- document aliases: 'private', 'public'
 - accessor privacy => "protected" and matching property alias
 - accessor style options
 - ":all" export key

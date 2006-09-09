@@ -5,11 +5,14 @@ use base qw(
     t::Object::Animal::JackRabbit 
 );
 
-use Class::InsideOut qw( property id );
+use Class::InsideOut qw( private property id );
 
 # superclass is handling new()
 
-property kills => my %kills, { privacy => 'public' };
+Class::InsideOut::options( { privacy => 'public' } );
+
+property kills    => my %kills;
+private  whiskers => my %whiskers; 
 
 our $freezings;
 our $thawings;

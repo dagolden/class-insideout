@@ -3,7 +3,7 @@ package Class::InsideOut;
 $VERSION     = "0.09";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( );
-@EXPORT_OK   = qw ( options property register id );
+@EXPORT_OK   = qw ( id options private property public register );
 %EXPORT_TAGS = ( );
 
 use strict;
@@ -42,6 +42,13 @@ sub options {
     return %{ $OPTIONS{ $caller } };
 }
     
+sub private($\%;$) {
+    $_[2] ||= {};
+    $_[2] = { %{$_[2]}, privacy => 'private' };
+    
+    goto &property;
+}
+
 sub property($\%;$) {
     my ($label, $hash, $opt) = @_;
     my $caller = caller;
@@ -55,6 +62,13 @@ sub property($\%;$) {
         *{ $caller . "::" . $label } = _gen_accessor( $hash );
     }
     return;
+}
+
+sub public($\%;$) {
+    $_[2] ||= {};
+    $_[2] = { %{$_[2]}, privacy => 'public' };
+    
+    goto &property;
 }
 
 sub register {
