@@ -4,8 +4,10 @@ use strict;
 use Class::InsideOut;
 use Scalar::Util qw( refaddr );
 
-Class::InsideOut::property name => my %name;
-Class::InsideOut::property species => my %species;
+my $opts = { privacy => 'public' };
+
+Class::InsideOut::property( name => my %name, $opts );
+Class::InsideOut::property( species => my %species, $opts );
 
 # Globals for testing
 
@@ -23,19 +25,6 @@ sub new {
     $animal_count++;
     return $self;
 }
-
-sub name {
-    my $self = shift;
-    $name{ refaddr $self } = shift if @_;
-    return $name{ refaddr $self };
-}
-
-sub species {
-    my $self = shift;
-    $species{ refaddr $self } = shift if @_;
-    return $species{ refaddr $self };
-}
-
 
 sub DEMOLISH {
     my $self = shift;

@@ -15,8 +15,8 @@ my ($o, $p);
 
 require_ok( $class );
 
-is( Class::InsideOut::_property_count( "$class" ), 1,
-    "$class has 1 properties registered"
+is( Class::InsideOut::_property_count( "$class" ), 2,
+    "$class has 2 properties registered"
 );
 
 is( Class::InsideOut::_object_count( $class ), 0,

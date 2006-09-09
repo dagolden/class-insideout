@@ -7,6 +7,9 @@ use Scalar::Util qw( refaddr );
 # declare a lexical property hash with 'my'
 property name => my %name; 
 
+# declare a property and generate an accessor
+property color => my %color, { privacy => 'public' };
+ 
 sub new {
     my $class = shift;
     my $self = \do {my $scalar};

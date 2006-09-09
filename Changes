@@ -2,7 +2,12 @@ Revision history for Perl module Class::InsideOut
 
 0.09 in progress
 
+    - added basic accessor generation as an option
+
     - added support for user-written freeze and thaw hooks
+
+    - documentation updates: typo safety requires strict (Steven Lembark);
+      caching refaddr() to minimize overhead;  
 
 0.08 Wed Jan 18 10:50:13 EST 2006
 

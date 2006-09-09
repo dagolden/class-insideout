@@ -6,12 +6,6 @@ use Class::InsideOut qw( property id );
 
 # superclass is handling new()
 
-property speed => my %speed;
-
-sub speed {
-    my $self = shift;
-    $speed{ refaddr $self } = shift if @_;
-    return $speed{ refaddr $self };
-}
+property speed => my %speed, { privacy => "public" };
 
 1;

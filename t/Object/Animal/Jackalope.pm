@@ -9,13 +9,7 @@ use Class::InsideOut qw( property id );
 
 # superclass is handling new()
 
-property kills => my %kills;
-
-sub kills {
-    my $self = shift;
-    $kills{ refaddr $self } = shift if @_;
-    return $kills{ refaddr $self };
-}
+property kills => my %kills, { privacy => 'public' };
 
 our $freezings;
 our $thawings;

@@ -30,9 +30,15 @@ sub import {
 
 BEGIN { *id = \&Scalar::Util::refaddr; }
 
-sub property($\%) {
-    push @{ $PROP_NAMES_OF{ scalar caller } }, $_[0];
-    push @{ $PROPERTIES_OF{ scalar caller } }, $_[1];
+sub property($\%;$) {
+    my ($label, $hash, $opt) = @_;
+    my $caller = caller;
+    push @{ $PROP_NAMES_OF{ $caller } }, $label;
+    push @{ $PROPERTIES_OF{ $caller } }, $hash;
+    if ( exists $opt->{privacy} && $opt->{privacy} eq 'public' ) {
+        no strict 'refs';
+        *{ $caller . "::" . $label } = _gen_accessor( $hash );
+    }
     return;
 }
 
@@ -76,6 +82,16 @@ sub CLONE {
     }
 }
 
+sub _gen_accessor {
+    my $ref = shift;
+    return sub {
+        my $obj = shift;
+        my $obj_id = refaddr $obj;
+        $ref->{ $obj_id } = shift if (@_);
+        return $ref->{ $obj_id };
+    };
+}
+    
 sub _gen_DESTROY {
     my $class = shift;
     return sub {
@@ -246,6 +262,9 @@ Class::InsideOut - a safe, simple inside-out object construction kit
  # declare a lexical property "name" as a lexical ("my") hash
  property name => my %name;
  
+ # declare a property and generate an accessor
+ property color => my %color, { privacy => 'public' };
+ 
  sub new {
    my $class = shift;
    my $self = \do {my $scalar};
@@ -280,16 +299,18 @@ This is an B<alpha release> for a work in progress. It is B<functional but
 incomplete> and should not be used for any production purpose.  It has been
 released to solicit peer review and feedback.
 
-WARNING: Version 0.08 introduces a B<BACKWARDS INCOMPATIBLE> syntax change to
+WARNING: Version 0.08 introduced a B<BACKWARDS INCOMPATIBLE> syntax change to
 the C<property> method.  C<property> now requires two arguments, including a
-label for the property.  This label will be used in future versions to better
-support introspection and accessor creation.
+label for the property.  This label is used to support accessor creation and 
+introspection.
 
 Serialization with L<Storable> appears to be working but may have unanticipated
-bugs and could use some real-world testing.  Property destruction support for
-various inheritance patterns (e.g.  diamond) is B<experimental> and the API may
-change.  There is minimal argument checking or other error handling.  A future
-version will also add very basic accessor support.
+bugs and could use some real-world testing.  
+
+Property destruction support for various inheritance patterns (e.g. diamond)
+is in draft form and the API around DEMOLISH may change slightly.  
+
+There is minimal argument checking or other error handling.  
 
 =head1 DESCRIPTION
 
@@ -303,7 +324,7 @@ mod_perl compatible.
 
 It provides the minimal support necessary for creating safe inside-out objects.
 All other implementation details, including writing a constructor and managing
-inheritance, are left to the user.
+inheritance, are left to the user to maximize flexibility.
 
 Programmers seeking a more full-featured approach to inside-out objects are
 encouraged to explore L<Object::InsideOut>.  Other implementations are briefly
@@ -315,8 +336,8 @@ Inside-out objects use the blessed reference as an index into lexical data
 structures holding object properties, rather than using the blessed reference
 itself as a data structure.
 
-  $self->{ name }        = "Larry"; # classic, hash-based object
-  $name{ refaddr $self } = "Larry"; # inside-out
+ $self->{ name }        = "Larry"; # classic, hash-based object
+ $name{ refaddr $self } = "Larry"; # inside-out
 
 The inside-out approach offers three major benefits:
 
@@ -330,7 +351,8 @@ from ouside the lexical scope that declared them
 =item *
 
 Making the property name part of a lexical variable rather than a hash-key
-means that typos in the name will be caught as compile-time errors
+means that typos in the name will be caught as compile-time errors (if 
+using L<strict>)
 
 =item *
 
@@ -384,7 +406,7 @@ styles of constructor, destructor and inheritance support.
 
 =head2 Importing C<Class::InsideOut>
 
-  use Class::InsideOut;
+ use Class::InsideOut;
 
 By default, C<Class::InsideOut> imports three critical methods into the
 namespace that uses it: C<DESTROY>, C<STORABLE_freeze> and C<STORABLE_thaw>.
@@ -392,13 +414,13 @@ These methods are intimately tied to correct functioning of the inside-out
 objects. No other functions are imported by default.  Additional functions can
 be imported by including them as arguments with C<use>:
 
-  use Class::InsideOut qw( register property id );
+ use Class::InsideOut qw( register property id );
 
 Note that C<DESTROY> and C<STORABLE_*> will still be imported even without an
 explicit request.  This can only be avoided by explicitly doing no importing,
 via C<require> or passing an empty list to C<use>:
 
-  use Class::InsideOut ();
+ use Class::InsideOut ();
 
 There is almost no circumstance under which this is a good idea.  Users
 seeking custom destruction behavior should consult L</"Object destruction"> and
@@ -408,16 +430,16 @@ likewise described in L</"Serialization">.
 If users do not wish to import functions such as C<register>, C<property>, etc.
 they may, of course, be called using a fully qualified syntax:
 
-  Class::InsideOut::property name => my %name;
-  Class::InsideOut::register $self;
+ Class::InsideOut::property name => my %name;
+ Class::InsideOut::register $self;
 
 =head2 Declaring and accessing object properties
 
 Object properties are declared with the C<property> function, which must
 be passed a label and a lexical (i.e. C<my>) hash.
 
-  property name => my %name;
-  property age => my %age;
+ property name => my %name;
+ property age => my %age;
 
 Properties are private by default and no accessors are created.  Users are
 free to create accessors of any style.
@@ -427,11 +449,44 @@ based on the memory address of the object.  This memory address I<must> be
 obtained via C<Scalar::Util::refaddr>.  The alias C<id> is available for
 brevity.
 
-  $name{ refaddr $self } = "James";
-  $age { id      $self } = 32;
+ $name{ refaddr $self } = "James";
+ $age { id      $self } = 32;
 
-In the future, additional options will be supported to create accessors
-in various styles.
+B<Tip>: since C<refaddr> (or C<id>) are function calls, it may be helpful
+to store the value once at the beginning of a method rather than call it 
+repeatedly throughout.  This is particularly true if it would be called 
+within a loop.  For example:
+
+ property dsn => my %dsn;
+ property dbh => my %dbh;
+  
+ sub dbi_connect {
+     my $self = shift;
+     my $id = refaddr $self; # calculate once and store
+
+     # try up to 20 times
+     for ( 1 .. 20 ) { 
+         $dbh{ $id } = DBI->connect( $dsn{ $id } );
+         return if $dbh{ $id };
+     }
+     die "Couldn't connect to $dbh{ $id }";
+ }
+          
+=head2 Property accessors
+
+ property color => my %color, { privacy => 'public' };
+ 
+ $obj->color( "red" );
+ print $obj->color(); # prints "red"
+
+The C<property> method supports an optional hash reference of options.  If the
+I<privacy> option is equal to I<public>, an accessor will be created with the
+same name as the label.  If the accessor is passed an argument, the property
+will be set to the argument.  The accessor always returns the value of the
+property.
+
+Future versions of C<Class::InsideOut> will support additional accessor 
+styles.
 
 =head2 Object construction
 
@@ -607,15 +662,32 @@ Perl 5.6.  Win32 Perl 5.8 C<fork> is supported.
 =head2 C<property>
 
   property name => my %name;
+  property rank => my %rank, { %options }; 
 
-Declares an inside-out property.  Two arguments are required.  The first is a
-label for the property; in a future version, this label will be used for
+Declares an inside-out property.  Two arguments are required and a third is
+optional.  The first is a label for the property; this label will be used for
 introspection and generating accessors and thus should be a valid perl
 identifier.  The second argument must be the lexical hash that will be used to
 store data for that property.  Note that the C<my> keyword can be included as
-part of the argument rather than as a separate statement.  No accessor is
-created, but the property will be tracked for memory cleanup during object
-destruction and for proper thread-safety.
+part of the argument rather than as a separate statement.  The property will be
+tracked for memory cleanup during object destruction and for proper
+thread-safety.
+
+If a third, optional argument is provided, it must be a reference to a hash
+of options that will be applied to the property.  Valid options include:
+
+=over
+
+=item C<privacy>
+
+  property rank => my %rank, { privacy => 'public' };
+
+If the I<privacy> option is equal to I<public>, an accessor will be created
+with the same name as the label.  If the accessor is passed an argument, the
+property will be set to the argument.  The accessor always returns the value of
+the property.
+
+=back
 
 =head2 C<register>
 

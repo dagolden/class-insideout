@@ -2,17 +2,17 @@ TODO list for Perl module Class::InsideOut
 
 # Planned todos around core functionality
 
-- accessor creation
-- accessor privacy options
-- aliases: 'private', 'public', 'protected'
+- class-wide default options
+- aliases: 'private', 'public'
+- accessor privacy => "protected" and matching property alias
 - accessor style options
 - ":all" export key
-- mutator filter options and validation handling
-- class-wide default options
-- error handling and argument checking
-- STORABLE_attach and singleton support (!?) (Class::InsideOut::Singleton)
-- expand documentation (tutorial? notes on writing Builders)
+- mutator filter options and validation handling { filter => \&code }
+- error handling and argument checking throughout
 - add checks for XS weaken and add to documentation
+- STORABLE_attach and singleton support (write as Class::InsideOut::Singleton)
+- expand documentation (tutorial? notes on writing Builders)
+- cleanup test objects to use new features like accessor generation
 
 # Possible todos depending on demand
 
@@ -22,13 +22,22 @@ TODO list for Perl module Class::InsideOut
 - pre-clone user hook?? (waiting for someone to say they need it)
 
 #--------------------------------------------------------------------------#
-# old interface ideas
+# interface ideas
+#--------------------------------------------------------------------------#
+
+property should use class defaults and then provided options
+
+aliases 'private', etc. for property' should use class defaults, then
+provided options, then force "privacy => 'private'"; similar for 'public'
+
+#--------------------------------------------------------------------------#
+# examples
 #--------------------------------------------------------------------------#
 
 use Class::InsideOut qw( property public private register id );
 
 Class::InsideOut::options(
-  accessor_style => 'bimodal', # or eiffel or get_set
+  accessor_style => 'bimodal', # or combo or eiffel or get_set
   get_prefix => 'get_',
   set_prefix => 'set_',
   privacy => 'public',  # create accessors for everything given to properties
