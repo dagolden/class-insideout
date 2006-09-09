@@ -2,6 +2,7 @@ use strict;
 use warnings;
 use Test::More;
 use Scalar::Util qw( refaddr );
+use Class::InsideOut ();
 
 $|++; # keep stdout and stderr in order on Win32 (maybe)
 
@@ -16,7 +17,7 @@ if ( $@ ) {
     plan skip_all => "Storable >= 2.14 needed for singleton support",
 }
 else {
-    plan tests => 10 * scalar keys %constructors_for;
+    plan tests => 11 * scalar keys %constructors_for;
 }
 
 #--------------------------------------------------------------------------#
@@ -39,43 +40,48 @@ for my $class ( keys %constructors_for ) {
     is( $o->name(), $name,
         "... Setting 'name' to '$name'"
     );
+    diag refaddr $o;
         
     # freeze object
     my ( $frozen, $thawed );
     ok( $frozen = Storable::freeze( $o ),
-        "... Freezing object"
+        "... Freezing $class object"
     );
 
     # thaw object
     ok( $thawed = Storable::thaw( $frozen ),
-        "... Thawing object"
+        "... Thawing $class object"
     );
     is( refaddr $o, refaddr $thawed,
-        "... Thawed object is the singleton"
+        "... Thawed $class object is the singleton"
     );
 
     # check it
     is( $thawed->name(), $name,
-        "... Thawed object 'name' is '$name'"
+        "... Thawed $class object 'name' is '$name'"
     );
 
     # destroy the singleton
     {
         no strict 'refs';
-        undef ${"$class\::self"};
+        $thawed = undef;
+        ${"$class\::self"} = undef;
         is( ${"$class\::self"}, undef,
             "... Destroying $class singleton manually"
+        );
+        ok( ! Class::InsideOut::_leaking_memory,
+            "... $class not leaking memory"
         );
     }
 
     # recreate it
     ok( $thawed = Storable::thaw( $frozen ),
-        "... Thawing object again (recreating)"
+        "... Re-thawing $class object again (recreating)"
     );
 
     # check it
     is( $thawed->name(), $name,
-        "... Thawed object 'name' is '$name'"
+        "... Re-thawed $class object 'name' is '$name'"
     );
 }
 
