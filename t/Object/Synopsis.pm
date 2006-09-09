@@ -30,7 +30,7 @@ sub name {
 
 sub greeting {
     my $self = shift;
-    print "Hello, my name is " . $name { refaddr $self } . "\n";
+    return "Hello, my name is " . $name { refaddr $self };
 }
 
 1;

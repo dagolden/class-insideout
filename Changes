@@ -1,6 +1,7 @@
 Revision history for Perl module Class::InsideOut
 
 0.03 in progress
+    - added DEMOLISH support for custom destruction actions
     - documentation tweaks
 
 0.02 Thu Jan  5 00:51:01 EST 2006

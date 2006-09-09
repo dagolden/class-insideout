@@ -3,6 +3,8 @@ use threads;
 use Config;
 use Test::More;
 
+$|++; # keep stdout and stderr in order on Win32
+
 #--------------------------------------------------------------------------#
 
 my $class = "t::Object::Animal";

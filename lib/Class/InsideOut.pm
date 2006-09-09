@@ -60,6 +60,7 @@ sub DESTROY {
     my $obj = shift;
     my $class = ref $obj;
     my $obj_id = refaddr $obj;
+    $obj->DEMOLISH if $obj->can( 'DEMOLISH' );
     delete $_->{ $obj_id } for @{ $PROPERTIES_OF{ $class } };
     delete $REGISTRY_OF{ $class }{ $obj_id };
     return;
@@ -128,7 +129,7 @@ Class::InsideOut - a safe, simple inside-out object construction kit
  
  sub greeting {
    my $self = shift;
-   print "Hello, my name is " . $name { refaddr $self } . "\n";
+   return "Hello, my name is " . $name { refaddr $self };
  }
 
 =head1 DESCRIPTION
@@ -136,10 +137,12 @@ Class::InsideOut - a safe, simple inside-out object construction kit
 This is an alpha release for a work in progress. It is a functional but
 incomplete implementation of a simple, safe and streamlined toolkit for
 building inside-out objects.  Unlike most other inside-out object building
-modules already on CPAN, this module aims for minimalism and robustness.  It
-uses no source filters, no attributes, supports foreign inheritance, does not
-leak memory, is overloading-safe, is thread-safe for Perl 5.8 or better and
-should be mod_perl compatible.
+modules already on CPAN, this module aims for minimalism and robustness.  
+
+It uses no source filters, no attributes or CHECK blocks, supports any
+underlying object type including foreign inheritance, does not leak memory, is
+overloading-safe, is thread-safe for Perl 5.8 or better and should be mod_perl
+compatible.
 
 In its current state, it provides the minimal support necessary for safe
 inside-out objects.  All other implementation details, including writing a
@@ -206,8 +209,10 @@ created.  It should never be called directly.
 
 This destructor is automatically exported to modules using C<Class::InsideOut>
 to clean up object property memory usage during object destruction.  It should
-never be called directly.  In the future, it will be enhanced to support a user
-supplied C<DEMOLISH> method for additional, custom destruction actions.
+never be called directly.  C<DESTROY> will call a user-supplied C<DEMOLISH>
+method if one exists to allow for additional, custom destruction actions such
+as closing sockets or database handles.  C<DEMOLISH> is called prior to
+deleting object properties.
 
 =head1 SEE ALSO
 
@@ -218,7 +223,7 @@ supplied C<DEMOLISH> method for additional, custom destruction actions.
 L<Object::InsideOut> -- Currently the most full-featured, robust implementation
 of inside-out objects, but foreign inheritance is handled via delegation.
 Highly recommended if a more full-featured inside-out object builder is
-needed.
+needed.  Array-based mode is faster than hash-based implementations.
 
 =item *
 

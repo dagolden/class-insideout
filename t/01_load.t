@@ -16,6 +16,8 @@ BEGIN {
 
 use Test::More tests =>  1 + @api ;
 
+$|++; # keep stdout and stderr in order on Win32
+
 BEGIN { use_ok( 'Class::InsideOut' ); }
 
 can_ok( 'Class::InsideOut', $_ ) for @api;

@@ -1,4 +1,3 @@
-# Class::InsideOut - check module loading and create testing directory
 use strict;
 
 my @available;
@@ -13,6 +12,8 @@ BEGIN {
 }
 
 use Test::More tests =>  1 + @available ;
+
+$|++; # keep stdout and stderr in order on Win32
 
 BEGIN { use_ok( 'Class::InsideOut', qw( property register )); }
 

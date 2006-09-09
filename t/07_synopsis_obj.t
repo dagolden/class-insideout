@@ -2,13 +2,14 @@ use strict;
 use Test::More;
 use Class::InsideOut ();
 
-plan 'no_plan'; # tests => 9;
+$|++; # keep stdout and stderr in order on Win32
+
+plan tests => 12;
 
 #--------------------------------------------------------------------------#
 
 my $class = "t::Object::Synopsis";
 my ($o, $p);
-my $got;
 
 #--------------------------------------------------------------------------#
 
@@ -44,7 +45,9 @@ isnt( $o->name, $p->name,
     "Objects have different names"
 );
 
-undef $got; # just in case it's holding a reference
+is( $o->greeting, "Hello, my name is Larry",
+    "Object greeting correct"
+);
 
 undef $o;
 ok( ! defined $o,

@@ -1,8 +1,8 @@
 TODO list for Perl module Class::InsideOut
 
+- decide if DEMOLISH should be an inheritable method(!!)
 - SUPER::DESTROY during DESTROY
-- DEMOLISH during DESTROY
-- foreign inheritance
+- test foreign inheritance
 - accessor creation
 - accessor privacy options
 - aliases: 'private', 'public', 'protected'
