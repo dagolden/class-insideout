@@ -2,11 +2,7 @@ TODO list for Perl module Class::InsideOut
 
 # Planned todos around core functionality
 
-- document checks on property/public/private
-
-- argument checking throughout
-    - options (form, valid keys)
-    - register
+- documentation on property/public/private arg checks
 - error handling
     - where?
 - cleanup code smells in storable support

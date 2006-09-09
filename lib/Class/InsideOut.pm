@@ -13,7 +13,7 @@ use strict;
 use Carp;
 use Exporter;
 use Class::ISA;
-use Scalar::Util qw( refaddr reftype );
+use Scalar::Util qw( refaddr reftype blessed );
 
 # Check for XS Scalar::Util with weaken() or warn and fallback
 BEGIN {
@@ -25,6 +25,9 @@ BEGIN {
     }
 }
 
+#--------------------------------------------------------------------------#
+# Class data
+#--------------------------------------------------------------------------#
 
 my %PROP_DATA_FOR;      # class => [ list of property hashrefs ]
 my %PROP_NAMES_FOR;     # class => [ matching list of names ]
@@ -32,6 +35,31 @@ my %PUBLIC_PROPS_FOR;   # class => { prop_name => 1 }
 my %CLASS_ISA;          # class => [ list of self and @ISA tree ]
 my %OPTIONS;            # class => { default accessor options  }
 my %OBJECT_REGISTRY;    # refaddr => weak object reference
+
+#--------------------------------------------------------------------------#
+# option validation parameters
+#--------------------------------------------------------------------------#
+
+# Private but global so related classes can define their own valid options
+# if they need them.  Modify at your own risk.  Done this way so as to 
+# avoid creating class functions to do the same basic thing
+
+use vars qw( %_OPTION_VALIDATION );
+
+sub __coderef { ref shift eq 'CODE' or die "must be a code reference" }
+
+%_OPTION_VALIDATION = (
+    privacy => sub { 
+        my $v = shift; 
+        $v =~ /public|private/ or die "'$v' is not a valid privacy setting"
+    },
+    set_hook =>  \&__coderef,
+    get_hook =>  \&__coderef,
+);
+
+#--------------------------------------------------------------------------#
+# public functions
+#--------------------------------------------------------------------------#
 
 sub import {
     no strict 'refs';
@@ -45,8 +73,10 @@ sub import {
 BEGIN { *id = \&Scalar::Util::refaddr; }
 
 sub options {
+    my $opt = shift;
     my $caller = caller;
-    return %{ $OPTIONS{ $caller } = _merge_options( $caller, shift ) };
+    _check_options( $opt ) if defined $opt;
+    return %{ $OPTIONS{ $caller } = _merge_options( $caller, $opt ) };
 }
  
 sub private($\%;$) {
@@ -61,7 +91,6 @@ sub property($\%;$) {
     goto &_install_property;
 }
 
-
 sub public($\%;$) {
     &_check_property;
     $_[2] ||= {};
@@ -71,9 +100,12 @@ sub public($\%;$) {
 
 sub register {
     my $obj = shift;
+    croak "Invalid argument '$obj' to register(): must be blessed reference"
+        if ! blessed $obj;
     weaken( $OBJECT_REGISTRY{ refaddr $obj } = $obj );
     return $obj;
 }
+
 
 #--------------------------------------------------------------------------#
 # private functions for implementation
@@ -109,15 +141,34 @@ sub CLONE {
     }
 }
 
+sub _check_options{
+    my ($opt) = @_;
+    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+
+    croak "Invalid options argument '$opt': must be a hash reference"
+        if $opt && ref $opt ne 'HASH';
+
+    my @valid_keys = keys %_OPTION_VALIDATION;
+    for my $key ( keys %$opt ) {
+        croak "Invalid option '$key': unknown option"
+            if ! grep { $_ eq $key } @valid_keys;
+        if ( ref $_OPTION_VALIDATION{$key} eq 'CODE' ) {
+            eval { $_OPTION_VALIDATION{$key}->( $opt->{$key} ) };
+            croak "Invalid option '$key': $@" if $@;
+        }
+    }
+    
+    return;
+}
+
 sub _check_property {
     my ($label, $hash, $opt) = @_;
     local $Carp::CarpLevel = $Carp::CarpLevel + 1;
     croak "Invalid property name '$label': must be a perl identifier"
         if $label !~ /\A[a-z_]\w*\z/;
-    croak "Invalid property options '$opt': must be a hash reference"
-        if $opt and ref $opt ne 'HASH';
     croak "Duplicate property name '$label'"
         if grep /$label/, @{ $PROP_NAMES_FOR{ caller(1) } }; 
+    _check_options( $opt ) if defined $opt;
     return;
 }
 

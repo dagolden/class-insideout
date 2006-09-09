@@ -10,6 +10,11 @@ Revision history for Perl module Class::InsideOut
       be identifiers; Property options must be given as hash references;
       Duplicate property names are not permitted. 
 
+    - options argument checked for proper format; option values are checked
+      for validity
+
+    - register argument checked for blessed reference
+
     - added optional pod/pod_coverage tests (skipped by default)
 
 0.11 Sat Jan 28 11:09:50 EST 2006
