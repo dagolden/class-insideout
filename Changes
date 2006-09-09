@@ -1,6 +1,6 @@
 Revision history for Perl module Class::InsideOut
 
-0.10 in progress
+0.10 Fri Jan 27 01:41:38 EST 2006
 
     - added "set_hook" and "get_hook" option for custom accessor/mutator
       manipulations
