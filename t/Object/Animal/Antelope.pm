@@ -11,6 +11,9 @@ Class::InsideOut::options( { privacy => 'private' } );
 # should override default options above
 property color => my %color, { privacy => 'public' };
 
+# should revert back to defaults
+property panicked => my %panicked;
+
 # should override default 
 public   points => my %points;
 

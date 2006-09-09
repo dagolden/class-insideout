@@ -1,8 +1,16 @@
 use strict;
 use Config;
 
-# threads needs to be loaded before Test::More if threads are configured
 BEGIN {
+    # don't run this at all under Devel::Cover
+    if ( $ENV{HARNESS_PERL_SWITCHES} &&
+         $ENV{HARNESS_PERL_SWITCHES} =~ /Devel::Cover/ ) {
+        require Test::More;
+        Test::More::plan( skip_all => 
+            "Devel::Cover not compatible with threads" );
+    }
+    
+    # threads needs to be loaded before Test::More if threads are configured
     if ( $Config{useithreads} ) {
         require threads;
     }

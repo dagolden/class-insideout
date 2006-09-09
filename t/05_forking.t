@@ -1,16 +1,18 @@
 use strict;
 use Config;
 use Test::More;
-
-$|++; # keep stdout and stderr in order on Win32
+$|++; # try to keep stdout and stderr in order on Win32
 
 #--------------------------------------------------------------------------#
 
-my $class    = "t::Object::Animal";
-my $subclass = "t::Object::Animal::Antelope";
-my ($o, $p);
-
-
+    # don't run this at all under Devel::Cover
+if ( $^O eq 'MSWin32' && $ENV{HARNESS_PERL_SWITCHES} &&
+     $ENV{HARNESS_PERL_SWITCHES} =~ /Devel::Cover/ ) {
+    require Test::More;
+    Test::More::plan( skip_all => 
+        "Devel::Cover not compatible with Win32 pseudo-fork" );
+}
+    
 #--------------------------------------------------------------------------#
 
 # Win32 fork is done with threads, so we need at least perl 5.8
@@ -20,6 +22,12 @@ if ( $^O eq 'MSWin32' && $Config{useithreads} &&  $] < 5.008 ) {
 else {
     plan tests => 10;
 }
+
+#--------------------------------------------------------------------------#
+
+my $class    = "t::Object::Animal";
+my $subclass = "t::Object::Animal::Antelope";
+my ($o, $p);
 
 #--------------------------------------------------------------------------#
 

@@ -15,7 +15,7 @@ my ($o, $p);
 
 require_ok( $class );
 
-is_deeply( [ Class::InsideOut::_properties( "$class" ) ], [],
+is_deeply( Class::InsideOut::_properties( "$class" ) , {},
     "$class has no properties registered"
 );
 

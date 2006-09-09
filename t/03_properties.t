@@ -4,24 +4,40 @@ use Class::InsideOut ();
 
 $|++; # keep stdout and stderr in order on Win32
 
-plan tests => 16;
+plan tests => 15;
 
 #--------------------------------------------------------------------------#
 
 my $class = "t::Object::Animal::Jackalope";
+
+my $properties = {
+    "t::Object::Animal" => {
+        name    => "public",
+        species => "public",
+    },
+    "t::Object::Animal::Antelope" => {
+       color    => "public",
+       panicked => "private",
+       points   => "public",
+    },
+    "t::Object::Animal::JackRabbit" => {
+       speed    => "public",
+    },
+    "t::Object::Animal::Jackalope" => {
+       kills    => "public",
+       whiskers => "private",
+    },
+};
+
 my ($o, $p);
 
 #--------------------------------------------------------------------------#
 
 require_ok( $class );
 
-is_deeply( [sort( Class::InsideOut::_properties( "$class" )) ], 
-           [sort( 'kills', 'whiskers' )],
-    "$class has 2 properties registered"
-);
-
-is( $class->can("whiskers"), undef,
-    "private() property shouldn't define an accessor"
+is_deeply( Class::InsideOut::_properties( $class ), 
+           $properties,
+    "$class has/inherited its expected properties"
 );
 
 is( Class::InsideOut::_object_count( $class ), 0,

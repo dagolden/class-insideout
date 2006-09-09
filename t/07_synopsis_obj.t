@@ -9,15 +9,24 @@ plan tests => 12;
 #--------------------------------------------------------------------------#
 
 my $class = "t::Object::Synopsis";
+my $properties = {
+    "t::Object::Synopsis" => {
+        name    => "private",
+        color   => "public",
+        height  => "public",
+        weight  => "private",
+    },
+};
+
 my ($o, $p);
 
 #--------------------------------------------------------------------------#
 
 require_ok( $class );
 
-is_deeply( [ sort( Class::InsideOut::_properties( "$class" ) ) ], 
-           [ sort( qw( name color height weight ) ) ],
-    "$class has 4 properties registered"
+is_deeply( Class::InsideOut::_properties( $class ), 
+           $properties,
+    "$class has/inherited its expected properties"
 );
 
 is( Class::InsideOut::_object_count( $class ), 0,
