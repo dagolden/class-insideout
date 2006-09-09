@@ -15,7 +15,6 @@ my %PROPERTIES_OF;
 my %REGISTRY_OF;
 
 BEGIN { *id = \&Scalar::Util::refaddr; }
-    
 
 sub import {
     my $caller = caller;
@@ -120,7 +119,7 @@ Class::InsideOut - a safe, simple inside-out object construction kit
 
  package My::Class;
  
- use Class::InsideOut qw( property register );
+ use Class::InsideOut qw( property register id );
  use Scalar::Util qw( refaddr );
 
  # declare a lexical property hash with 'my'
@@ -219,6 +218,14 @@ for memory cleanup during object destruction and for proper thread-safety.
 Registers an object for thread-safety.  This should be called as part of a
 constructor on a object blessed into the current package.  Returns the
 object (without modification).
+
+=head2 C<id>
+
+  $name{ id $object } = "Larry";
+
+This is a shorter, mnemonic alias for C<Scalar::Util::refaddr>.  It returns the
+memory address of an object (just like C<refaddr>) as the index to access
+the properties of an inside-out object.
 
 =head2 C<CLONE>
 
