@@ -2,7 +2,6 @@ TODO list for Perl module Class::InsideOut
 
 # Planned todos around core functionality
 
-- ":all" export key, ":std" export key ( qw(id public private register) )
 - mutator filter options and validation handling { filter => \&code }
 - error handling and argument checking throughout
 - add checks for XS weaken and add to documentation
