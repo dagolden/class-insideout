@@ -9,6 +9,7 @@ WriteMakefile
           'VERSION_FROM' => 'lib/Class/InsideOut.pm',
           'PREREQ_PM' => {
                            'Scalar::Util' => '1.09',
+                           'Class::ISA' => 0,
                            'Test::Simple' => '0.48'
                          }
         )

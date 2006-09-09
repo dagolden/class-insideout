@@ -1,17 +1,19 @@
 Revision history for Perl module Class::InsideOut
 
-0.06 in progress
+0.06 Sun Jan  8 23:07:22 EST 2006
     
-    - DESTROY cleans up all Class::InsideOut properties in the @ISA tree
-      (DEMOLISH should only call other DEMOLISH routines, not DESTROY)
+    - DESTROY cleans up all Class::InsideOut properties in the @ISA tree;
+      updated documentation on object destruction for clarity; fixes 
+      diamond-pattern inheritance memory leaks without requiring a DEMOLISH
+      method
     
-    - added first draft support of serialization with Storable for objects
+    - added first-draft support of serialization with Storable for objects
       based on scalars, arrays and hashes; tested on data values only; not 
       yet tested on values with references or objects, particularly circular
       reference chains
       
     - CLONE no longer exported; all refaddr index cleanup handled globally in
-      Class::InsideOut::CLONE
+      Class::InsideOut::CLONE rather than in class-specific methods
 
 0.05 Fri Jan  6 09:07:07 EST 2006
     

@@ -521,7 +521,7 @@ Serialization of objects that themselves contain references to objects has
 not yet been tested.  The semantics of a deep cloning C<freeze(thaw(.))> 
 operation has not been fully explored or tested.
 
-User feedback on serialization needs and limiations are encouraged.
+User feedback on serialization needs and limitations are encouraged.
 
 =head2 Thread-safety
 

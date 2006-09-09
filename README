@@ -39,28 +39,34 @@ SYNOPSIS
      }
 
 LIMITATIONS AND ROADMAP
-    This is an alpha release for a work in progress. It is a functional but
-    incomplete implementation and should not be used for any production
-    purposes. It has been released to solicit peer review and feedback.
+    This is an alpha release for a work in progress. It is functional but
+    incomplete and should not be used for any production purpose. It has
+    been released to solicit peer review and feedback.
 
-    Currently, there are still some substantial gaps in inheritance support
-    as relates to thread-safety and the API to facilitate this may change.
-    Serialization with Storable also has not yet been implemented and may
-    result in API changes. A future version will also add very basic
-    accessor support.
+    Currently, serialization with Storable is experimental and may have
+    unanticipated bugs, particularly relating to serializing references to
+    other objects. Property destruction support for various inheritance
+    patterns (e.g. diamond) is experimental and the API may change. There is
+    minimal argument checking or other error handling. A future version will
+    also add very basic accessor support.
 
 DESCRIPTION
     This is a simple, safe and streamlined toolkit for building inside-out
     objects. Unlike most other inside-out object building modules already on
-    CPAN, this module aims for minimalism and robustness. It uses no source
-    filters, no attributes or CHECK blocks, supports any underlying object
-    type including foreign inheritance, does not leak memory, is
-    overloading-safe, will be thread-safe for Perl 5.8 or better and should
-    be mod_perl compatible.
+    CPAN, this module aims for minimalism and robustness. It does not
+    require derived classes to subclass it; uses no source filters,
+    attributes or CHECK blocks; supports any underlying object type
+    including foreign inheritance; does not leak memory; is
+    overloading-safe; is thread-safe for Perl 5.8 or better; and should be
+    mod_perl compatible.
 
-    It provides the minimal support necessary for safe inside-out objects.
-    All other implementation details, including writing a constructor and
-    managing inheritance, are left to the user.
+    It provides the minimal support necessary for creating safe inside-out
+    objects. All other implementation details, including writing a
+    constructor and managing inheritance, are left to the user.
+
+    Programmers seeking a more full-featured approach to inside-out objects
+    are encouraged to explore Object::InsideOut. Other implementations are
+    briefly noted in the "See Also" section.
 
   Inside-out object basics
 
@@ -104,38 +110,45 @@ DESCRIPTION
     *   Properties must be based on hashes and declared via `property'
 
     *   Property hashes must be keyed on the `Scalar::Util::refaddr' of the
-        object (or the `id' alias).
+        object (or the `id' alias to `refaddr').
 
     *   `register' must be called on all new objects
 
-    All other implementation details, including constructors, are left to
-    the user.
+    All other implementation details, including constructors, initializers
+    and class inheritance management are left to the user. This does
+    requires some additional work, but maximizes freedom. `Class::InsideOut'
+    is intended to be the base class providing only fundamental features.
+    Subclasses of `Class::InsideOut' could be written that build upon it to
+    provide particular styles of constructor, destructor and inheritance
+    support.
 
 USAGE
   Importing `Class::InsideOut'
 
       use Class::InsideOut;
 
-    By default, `Class::InsideOut' imports two critical methods, `CLONE' and
-    `DESTROY'. These methods are intimately tied to correct functioning of
-    the inside-out objects. No other functions are imported by default.
-    Additional functions can be imported by including them as arguments with
-    `use':
+    By default, `Class::InsideOut' imports three critical methods:
+    `DESTROY', `STORABLE_freeze' and `STORABLE_thaw'. These methods are
+    intimately tied to correct functioning of the inside-out objects. No
+    other functions are imported by default. Additional functions can be
+    imported by including them as arguments with `use':
 
       use Class::InsideOut qw( register property id );
 
-    Note that `CLONE' and `DESTROY' will still be imported even without an
-    explicit request. They can only be avoided by explicitly doing no
+    Note that `DESTROY' and `STORABLE_*' will still be imported even without
+    an explicit request. This can only be avoided by explicitly doing no
     importing, via `require' or passing an empty list to `use':
 
       use Class::InsideOut ();
 
-    There is almost no circumstance under which this is a good idea.
+    There is almost no circumstance under which this is a good idea. Users
+    seeking custom destruction behavior should see "Object destruction" and
+    the description of the `DEMOLISH' method.
 
   Declaring and accessing object properties
 
     Object properties are declared with the `property' function, which must
-    be passed a single lexical (`my') hash.
+    be passed a single lexical (i.e. `my') hash.
 
       property my %name;
       property my %age;
@@ -158,7 +171,7 @@ USAGE
 
     `Class::InsideOut' provides no constructor function as there are many
     possible ways of constructing an inside-out object. Additionally, this
-    avoids constraining users into any particular object initialization or
+    avoids constraining users to any particular object initialization or
     superclass initialization approach.
 
     By using the memory address of the object as the index for properties,
@@ -181,13 +194,14 @@ USAGE
     register for details.
 
     A more advanced technique uses another object, usually a superclass
-    object, as the object reference. See Foreign inheritance for details.
+    object, as the object reference. See "Foreign inheritance" for details.
 
   Object destruction
 
-    `Class::InsideOut' provides a `DESTROY' function. This function cleans
-    up object property memory for all declared properties to avoid memory
-    leaks or data collision.
+    `Class::InsideOut' automatically exports a customized `DESTROY'
+    function. This function cleans up object property memory for all
+    declared properties for all `Class::InsideOut' based classes in the
+    `@ISA' array to avoid memory leaks or data collision.
 
     Additionally, if a user-supplied `DEMOLISH' function is available in the
     same package, it will be called with the object being destroyed as its
@@ -202,18 +216,41 @@ USAGE
        $objects_destroyed++;
      }
 
-    `DEMOLISH' is also the place to manage any necessary calls to superclass
-    destructors. As with `new', implementation details are left to the user
-    based on the user's approach to object inheritance.
+    `DEMOLISH' will only be automatically called if it exists for an
+    object's class. `DEMOLISH' will not be inherited and `DEMOLISH' will not
+    be called automatically for any superclasses.
+
+    `DEMOLISH' should manage any necessary calls to superclass `DEMOLISH'
+    methods. As with `new', implementation details are left to the user
+    based on the user's approach to object inheritance. Depending on how the
+    inheritance chain is constructed and how `DEMOLISH' is being used, users
+    may wish to entirely override superclass `DEMOLISH' methods, rely upon
+    `SUPER::DEMOLISH', or may prefer to walk the entire `@ISA' tree:
+
+     use Class::ISA;
+
+     sub DEMOLISH {
+       my $self = shift;
+       # class specific demolish actions
+
+       # DEMOLISH for all parent classes, but only once
+       my @demolishers = map { $_->can("DEMOLISH") } 
+                             Class::ISA::super_path( __PACKAGE__ );
+       for my $d ( @demolishers  ) {
+         $d->($self) if $d;
+       }
+     }
+
+    Generally, any class that inherits from another should define its own
+    `DEMOLISH' method.
 
   Foreign inheritance
 
     Because inside-out objects built with `Class::InsideOut' can use any
     type of reference for the object, inside-out objects can be built using
     other objects. This is of greatest utility when extending a superclass
-    object. Most importantly, this works regardless of whether the
-    superclass object is implemented with a hash or array or other
-    reference.
+    object, without regard for whether the superclass object is implemented
+    with a hash or array or other reference.
 
      use base 'IO::File';
  
@@ -230,10 +267,21 @@ USAGE
     object can be used directly anywhere an `IO::File' object would be,
     without interfering with any of its own inside-out functionality.
 
+    Classes using foreign inheritance should provide a `DEMOLISH' function
+    that calls the foreign class' destructor explicitly.
+
   Serialization
 
-    Serialization support with hooks for Storable has not yet been
-    implemented.
+    `Class::InsideOut' has experimental support for serialization with
+    Storable by providing the `STORABLE_freeze' and `STORABLE_thaw' methods.
+    Due to limitations of Storable, this serialization will only work for
+    objects based on scalars, arrays or hashes.
+
+    Serialization of objects that themselves contain references to objects
+    has not yet been tested. The semantics of a deep cloning
+    `freeze(thaw(.))' operation has not been fully explored or tested.
+
+    User feedback on serialization needs and limitations are encouraged.
 
   Thread-safety
 
@@ -242,16 +290,24 @@ USAGE
     new thread is created, the Perl interpreter is cloned, and all objects
     in the new thread will have new memory addresses. Starting with Perl
     5.8, if a `CLONE' function exists in a package, it will be called when a
-    thread is created to provide custom responses to thread cloning.
+    thread is created to provide custom responses to thread cloning. (See
+    perlmod for details.)
 
-    `Class::InsideOut' provides a `CLONE' function that automatically fixes
-    up properties in a new thread to reflect the new memory addresses.
-    `register' must be called on all newly constructed inside-out objects to
-    register them for use in `CLONE'.
+    `Class::InsideOut' itself has a `CLONE' function that automatically
+    fixes up properties in a new thread to reflect the new memory addresses
+    for all classes created with `Class::InsideOut'. `register' must be
+    called on all newly constructed inside-out objects to register them for
+    use in `Class::InsideOut::CLONE'.
 
-    Additionally, `fork' on Perl for Win32 is emulated using threads since
-    Perl 5.6. (See perlfork.) As Perl 5.6 did not support `CLONE',
-    inside-out objects using memory addresses are not fork-safe for Win32.
+    Users are strongly encouraged not to define their own `CLONE' functions
+    as they may interfere with the operation of `Class::InsideOut::CLONE'
+    and leave objects in an undefined state. Future versions may support a
+    user-defined CLONE hook, depending on demand.
+
+    Note: `fork' on Perl for Win32 is emulated using threads since Perl 5.6.
+    (See perlfork.) As Perl 5.6 did not support `CLONE', inside-out objects
+    using memory addresses (e.g. `Class::InsideOut' are not fork-safe for
+    Win32.
 
 FUNCTIONS
   `property'
@@ -280,29 +336,15 @@ FUNCTIONS
     returns the memory address of an object (just like `refaddr') as the
     index to access the properties of an inside-out object.
 
-  `CLONE'
-
-    `CLONE' is automatically exported to provide thread-safety to modules
-    using `Class::InsideOut'. See perlmod for details. It will be called
-    automatically by Perl if threads are in use and a new interpreter thread
-    is created. It should never be called directly.
-
-  `DESTROY'
-
-    This destructor is automatically exported to modules using
-    `Class::InsideOut' to clean up object property memory usage during
-    object destruction. It should never be called directly. `DESTROY' will
-    call a user-supplied `DEMOLISH' method if one exists to allow for
-    additional, custom destruction actions such as closing sockets or
-    database handles. `DEMOLISH' is called prior to deleting object
-    properties.
-
 SEE ALSO
+  Other modules on CPAN
+
     *   Object::InsideOut -- This is perhaps the most full-featured, robust
-        implementation of inside-out objects, but foreign inheritance is
-        handled via delegation. Highly recommended if a more full-featured
-        inside-out object builder is needed. Its array-based mode is faster
-        than hash-based implementations.
+        implementation of inside-out objects currently on CPAN. It is highly
+        recommended if a more full-featured inside-out object builder is
+        needed. Its array-based mode is faster than hash-based
+        implementations, but foreign inheritance is handled via delegation,
+        which imposes certain limitations.
 
     *   Class::Std -- Despite the name, does not reflect best practices for
         inside-out objects. Does not provide thread-safety with CLONE, is
@@ -314,18 +356,44 @@ SEE ALSO
 
     *   Lexical::Attributes -- The original inside-out implementation, but
         missing some key features like thread-safety. Also, uses source
-        filters to provide Perl-6-like object syntax.
+        filters to provide Perl-6-like object syntax. Not thread-safe.
 
     *   Class::MakeMethods::Templates::InsideOut -- Not a very robust
         implementation. Not thread-safe. Not overloading-safe. Has a steep
         learning curve for the Class::MakeMethods system.
 
     *   Object::LocalVars -- My own original thought experiment with
-        'outside-in' objects and local variable aliasing. Not
-        production-safe and offers very weak encapsulation.
+        'outside-in' objects and local variable aliasing. Not safe for any
+        production use and offers very weak encapsulation.
+
+  References
+
+    Much of the Perl community discussion of inside-out objects has taken
+    place on Perlmonks (http://perlmonks.org). My scratchpad there has a
+    fairly comprehensive list of articles
+    (http://perlmonks.org/index.pl?node_id=360998). Some of the more
+    informative articles include:
+
+    *   Abigail-II. "Re: Where/When is OO useful?". July 1, 2002.
+        http://perlmonks.org/index.pl?node_id=178518
+
+    *   Abigail-II. "Re: Tutorial: Introduction to Object-Oriented
+        Programming". December 11, 2002.
+        http://perlmonks.org/index.pl?node_id=219131
+
+    *   demerphq. "Yet Another Perl Object Model (Inside Out Objects)".
+        December 14, 2002. http://perlmonks.org/index.pl?node_id=219924
+
+    *   xdg. "Threads and fork and CLONE, oh my!". August 11, 2005.
+        http://perlmonks.org/index.pl?node_id=483162
+
+    *   jdhedden. "Anti-inside-out-object-ism". December 9, 2005.
+        http://perlmonks.org/index.pl?node_id=515650
 
 BUGS
-    Please report bugs using the CPAN Request Tracker at
+    Please report bugs or feature requests using the CPAN Request Tracker.
+    Bugs can be sent by email to `bug-Class-InsideOut@rt.cpan.org' or
+    submitted using the web interface at
     http://rt.cpan.org/NoAuth/Bugs.html?Dist=Class-InsideOut
 
     When submitting a bug or request, please include a test-file or a patch
@@ -338,7 +406,7 @@ AUTHOR
 
     http://dagolden.com/
 
-COPYRIGHT
+COPYRIGHT AND LICENSE
     Copyright (c) 2006 by David A. Golden
 
     This program is free software; you can redistribute it and/or modify it
@@ -346,4 +414,26 @@ COPYRIGHT
 
     The full text of the license can be found in the LICENSE file included
     with this module.
+
+DISCLAIMER OF WARRANTY
+    BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
+    FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
+    OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
+    PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
+    EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
+    ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
+    YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
+    NECESSARY SERVICING, REPAIR, OR CORRECTION.
+
+    IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
+    WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
+    REDISTRIBUTE THE SOFTWARE AS PERMITTED BY THE ABOVE LICENCE, BE LIABLE
+    TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL, OR
+    CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THE
+    SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
+    RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
+    FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
+    SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
+    DAMAGES.
 
