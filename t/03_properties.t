@@ -13,6 +13,7 @@ my $class = "t::Object::Animal::Jackalope";
 # sort alpha
 my $properties = {
     "t::Object::Animal" => {
+        nickname=> "public", #20997: Duplicate property name
         name    => "public",
         species => "public",
     },

@@ -1,5 +1,8 @@
 Revision history for Perl module Class::InsideOut
 
+1.02
+    - fixed duplicate property name checking (RT#20997)
+
 1.01 Thu Jul 27 12:30:54 EDT 2006
     - register() now handles standard cases with "sufficiently advanced
       technology" and does the right thing
