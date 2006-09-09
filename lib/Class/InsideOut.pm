@@ -5,8 +5,9 @@ $VERSION     = "0.15_01";
 @EXPORT      = qw ( ); # nothing by default
 @EXPORT_OK   = qw ( id options private property public register );
 %EXPORT_TAGS = (
-    "std"  => [ qw( id private public register ) ],
-    "all"  => [ @EXPORT_OK ],
+    "std"       => [ qw( id private public register ) ],
+    "all"       => [ @EXPORT_OK ],
+    "singleton" => [], # just a flag for import()
 );
 
 use strict;
@@ -65,9 +66,14 @@ sub import {
     no strict 'refs';
     my $caller = caller;
     *{ "$caller\::DESTROY" } = _gen_DESTROY( $caller );
-    # XXX check for ":singleton" and do export attach instead of thaw
+    # check for ":singleton" and do export attach instead of thaw
     # make ":singleton" an empty tag to Exporter doesn't choke on it
-    *{ "$caller\::STORABLE_freeze" } = _gen_STORABLE_freeze( $caller );
+    if ( grep { $_ eq ":singleton" } @_ ) {
+        *{ "$caller\::STORABLE_attach" } = _gen_STORABLE_attach( $caller );
+    }
+    else {
+        *{ "$caller\::STORABLE_freeze" } = _gen_STORABLE_freeze( $caller );
+    }
     *{ "$caller\::STORABLE_thaw" } = _gen_STORABLE_thaw( $caller );
     goto &Exporter::import;
 }
@@ -253,6 +259,11 @@ sub _gen_DESTROY {
     };
 }
 
+sub _gen_STORABLE_attach {
+    my $class = shift;
+    return sub { shift };
+}
+        
 sub _gen_STORABLE_freeze {
     my $class = shift;
     return sub {
@@ -808,7 +819,7 @@ methods to serialize.  They should not be called directly.  Due to limitations
 of {Storable}, this serialization will only work for objects based on scalars,
 arrays or hashes.
 
-References to object within the object being frozen will result in clones
+References to objects within the object being frozen will result in clones
 upon thawing unless the other references are included in the same freeze
 operation.  (See {Storable} for details.)
 

@@ -2,7 +2,11 @@ TODO list for Perl module Class::InsideOut
 
 # Planned todos around core functionality - 1.0 roadmap
 
-- STORABLE_attach and singleton support 
+- STORABLE_attach and singleton support: have to implement alternate
+STORABLE_freeze that doesn't return a data reference; serialize the 
+contents of the reference separately and return that string -- that will be
+recovered in STORABLE_attach and handed off to a class hook to recreate the
+object
 
 # Todos after 1.0
 
