@@ -230,7 +230,7 @@ safe and doesn't support foreign inheritance.
 
 L<Class::BuildMethods> -- Generates accessors with encapsulated storage using a
 flyweight inside-out variant. Lexicals properties are hidden; accessors must be
-used everywhere.
+used everywhere. Not thread-safe.
 
 =item *
 
