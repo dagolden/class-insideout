@@ -1,11 +1,11 @@
 package Class::InsideOut;
 
-$VERSION     = "0.07";
+$VERSION     = "0.08";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( );
 @EXPORT_OK   = qw ( property register id );
 %EXPORT_TAGS = ( );
-    
+
 use strict;
 use Carp;
 use Exporter;
@@ -14,6 +14,7 @@ use Class::ISA;
 
 my %PROPERTIES_OF;   # class => [ list of properties ]
 my %OBJECT_REGISTRY; # refaddr => object reference
+my %CLASS_ISA;       # class => [ list of self and @ISA tree ]
 
 BEGIN { *id = \&Scalar::Util::refaddr; }
 
@@ -27,7 +28,7 @@ sub import {
     }
     goto &Exporter::import;
 }
-    
+
 sub property(\%) {
     push @{ $PROPERTIES_OF{ scalar caller } }, $_[0];
     return;
@@ -43,30 +44,30 @@ sub register {
 # private functions for implementation
 #--------------------------------------------------------------------------#
 
-# Registering is global to avoid having to register objects for each class. 
+# Registering is global to avoid having to register objects for each class.
 # CLONE is not exported but CLONE in Class::InsideOut updates all registered
-# objects for all properties across all classes 
+# objects for all properties across all classes
 
 sub CLONE {
     my $class = shift;
 
     # assemble references to all properties for all classes
     my @properties = map { @$_ } values %PROPERTIES_OF;
-    
-    for my $old_id ( keys %OBJECT_REGISTRY ) {  
-        
+
+    for my $old_id ( keys %OBJECT_REGISTRY ) {
+
         # retrieve the new object and id
         my $object = $OBJECT_REGISTRY{ $old_id };
         my $new_id = refaddr $object;
-        
-        # for all properties, relocate data to the new id if 
+
+        # for all properties, relocate data to the new id if
         # the property has data under the old id
         for my $prop ( @properties ) {
             next unless exists $prop->{ $old_id };
             $prop->{ $new_id } = $prop->{ $old_id };
             delete $prop->{ $old_id };
         }
-        
+
         # update the registry to the new, cloned object
         weaken ( $OBJECT_REGISTRY{ $new_id } = $object );
         delete $OBJECT_REGISTRY{ $old_id };
@@ -88,7 +89,9 @@ sub _gen_DESTROY {
         $demolish->($obj) if defined $demolish;
 
         # Clean up properties in all Class::InsideOut parents
-        for my $c ( Class::ISA::self_and_super_path( $class ) ) {
+        $CLASS_ISA{ $class } ||= [ Class::ISA::self_and_super_path( $class ) ];
+
+        for my $c ( @{ $CLASS_ISA{ $class } } ) {
             next unless exists $PROPERTIES_OF{ $c };
             delete $_->{ $obj_id } for @{ $PROPERTIES_OF{ $c } };
         }
@@ -111,7 +114,8 @@ sub _gen_STORABLE_freeze {
 
         # extract properties to save
         my %property_vals;
-        for my $c ( Class::ISA::self_and_super_path( $class ) ) {
+        $CLASS_ISA{ $class } ||= [ Class::ISA::self_and_super_path( $class ) ];
+        for my $c ( @{ $CLASS_ISA{ $class } } ) {
             next unless exists $PROPERTIES_OF{ $c };
             my $properties = $PROPERTIES_OF{ $c };
             for my $prop ( @$properties ) {
@@ -121,23 +125,13 @@ sub _gen_STORABLE_freeze {
                 push @{ $property_vals{$c} }, $value;
             }
         }
-        
+
         # extract object reference contents (by type)
         my $contents;
-        for ( reftype $obj ) {
-            /SCALAR/ && do { 
-                $contents = \do{ my $s = $$obj }; 
-                last;
-            };
-            /ARRAY/  && do { 
-                $contents = [ @$obj ]; 
-                last;
-            };
-            /HASH/   && do { 
-                $contents = { %$obj }; 
-                last 
-            };
-        }
+        my $type = reftype $obj;
+        if    ( $type eq 'SCALAR' ) { $contents = \do{ my $s = $$obj } }
+        elsif ( $type eq 'ARRAY'  ) { $contents = [ @$obj ]            }
+        elsif ( $type eq 'HASH'   ) { $contents = { %$obj }            }
 
         # assemble reference to hand back to Storable
         my $data = {
@@ -156,41 +150,32 @@ sub _gen_STORABLE_thaw {
     my $class = shift;
     return sub {
         my ( $obj, $cloning, $serialized, $data ) = @_;
-        
+
         # restore contents
         my $contents = $data->{contents};
-        for ( reftype $obj ) {
-            /SCALAR/ && do { 
-                $$obj = $$contents; 
-                last;
-            };
-            /ARRAY/  && do { 
-                @$obj = @$contents; 
-                last;
-            };
-            /HASH/   && do { 
-                %$obj = %$contents; 
-                last 
-            };
-        }
+        my $type = reftype $obj;
+        if    ( $type eq 'SCALAR' ) { $$obj = $$contents }
+        elsif ( $type eq 'ARRAY'  ) { @$obj = @$contents }
+        elsif ( $type eq 'HASH'   ) { %$obj = %$contents }
 
         # restore properties
-        for my $c ( Class::ISA::self_and_super_path( $class ) ) {
+        $CLASS_ISA{ $class } ||= [ Class::ISA::self_and_super_path( $class ) ];
+        for my $c ( @{ $CLASS_ISA{ $class } } ) {
             my $properties = $PROPERTIES_OF{ $c };
             my @property_vals = @{ $data->{properties}{ $c } };
             for my $prop ( @$properties ) {
                 $prop->{ refaddr $obj } = shift @property_vals;
             }
         }
-        
-        return; 
+
+        return;
     };
 }
 
 #--------------------------------------------------------------------------#
 # private functions for use in testing
 #--------------------------------------------------------------------------#
-    
+
 sub _object_count {
     return scalar( keys %OBJECT_REGISTRY );
 }
@@ -203,11 +188,11 @@ sub _property_count {
 
 sub _leaking_memory {
     my %leaks;
-    
+
     for my $class ( keys %PROPERTIES_OF ) {
         for my $prop ( @{ $PROPERTIES_OF{ $class } } ) {
             for my $obj_id ( keys %$prop ) {
-                $leaks{ $class }++ 
+                $leaks{ $class }++
                     if not exists $OBJECT_REGISTRY{ $obj_id };
             }
         }
@@ -216,7 +201,7 @@ sub _leaking_memory {
     return keys %leaks;
 }
 
-1; #this line is important and will help the module return a true value
+1; # modules must return true
 __END__
 
 =head1 NAME
@@ -229,26 +214,26 @@ Class::InsideOut - a safe, simple inside-out object construction kit
  
  use Class::InsideOut qw( property register id );
  use Scalar::Util qw( refaddr );
-
+ 
  # declare a lexical property hash with 'my'
- property my %name; 
-
+ property my %name;
+ 
  sub new {
    my $class = shift;
    my $self = \do {my $scalar};
    bless $self, $class;
-   
+ 
    # register the object for thread-safety
-   register( $self ); 
+   register( $self );
  }
-
+ 
  sub name {
    my $self = shift;
-   if ( @_ ) { 
-   
+   if ( @_ ) {
+ 
      # use 'refaddr' to access properties for an object
      $name{ refaddr $self } = shift;
-     
+ 
      return $self;
    }
    return $name{ refaddr $self };
@@ -256,13 +241,13 @@ Class::InsideOut - a safe, simple inside-out object construction kit
  
  sub greeting {
    my $self = shift;
-   
+ 
    # use 'id' as a mnemonic alias for 'refaddr'
    return "Hello, my name is " . $name { id $self };
  }
 
 =head1 LIMITATIONS AND ROADMAP
- 
+
 This is an B<alpha release> for a work in progress. It is B<functional but
 incomplete> and should not be used for any production purpose.  It has been
 released to solicit peer review and feedback.
@@ -285,7 +270,7 @@ mod_perl compatible.
 
 It provides the minimal support necessary for creating safe inside-out objects.
 All other implementation details, including writing a constructor and managing
-inheritance, are left to the user. 
+inheritance, are left to the user.
 
 Programmers seeking a more full-featured approach to inside-out objects are
 encouraged to explore L<Object::InsideOut>.  Other implementations are briefly
@@ -297,7 +282,7 @@ Inside-out objects use the blessed reference as an index into lexical data
 structures holding object properties, rather than using the blessed reference
 itself as a data structure.
 
-  $self->{ name }        = "Larry"; # classic, hash-based object       
+  $self->{ name }        = "Larry"; # classic, hash-based object
   $name{ refaddr $self } = "Larry"; # inside-out
 
 The inside-out approach offers three major benefits:
@@ -321,7 +306,7 @@ the reference can be of any type
 
 =back
 
-In exchange for these benefits, however, robust implementation of inside-out 
+In exchange for these benefits, however, robust implementation of inside-out
 objects can be quite complex.  C<Class::InsideOut> manages that complexity.
 
 =head2 Philosophy of C<Class::InsideOut>
@@ -334,7 +319,7 @@ the inside-out technique.  All capabilities necessary for robustness should be
 automatic.  Anything that can be optional should be.  The design should not
 introduce new restrictions unrelated to inside-out objects (such as attributes
 and C<CHECK> blocks that cause problems for C<mod_perl> or the use of source
-filters for new syntax).
+filters for a new syntax).
 
 As a result, only a few things are mandatory:
 
@@ -346,8 +331,8 @@ Properties must be based on hashes and declared via C<property>
 
 =item *
 
-Property hashes must be keyed on the C<Scalar::Util::refaddr> of the object 
-(or the C<id> alias to C<refaddr>).
+Property hashes must be keyed on the C<Scalar::Util::refaddr> of the object
+(or the optional C<id> alias to C<Scalar::Util::refaddr>).
 
 =item *
 
@@ -361,18 +346,18 @@ additional work, but maximizes freedom.  C<Class::InsideOut> is intended to
 be a base class providing only fundamental features.  Subclasses of
 C<Class::InsideOut> could be written that build upon it to provide particular
 styles of constructor, destructor and inheritance support.
-   
+
 =head1 USAGE
 
 =head2 Importing C<Class::InsideOut>
 
   use Class::InsideOut;
 
-By default, C<Class::InsideOut> imports three critical methods: C<DESTROY>,
-C<STORABLE_freeze> and C<STORABLE_thaw>.  These methods are intimately tied to
-correct functioning of the inside-out objects. No other functions are imported
-by default.  Additional functions can be imported by including them as
-arguments with C<use>:
+By default, C<Class::InsideOut> imports three critical methods into the
+namespace that uses it: C<DESTROY>, C<STORABLE_freeze> and C<STORABLE_thaw>.
+These methods are intimately tied to correct functioning of the inside-out
+objects. No other functions are imported by default.  Additional functions can
+be imported by including them as arguments with C<use>:
 
   use Class::InsideOut qw( register property id );
 
@@ -382,14 +367,14 @@ via C<require> or passing an empty list to C<use>:
 
   use Class::InsideOut ();
 
-There is almost no circumstance under which this is a good idea.  Users 
-seeking custom destruction behavior should see L</"Object destruction"> and
+There is almost no circumstance under which this is a good idea.  Users
+seeking custom destruction behavior should consult L</"Object destruction"> and
 the description of the C<DEMOLISH> method.
 
 =head2 Declaring and accessing object properties
 
 Object properties are declared with the C<property> function, which must
-be passed a single lexical (i.e. C<my>) hash.  
+be passed a single lexical (i.e. C<my>) hash.
 
   property my %name;
   property my %age;
@@ -417,17 +402,17 @@ initialization approach.
 
 By using the memory address of the object as the index for properties, I<any>
 type of reference can be used as the basis for an inside-out object with
-C<Class::InsideOut>.  
+C<Class::InsideOut>.
 
  sub new {
    my $class = shift;
-   
+ 
    my $self = \do{ my $scalar };  # anonymous scalar
  # my $self = {};                 # anonymous hash
  # my $self = [];                 # anonymous array
  # open my $self, "<", $filename; # filehandle reference
-
-   register( bless $self, $class ); 
+ 
+   register( bless $self, $class );
  }
 
 However, to ensure that the inside-out objects are thread-safe, the C<register>
@@ -450,6 +435,8 @@ C<DEMOLISH> can be used for custom destruction behavior such as updating class
 properties, closing sockets or closing database connections.  Object properties
 will not be deleted until after C<DEMOLISH> returns.
 
+ # Sample DEMOLISH: Count objects demolished (for whatever reason)
+ 
  my $objects_destroyed;
  
  sub DEMOLISH {
@@ -468,13 +455,13 @@ entirely override superclass C<DEMOLISH> methods, rely upon C<SUPER::DEMOLISH>,
 or may prefer to walk the entire C<@ISA> tree:
 
  use Class::ISA;
-
+ 
  sub DEMOLISH {
    my $self = shift;
    # class specific demolish actions
-
+ 
    # DEMOLISH for all parent classes, but only once
-   my @demolishers = map { $_->can("DEMOLISH") } 
+   my @demolishers = map { $_->can("DEMOLISH") }
                          Class::ISA::super_path( __PACKAGE__ );
    for my $d ( @demolishers  ) {
      $d->($self) if $d;
@@ -496,15 +483,15 @@ reference.
  
  sub new {
    my ($class, $filename) = @_;
-   
+ 
    my $self = IO::File->new( $filename );
-
-   register( bless $self, $class ); 
+ 
+   register( bless $self, $class );
  }
 
 In the example above, C<IO::File> is a superclass.  The object is an
 C<IO::File> object, re-blessed into the inside-out class.  The resulting
-object can be used directly anywhere an C<IO::File> object would be, 
+object can be used directly anywhere an C<IO::File> object would be,
 without interfering with any of its own inside-out functionality.
 
 Classes using foreign inheritance should provide a C<DEMOLISH> function that
@@ -594,7 +581,7 @@ the properties of an inside-out object.
 =head1 SEE ALSO
 
 =head2 Other modules on CPAN
-   
+
 =over
 
 =item *
@@ -607,7 +594,7 @@ inheritance is handled via delegation, which imposes certain limitations.
 
 =item *
 
-L<Class::Std> -- Despite the name, does not reflect best practices for
+L<Class::Std> -- Despite the name, this does not reflect best practices for
 inside-out objects.  Does not provide thread-safety with CLONE, is not mod_perl
 safe and doesn't support foreign inheritance.
 
@@ -652,24 +639,24 @@ informative articles include:
 Abigail-II. "Re: Where/When is OO useful?". July 1, 2002.
 L<http://perlmonks.org/index.pl?node_id=178518>
 
-=item * 
+=item *
 
 Abigail-II. "Re: Tutorial: Introduction to Object-Oriented Programming".
 December 11, 2002. L<http://perlmonks.org/index.pl?node_id=219131>
 
-=item * 
+=item *
 
 demerphq. "Yet Another Perl Object Model (Inside Out Objects)". December 14,
 2002. L<http://perlmonks.org/index.pl?node_id=219924>
 
-=item * 
+=item *
 
 xdg. "Threads and fork and CLONE, oh my!". August 11, 2005.
 L<http://perlmonks.org/index.pl?node_id=483162>
 
-=item * 
+=item *
 
-jdhedden. "Anti-inside-out-object-ism". December 9, 2005. 
+jdhedden. "Anti-inside-out-object-ism". December 9, 2005.
 L<http://perlmonks.org/index.pl?node_id=515650>
 
 =back

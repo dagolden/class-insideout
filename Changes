@@ -1,5 +1,14 @@
 Revision history for Perl module Class::InsideOut
 
+0.08 in progress
+
+    - Class::ISA results are now cached when first used; also minor
+      optimization of reftype switching in STORABLE_* methods (Adam Kennedy)
+    
+    - foreign inheritance test now checks for IO::File or skips
+    
+    - documentation cleanup and trailing whitespace removal (Ron Savage)
+
 0.07 Mon Jan  9 09:48:46 EST 2006
     
     - Storable support tested with references, grouped references and circular

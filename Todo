@@ -1,6 +1,8 @@
 TODO list for Perl module Class::InsideOut
 
+- add examples showing Class::InsideOut::property my %foo
 - storable hooks: pre-freeze user hook
+- storable_attach and singleton support (!?)
 - ":all" export key
 - accessor creation
 - accessor privacy options
@@ -19,6 +21,34 @@ TODO list for Perl module Class::InsideOut
 # Interface brainstorming below
 #--------------------------------------------------------------------------#
 
+Need to figure out how to best get the accessor name -- can't use PadWalker
+because that's 5.8 specific.  Ideas:
+
+# cumbersome but similar to Class::Std and Object::InsideOut
+property my %name => { get => 'name', set=>'name' };
+
+# simple and avoids needing a privacy option too, which removes
+# need for aliases for property
+property my %rank,  { public => 'rank' } 
+property my %count, { protected => 'count' }
+
+# clearer but requires additionally denoting degree of privacy
+property my %rank => { accessor => 'rank' } 
+
+# functional style: sub public($\%;$)
+public rank => my %rank, { filter = \&validate };
+protected count => my %count;
+
+# question: should 'property' do the same thing (with/without a 'private')
+# alias?  Would help with introspection and dumping to have names for thingsj
+property name => my %name;
+private color => my %color;
+
+
+#--------------------------------------------------------------------------#
+# old interface ideas
+#--------------------------------------------------------------------------#
+
 use Class::InsideOut qw( property public private register id );
 
 Class::InsideOut::options(
@@ -29,7 +59,7 @@ Class::InsideOut::options(
                        # or 'readonly' or 'protected' or 'private'
   filter => \&coderef,  # mutator argument filtered through this
                        # will catch die message for error
-  
+  set_returns => 'self' # or 'value' or 'oldvalue'
 );
 
 Class::InsideOut::property ( my %UID, { privacy => 'readonly' });
@@ -51,20 +81,3 @@ sub dump {
   print "name: ", $NAME{ id $self }, "\n";
 }
 
-#--------------------------------------------------------------------------#
-# thoughts on storable
-#--------------------------------------------------------------------------#
-
-I think I need to build a data structure like this and hand it back to 
-Storable as an additional reference:
-
-my %freeze = {
-  object => $unblessed_copy_of_object_contents
-  properties => {
-    "My::Class"      => [ array of properties ],
-    "My::SuperClass" => [ array of properties ],
-  }
-};
-
-Have to loop over object class and unique list of superclasses but only store
-properties for classes that have registered properties.

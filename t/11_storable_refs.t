@@ -9,8 +9,7 @@ eval { require Storable };
 if ( $@ ) {
     plan skip_all => "Storable not installed",
 }
-else
-{
+else {
     plan tests => 56; 
 }
 
