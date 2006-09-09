@@ -31,10 +31,14 @@ sub species {
     return $species{ refaddr $self };
 }
 
+our @subclass_errors;
+
 sub DEMOLISH {
     my $self = shift;
-    die unless $self->isa( "t::Object::Animal" );
     $animal_count--;
+    if ( ref $self ne "t::Object::Animal" ) {
+        push @subclass_errors, ref $self;
+    }
 }
 
 1;
