@@ -4,14 +4,18 @@ TODO list for Perl module Class::InsideOut
 
 - other error handling(?)
 - cleanup code smells in storable support
-- accessor style options
 - code coverage: storable for non-scalar/array/hash
 - code coverage: storable with non-inside-out superclasses
 - STORABLE_attach and singleton support (write as Class::InsideOut::Singleton)
-- write FAQs
-- refactor docs (separate theory from quickstart)
-- expand documentation (cookbook? quick-start? notes on writing Builders)
 - cleanup test objects to use new features like accessor generation
+
+# Todos after 1.0
+
+- add support for new DDS serialization hooks
+- write FAQs
+- expand documentation (cookbook? quick-start? notes on writing Builders)
+- accessor style options
+- refactor docs (separate theory from quickstart)
 
 # Possible todos depending on demand
 
