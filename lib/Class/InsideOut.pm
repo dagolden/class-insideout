@@ -30,8 +30,7 @@ BEGIN {
 # Class data
 #--------------------------------------------------------------------------#
 
-my %PROP_DATA_FOR;      # class => [ list of property hashrefs ]
-my %PROP_NAMES_FOR;     # class => [ matching list of names ]
+my %PROP_DATA_FOR;      # class => { prop_name => property hashrefs }
 my %PUBLIC_PROPS_FOR;   # class => { prop_name => 1 }
 my %CLASS_ISA;          # class => [ list of self and @ISA tree ]
 my %OPTIONS;            # class => { default accessor options  }
@@ -128,7 +127,7 @@ sub CLONE {
     my $class = shift;
 
     # assemble references to all properties for all classes
-    my @properties = map { @$_ } values %PROP_DATA_FOR;
+    my @properties = map { values %$_ } values %PROP_DATA_FOR;
 
     for my $old_id ( keys %OBJECT_REGISTRY ) {
 
@@ -174,7 +173,7 @@ sub _check_property {
     croak "Invalid property name '$label': must be a perl identifier"
         if $label !~ /\A[a-z_]\w*\z/;
     croak "Duplicate property name '$label'"
-        if grep /$label/, @{ $PROP_NAMES_FOR{ caller(1) } }; 
+        if grep /$label/, keys %{ $PROP_DATA_FOR{ caller(1) } }; 
     _check_options( $opt ) if defined $opt;
     return;
 }
@@ -201,11 +200,11 @@ sub _evert {
         for my $c ( @class_isa ) {
             next unless exists $PROP_DATA_FOR{ $c };
             my $properties = $PROP_DATA_FOR{ $c };
-            for my $prop ( @$properties ) {
-                my $value = exists $prop->{ refaddr $obj }
-                          ? $prop->{ refaddr $obj }
+            for my $prop ( keys %$properties ) {
+                my $value = exists $properties->{$prop}{ refaddr $obj }
+                          ? $properties->{$prop}{ refaddr $obj }
                           : undef ;
-                push @{ $property_vals{$c} }, $value;
+                $property_vals{$c}{$prop} = $value;
             }
         }
 
@@ -287,7 +286,7 @@ sub _gen_DESTROY {
         # Clean up properties in all Class::InsideOut parents
         for my $c ( _class_tree( $class ) ) {
             next unless exists $PROP_DATA_FOR{ $c };
-            delete $_->{ $obj_id } for @{ $PROP_DATA_FOR{ $c } };
+            delete $_->{ $obj_id } for values %{ $PROP_DATA_FOR{ $c } };
         }
 
         # XXX this global registry could be deleted repeatedly
@@ -307,7 +306,25 @@ sub _gen_STORABLE_attach {
         my ( $class, $cloning, $serialized ) = @_;
         require Storable;
         my $data = Storable::thaw( $serialized );
-        return $class->new();
+        
+        # find a user attach hook
+        my $hook;
+        {
+            no strict 'refs';
+            $hook = *{ "$class\::STORABLE_attach_hook" }{CODE};
+        }
+
+        # try user hook to recreate, otherwise new(), otherwise give up
+        if ( defined $hook ) {
+            return $hook->($class, $cloning, $data);
+        }
+        elsif ( $class->can( "new" ) ) {
+            return $class->new();
+        }
+        else {
+            croak "Error attaching to $class singleton.\n" .
+                  "Couldn't find STORABLE_attach_hook() or new() in $class\n";
+        }
     };
 }
         
@@ -366,9 +383,9 @@ sub _gen_STORABLE_thaw {
         for my $c ( @class_isa ) {
             my $properties = $PROP_DATA_FOR{ $c };
             next unless $properties;
-            my @property_vals = @{ $data->{properties}{ $c } };
-            for my $prop ( @$properties ) {
-                $prop->{ refaddr $obj } = shift @property_vals;
+            for my $prop ( keys %$properties ) {
+                my $value = $data->{properties}{ $c }{ $prop };
+                $properties->{$prop}{ refaddr $obj } = $value;
             }
         }
 
@@ -390,8 +407,7 @@ sub _install_property{
     my ($label, $hash, $opt) = @_;
 
     my $caller = caller(0); # we get here via "goto", so caller(0) is right
-    push @{ $PROP_NAMES_FOR{ $caller } }, $label;
-    push @{ $PROP_DATA_FOR{ $caller } }, $hash;
+    $PROP_DATA_FOR{ $caller }{$label} = $hash;
     my $options = _merge_options( $caller, $opt );
     if ( exists $options->{privacy} && $options->{privacy} eq 'public' ) {
         no strict 'refs';
@@ -425,8 +441,8 @@ sub _properties {
     my $class = shift;
     my %properties;
     for my $c ( _class_tree( $class ) ) {
-        next if not exists $PROP_NAMES_FOR{ $c };
-        for my $p ( @{ $PROP_NAMES_FOR{ $c } } ) {
+        next if not exists $PROP_DATA_FOR{ $c };
+        for my $p ( sort keys %{ $PROP_DATA_FOR{ $c } } ) {
             $properties{$c}{$p} = exists $PUBLIC_PROPS_FOR{$c}{$p}
                                 ? "public" : "private";
         }
@@ -438,7 +454,7 @@ sub _leaking_memory {
     my %leaks;
 
     for my $class ( keys %PROP_DATA_FOR ) {
-        for my $prop ( @{ $PROP_DATA_FOR{ $class } } ) {
+        for my $prop ( values %{ $PROP_DATA_FOR{ $class } } ) {
             for my $obj_id ( keys %$prop ) {
                 $leaks{ $class }++
                     if not exists $OBJECT_REGISTRY{ $obj_id };

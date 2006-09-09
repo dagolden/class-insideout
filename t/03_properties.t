@@ -10,6 +10,7 @@ plan tests => 15;
 
 my $class = "t::Object::Animal::Jackalope";
 
+# sort alpha
 my $properties = {
     "t::Object::Animal" => {
         name    => "public",
@@ -25,8 +26,8 @@ my $properties = {
     },
     "t::Object::Animal::Jackalope" => {
        kills    => "public",
-       whiskers => "private",
        sidekick => "private",
+       whiskers => "private",
     },
 };
 

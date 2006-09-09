@@ -5,7 +5,7 @@ use Class::InsideOut qw( public register :singleton );
 
 public name => my %name; 
 
-my $self;
+our $self;
 
 sub new { 
     $self ||= register( bless \(my $s), shift) 

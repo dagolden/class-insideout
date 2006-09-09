@@ -3,12 +3,11 @@ TODO list for Perl module Class::InsideOut
 # Planned todos around core functionality - 1.0 roadmap
 
 - test that thawed objects are registered properly
-
-- test that singletons can be recreated when original singleton 
-doesn't already exist
-
-- test that singletons can be recreated when get_instance is used instead
-of "new()"
+- test that singletons can be recreated when original singleton doesn't already
+  exist
+- test that singletons can be recreated when get_instance is used instead of
+  "new()"
+- document storable singleton support
 
 # Todos after 1.0
 
