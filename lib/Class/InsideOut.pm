@@ -495,19 +495,6 @@ Class::InsideOut - a safe, simple inside-out object construction kit
    return "Hello, my name is $name{ id $self }";
  }
 
-= LIMITATIONS AND ROADMAP
-
-This is an *alpha release* for a work in progress. It is functional but
-unfinished and should not be used for any production purpose.  It has been
-released to solicit peer review and feedback.
-
-Serialization with [Storable] appears to be working but may have unanticipated
-bugs if an object contains a complicated (i.e. circular) reference structure
-and could use some real-world testing.
-
-I believe API's may have stabilized.  The module will be declared "beta" when
-additional accessor styles are written and singleton support for Storable has
-been added.  Users' feedback would be greatly appreciated.
 
 = DESCRIPTION
 
@@ -890,7 +877,17 @@ Likewise, when a serialized object is thawed, if its class or any
 superclass provides {STORABLE_thaw_hook} functions, they are each called
 ~after~ the object has been thawed with the thawed object as an argument.
 
-User feedback on serialization needs and limitations is welcome.
+{Class::InsideOut} also supports serialization of singleton objects for
+recent vesions of {Storable} that support {STORABLE_attach}.  Users must
+signal that {STORABLE_attach} should be used instead of {STORABLE_thaw}
+by adding {:singleton} to their import line as follows:
+
+  use Class::InsideOut qw( :std :singleton );
+
+When attaching, the singleton object will be recreated in one of two ways:
+
+* If the singleton class contains a {STORABLE_attach_hook) function, it 
+will be called with 
 
 == Thread-safety
 
@@ -912,11 +909,12 @@ they may interfere with the operation of {Class::InsideOut::CLONE} and leave
 objects in an undefined state.  Future versions may support a user-defined
 CLONE hook, depending on demand.
 
-=== Limitations
-{fork} on Perl for Win32 is emulated using threads since Perl 5.6. (See
-[perlfork].)  As Perl 5.6 did not support {CLONE}, inside-out objects that use 
-memory addresses (e.g. {Class::InsideOut}) are not fork-safe for Win32 on
-Perl 5.6.  Win32 Perl 5.8 {fork} is supported.
+*Limitations:* 
+
+{fork} on Perl for Win32 is emulated using threads since Perl
+5.6. (See [perlfork].)  As Perl 5.6 did not support {CLONE}, inside-out objects
+that use memory addresses (e.g. {Class::InsideOut}) are not fork-safe for Win32
+on Perl 5.6.  Win32 Perl 5.8 {fork} is supported.
 
 The technique for thread-safety requires creating weak references using
 {Scalar::Util::weaken()}, which is implemented in XS.  If the XS-version of
@@ -1019,6 +1017,14 @@ It will override default options or options passed as an argument.
 Registers an object for thread-safety.  This should be called as part of a
 constructor on a object blessed into the current package.  Returns the
 object (without modification).
+
+= ROADMAP
+
+Features slated for after the 1.0 release include:
+
+* adding support for [Data::Dump::Streamer] serialization hooks
+* adding additional accessor styles (e.g. get_name()/set_name())
+* revising and clarifying documentation
 
 = SEE ALSO
 
