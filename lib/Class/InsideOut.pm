@@ -65,6 +65,8 @@ sub import {
     no strict 'refs';
     my $caller = caller;
     *{ "$caller\::DESTROY" } = _gen_DESTROY( $caller );
+    *{ "$caller\::DDS_freeze" } = _gen_DDS_freeze( $caller );
+    *{ "$caller\::DDS_thaw" } = _gen_DDS_thaw( $caller );
     # check for ":singleton" and do export attach instead of thaw
     # make ":singleton" an empty tag to Exporter doesn't choke on it
     if ( grep { $_ eq ":singleton" } @_ ) {
@@ -211,6 +213,7 @@ sub _evert {
 
     # assemble reference to hand back
     return {
+        class => ref $obj,
         type => $type,
         contents => $contents,
         properties => \%property_vals
@@ -261,6 +264,51 @@ sub _gen_hook_accessor {
     };
 }
  
+sub _gen_DDS_freeze {
+    my $class = shift;
+    return sub {
+        my ( $obj ) = @_;
+
+        # Call STORABLE_freeze_hooks in each class if they exists
+        for my $c ( _class_tree( ref $obj ) ) {
+            my $hook;
+            {
+                no strict 'refs';
+                $hook = *{ "$c\::STORABLE_freeze_hook" }{CODE};
+            }
+            $hook->($obj) if defined $hook;
+        }
+
+        # Extract properties to save
+        my $data = _evert( $obj );
+
+        # Return DDS proxy and thaw function
+        return $data, "$class\::DDS_thaw()";
+    };
+}
+
+sub _gen_DDS_thaw {
+    my $class = shift;
+    return sub {
+        my ( $data ) = @_;
+
+        # restore contents
+        my $obj = _revert( $data );
+
+        # Call STORABLE_thaw_hooks in each class if they exists
+        for my $c ( _class_tree( ref $obj ) ) {
+            my $hook;
+            {
+                no strict 'refs';
+                $hook = *{ "$c\::STORABLE_thaw_hook" }{CODE};
+            }
+            $hook->($obj) if defined $hook;
+        }
+
+        return $obj;
+    };
+}
+
 sub _gen_DESTROY {
     my $class = shift;
     return sub {
@@ -357,7 +405,7 @@ sub _gen_STORABLE_thaw {
     return sub {
         my ( $obj, $cloning, $serialized, $data ) = @_;
 
-        _revert( $obj, $data );
+        _revert( $data, $obj );
 
         # Call STORABLE_thaw_hooks in each class if they exists
         for my $c ( _class_tree( ref $obj ) ) {
@@ -400,15 +448,23 @@ sub _merge_options {
 }
  
 sub _revert {
-    my ( $obj, $data ) = @_;
+    my ( $data, $obj ) = @_;
 
-    # restore contents
     my $contents = $data->{contents};
-    my $type = reftype $obj;
-    if    ( $type eq 'SCALAR' ) { $$obj = $$contents }
-    elsif ( $type eq 'ARRAY'  ) { @$obj = @$contents }
-    elsif ( $type eq 'HASH'   ) { %$obj = %$contents }
-    else                        { } # leave it empty
+    if ( defined $obj ) {
+        # restore contents to the pregenerated object
+        my $type = reftype $obj;
+        if    ( $type eq 'SCALAR' ) { $$obj = $$contents }
+        elsif ( $type eq 'ARRAY'  ) { @$obj = @$contents }
+        elsif ( $type eq 'HASH'   ) { %$obj = %$contents }
+        else                        { } # leave it empty
+    }
+    else {
+        # just use the contents as the reference
+        # and bless it back into an object
+        $obj = $contents;
+        bless $obj, $data->{class};
+    }
 
     # restore properties
     for my $c ( _class_tree( ref $obj ) ) {
@@ -422,6 +478,7 @@ sub _revert {
 
     # register object
     register( $obj );
+    return $obj;
 }
 
 #--------------------------------------------------------------------------#

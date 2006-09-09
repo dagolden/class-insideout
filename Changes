@@ -2,6 +2,7 @@ Revision history for Perl module Class::InsideOut
 
 0.15_01 in progress
     - added support for STORABLE_attach for singletons
+    - added support for serialization with Data::Dump::Streamer
     - improved test coverage
     - refactored some of the test classes
     - refactored STORABLE_* code

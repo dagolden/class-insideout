@@ -2,7 +2,11 @@ TODO list for Perl module Class::InsideOut
 
 # Planned todos around core functionality - 1.0 roadmap
 
+- rename serialization hooks
+- test DDS on other serialization tests
 - document storable singleton support
+- document DDS support
+- refactor docs
 
 # Todos after 1.0
 
@@ -10,7 +14,6 @@ TODO list for Perl module Class::InsideOut
 - accessor style options
 - write FAQs
 - expand documentation (cookbook? quick-start? notes on writing Builders)
-- refactor docs (separate theory from quickstart)
 
 # Possible todos depending on demand
 
