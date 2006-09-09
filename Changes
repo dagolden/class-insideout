@@ -1,6 +1,6 @@
 Revision history for Perl module Class::InsideOut
 
-0.07 in progress
+0.07 Mon Jan  9 09:48:46 EST 2006
     
     - Storable support tested with references, grouped references and circular
       references; references external to the freeze are cloned

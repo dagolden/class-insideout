@@ -17,6 +17,7 @@ t/07_synopsis_obj.t
 t/08_DEMOLISH.t
 t/09_foreign.t
 t/10_storable_values.t
+t/11_storable_refs.t
 t/data/testdata.txt
 t/Object/Animal.pm
 t/Object/Animal/Antelope.pm
@@ -24,6 +25,7 @@ t/Object/Animal/Jackalope.pm
 t/Object/Animal/JackRabbit.pm
 t/Object/Array.pm
 t/Object/Foreign.pm
+t/Object/Friends.pm
 t/Object/Hash.pm
 t/Object/Scalar.pm
 t/Object/Synopsis.pm

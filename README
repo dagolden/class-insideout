@@ -43,12 +43,12 @@ LIMITATIONS AND ROADMAP
     incomplete and should not be used for any production purpose. It has
     been released to solicit peer review and feedback.
 
-    Currently, serialization with Storable is experimental and may have
-    unanticipated bugs, particularly relating to serializing references to
-    other objects. Property destruction support for various inheritance
-    patterns (e.g. diamond) is experimental and the API may change. There is
-    minimal argument checking or other error handling. A future version will
-    also add very basic accessor support.
+    Serialization with Storable appears to be working but may have
+    unanticipated bugs and could use some real-world testing. Property
+    destruction support for various inheritance patterns (e.g. diamond) is
+    experimental and the API may change. There is minimal argument checking
+    or other error handling. A future version will also add very basic
+    accessor support.
 
 DESCRIPTION
     This is a simple, safe and streamlined toolkit for building inside-out
@@ -117,7 +117,7 @@ DESCRIPTION
     All other implementation details, including constructors, initializers
     and class inheritance management are left to the user. This does
     requires some additional work, but maximizes freedom. `Class::InsideOut'
-    is intended to be the base class providing only fundamental features.
+    is intended to be a base class providing only fundamental features.
     Subclasses of `Class::InsideOut' could be written that build upon it to
     provide particular styles of constructor, destructor and inheritance
     support.
@@ -200,8 +200,8 @@ USAGE
 
     `Class::InsideOut' automatically exports a customized `DESTROY'
     function. This function cleans up object property memory for all
-    declared properties for all `Class::InsideOut' based classes in the
-    `@ISA' array to avoid memory leaks or data collision.
+    declared properties the class and for all `Class::InsideOut' based
+    classes in the `@ISA' array to avoid memory leaks or data collision.
 
     Additionally, if a user-supplied `DEMOLISH' function is available in the
     same package, it will be called with the object being destroyed as its
@@ -268,20 +268,36 @@ USAGE
     without interfering with any of its own inside-out functionality.
 
     Classes using foreign inheritance should provide a `DEMOLISH' function
-    that calls the foreign class' destructor explicitly.
+    that calls the foreign class destructor explicitly.
 
   Serialization
 
     `Class::InsideOut' has experimental support for serialization with
     Storable by providing the `STORABLE_freeze' and `STORABLE_thaw' methods.
-    Due to limitations of Storable, this serialization will only work for
-    objects based on scalars, arrays or hashes.
+    `Storable' will use these methods to serialize. They should not be
+    called directly. Due to limitations of `Storable', this serialization
+    will only work for objects based on scalars, arrays or hashes.
 
-    Serialization of objects that themselves contain references to objects
-    has not yet been tested. The semantics of a deep cloning
-    `freeze(thaw(.))' operation has not been fully explored or tested.
+    References to object within the object being frozen will result in
+    clones upon thawing unless the other references are included in the same
+    freeze operation. (See `Storable' for details.)
 
-    User feedback on serialization needs and limitations are encouraged.
+      # assume $alice and $bob are objects
+      $alice->friends( $bob );
+      $bob->friends( $alice );
+
+      $alice2 = Storable::dclone( $alice );
+ 
+      # $bob was cloned, too, thanks to the reference 
+      die if $alice2->has_friend( $bob ); 
+  
+      # get alice2's friend
+      ($bob2) = $alice2->friends(); 
+  
+      # preserved relationship between bob2 and alice2
+      die unless $bob2->has_friend( $alice ); 
+
+    User feedback on serialization needs and limitations is encouraged.
 
   Thread-safety
 
@@ -307,7 +323,7 @@ USAGE
     Note: `fork' on Perl for Win32 is emulated using threads since Perl 5.6.
     (See perlfork.) As Perl 5.6 did not support `CLONE', inside-out objects
     using memory addresses (e.g. `Class::InsideOut' are not fork-safe for
-    Win32.
+    Win32 on Perl 5.6. Win32 Perl 5.8 `fork' is supported.
 
 FUNCTIONS
   `property'
