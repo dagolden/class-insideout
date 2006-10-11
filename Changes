@@ -1,5 +1,8 @@
 Revision history for Perl module Class::InsideOut
 
+1.03
+    - thread tests skip if thread creation fails
+
 1.02 Tue Aug 15 09:26:11 EDT 2006
     - fixed duplicate property name checking (RT#20997)
 

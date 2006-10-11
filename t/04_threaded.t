@@ -89,5 +89,10 @@ my $thr = threads->new(
     } 
 );
 
-$thr->join;
+SKIP: {
+    skip "Couldn't create a thread", 3
+        unless defined $thr;
+    $thr->join;
+}
+
 
