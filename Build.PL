@@ -78,7 +78,8 @@ my $builder = $class->new(
             file => [ qw{ 
                 lib/Class/InsideOut/Manual/About.pm
                 lib/Class/InsideOut/Manual/Advanced.pm 
-            } ] 
+            } ],
+            directory => [ 'examples' ],
         } 
     },
 

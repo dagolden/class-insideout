@@ -1,5 +1,6 @@
 Build.PL
 Changes
+examples/README
 INSTALL
 lib/Class/InsideOut.pm
 lib/Class/InsideOut.pod
