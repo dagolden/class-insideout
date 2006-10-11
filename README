@@ -2,7 +2,7 @@ NAME
     Class::InsideOut - a safe, simple inside-out object construction kit
 
 VERSION
-    This documentation refers to version 1.02
+    This documentation refers to version 1.03
 
 SYNOPSIS
       package My::Class;

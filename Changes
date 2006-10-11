@@ -1,6 +1,6 @@
 Revision history for Perl module Class::InsideOut
 
-1.03
+1.03 Wed Oct 11 10:55:28 EDT 2006
     - thread tests skip if thread creation fails
 
 1.02 Tue Aug 15 09:26:11 EDT 2006
