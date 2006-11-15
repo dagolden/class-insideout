@@ -1,5 +1,9 @@
 Revision history for Perl module Class::InsideOut
 
+1.0301 Wed Nov 15 06:08:47 EST 2006
+    - removing email address for bug reports to (hopefully)
+      cut down on RT ticket spam
+
 1.03 Wed Oct 11 10:55:28 EDT 2006
     - thread tests skip if thread creation fails
     - added an examples directory with a reference to some of the objects

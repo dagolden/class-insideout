@@ -2,19 +2,19 @@ NAME
     Class::InsideOut - a safe, simple inside-out object construction kit
 
 VERSION
-    This documentation refers to version 1.03
+    This documentation refers to version 1.0301
 
 SYNOPSIS
       package My::Class;
-     
-  use Class::InsideOut qw( public private register id );
-     
-  public     name => my %name;       # accessor: name()
+ 
+      use Class::InsideOut qw( public private register id );
+ 
+      public     name => my %name;       # accessor: name()
       private    age  => my %age;        # no accessor
-     
-  sub new { register( shift ) }
-     
-  sub greeting {
+ 
+      sub new { register( shift ) }
+ 
+      sub greeting {
         my $self = shift;
         return "Hello, my name is $name{ id $self }";
       }
@@ -64,10 +64,10 @@ USAGE
     arguments to "use". For example:
 
       use Class::InsideOut qw( register public );
-     
-  public name => my %name;
-     
-  sub new { register( shift ) }
+ 
+      public name => my %name;
+ 
+      sub new { register( shift ) }
 
     As a shortcut, "Class::InsideOut" supports two tags for importing sets
     of functions:
@@ -132,13 +132,13 @@ USAGE
 
       sub new {
         my $class = shift;
-     
-    my $self = \( my $scalar );    # anonymous scalar
+ 
+        my $self = \( my $scalar );    # anonymous scalar
       # my $self = {};                 # anonymous hash
       # my $self = [];                 # anonymous array
       # open my $self, "<", $filename; # filehandle reference
-     
-    bless $self, $class;
+ 
+        bless $self, $class;
         register( $self );
       }
 
@@ -170,10 +170,10 @@ USAGE
     "DEMOLISH" returns.
 
       # Sample DEMOLISH: Count objects demolished (for whatever reason)
-     
-  my $objects_destroyed;
-     
-  sub DEMOLISH {
+ 
+      my $objects_destroyed;
+ 
+      sub DEMOLISH {
         $objects_destroyed++;
       }
 
@@ -189,12 +189,12 @@ USAGE
     "SUPER::DEMOLISH", or may prefer to walk the entire @ISA tree:
 
       use Class::ISA;
-     
-  sub DEMOLISH {
+ 
+      sub DEMOLISH {
         my $self = shift;
         # class specific demolish actions
-     
-    # DEMOLISH for all parent classes, but only once
+ 
+        # DEMOLISH for all parent classes, but only once
         my @parents = Class::ISA::super_path( __PACKAGE__ );
         my %called;
         for my $p ( @parents  ) {
@@ -328,9 +328,7 @@ ROADMAP
     *   Further documentation revisions and clarification
 
 BUGS
-    Please report bugs or feature requests using the CPAN Request Tracker.
-    Bugs can be sent by email to "bug-Class-InsideOut@rt.cpan.org" or
-    submitted using the web interface at
+    Please report bugs or feature requests using the CPAN Request Tracker:
     <http://rt.cpan.org/Public/Dist/Display.html?Name=Class-InsideOut>
 
     When submitting a bug or request, please include a test-file or a patch

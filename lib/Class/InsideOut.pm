@@ -1,6 +1,6 @@
 package Class::InsideOut;
 
-$VERSION     = "1.03";
+$VERSION     = "1.0301";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( ); # nothing by default
 @EXPORT_OK   = qw ( new id options private property public register );
@@ -861,9 +861,7 @@ Features slated for after the 1.0 release include:
 
 = BUGS
 
-Please report bugs or feature requests using the CPAN Request Tracker.
-Bugs can be sent by email to {bug-Class-InsideOut@rt.cpan.org} or
-submitted using the web interface at
+Please report bugs or feature requests using the CPAN Request Tracker:
 [http://rt.cpan.org/Public/Dist/Display.html?Name=Class-InsideOut]
 
 When submitting a bug or request, please include a test-file or a patch to an

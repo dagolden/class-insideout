@@ -8,7 +8,7 @@ Class::InsideOut - a safe, simple inside-out object construction kit
 
 =head1 VERSION
 
-This documentation refers to version 1.03
+This documentation refers to version 1.0301
 
 =head1 SYNOPSIS
 
@@ -394,9 +394,7 @@ Further documentation revisions and clarification
 
 =head1 BUGS
 
-Please report bugs or feature requests using the CPAN Request Tracker.
-Bugs can be sent by email to C<<< bug-Class-InsideOut@rt.cpan.org >>> or
-submitted using the web interface at
+Please report bugs or feature requests using the CPAN Request Tracker:
 L<http://rt.cpan.org/Public/Dist/Display.html?Name=Class-InsideOut>
 
 When submitting a bug or request, please include a test-file or a patch to an
