@@ -35,6 +35,7 @@ t/18_register_argument_checking.t
 t/19_storable_singleton.t
 t/20_storable_singleton_error.t
 t/21_optional_new.t
+t/22_readonly.t
 t/98_pod.t
 t/99_pod_coverage.t
 t/data/testdata.txt
@@ -47,6 +48,7 @@ t/Object/Foreign.pm
 t/Object/Friends.pm
 t/Object/Hash.pm
 t/Object/Hooked.pm
+t/Object/ReadOnly.pm
 t/Object/RegisterClassname.pm
 t/Object/RegisterRef.pm
 t/Object/Scalar.pm

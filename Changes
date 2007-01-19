@@ -1,5 +1,8 @@
 Revision history for Perl module Class::InsideOut
 
+1.04 Thu Jan 18 21:47:19 EST 2007
+    - added 'readonly' accessor-creator
+
 1.0301 Wed Nov 15 06:08:47 EST 2006
     - removing email address for bug reports to (hopefully)
       cut down on RT ticket spam

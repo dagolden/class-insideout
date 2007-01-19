@@ -1,11 +1,11 @@
 package Class::InsideOut;
 
-$VERSION     = "1.0301";
+$VERSION     = "1.04";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( ); # nothing by default
-@EXPORT_OK   = qw ( new id options private property public register );
+@EXPORT_OK   = qw ( new id options private property public readonly register );
 %EXPORT_TAGS = (
-    "std"       => [ qw( id private public register ) ],
+    "std"       => [ qw( id private public readonly register ) ],
     "new"       => [ qw( new ) ],
     "all"       => [ @EXPORT_OK ],
     "singleton" => [], # just a flag for import()
@@ -130,6 +130,17 @@ sub public($\%;$) {
     &_check_property;
     $_[2] ||= {};
     $_[2] = { %{$_[2]}, privacy => 'public' };
+    goto &_install_property;
+}
+
+sub readonly($\%;$) {
+    &_check_property;
+    $_[2] ||= {};
+    $_[2] = { 
+        %{$_[2]}, 
+        privacy => 'public',
+        set_hook => sub { die "is read-only\n" }
+    };
     goto &_install_property;
 }
 
@@ -538,10 +549,11 @@ This documentation refers to version %%VERSION%%
 
  package My::Class;
  
- use Class::InsideOut qw( public private register id );
+ use Class::InsideOut qw( public readonly private register id );
 
- public     name => my %name;       # accessor: name()
- private    age  => my %age;        # no accessor
+ public     name => my %name;    # accessor: name()
+ readonly   ssn  => my %ssn;     # read-only accessor: ssn()
+ private    age  => my %age;     # no accessor
  
  sub new { register( shift ) }
  
@@ -598,7 +610,7 @@ Additional functions may be imported as usual by including them as arguments to
 As a shortcut, {Class::InsideOut} supports two tags for importing sets of
 functions:
 
-* {:std} provides {id}, {private}, {public} and {register}
+* {:std} provides {id}, {private}, {public}, {readonly} and {register}
 * {:all} imports all functions (including an optional constructor)
 
 *Note*: Automatic imports can be bypassed via {require} or by passing an empty
@@ -607,12 +619,13 @@ this is a good idea.
 
 == Object properties and accessors
 
-Object properties are declared with the {public} and {private}
+Object properties are declared with the {public}, {readonly} and {private}
 functions.  They must be passed a label and the lexical hash that will be
 used to store object properties:
 
- public name => my %name;
- private age => my %age;
+ public   name => my %name;
+ readonly ssn  => my %ssn;
+ private  age  => my %age;
 
 Properties for an object are accessed through an index into the lexical hash
 based on the memory address of the object.  This memory address ~must~ be
@@ -620,6 +633,7 @@ obtained via {Scalar::Util::refaddr}.  The alias {id} may be imported for
 brevity.
 
  $name{ refaddr $self } = "James";
+ $ssn { id      $self } = 123456789;
  $age { id      $self } = 32;
 
 *Tip*: since {refaddr} and {id} are function calls, it may be efficient to
@@ -634,6 +648,17 @@ the property.
  # Outside the class
  $person = My::Class->new;
  $person->name( "Larry" );
+
+Object properties declared with {readonly} will have a read-only accessor
+created.  The accessor will die if passed an argument to set the property
+value.  The property may be set directly in the hash from within the class
+package as usual.
+
+ # Inside the class
+ $ssn { id $person } = 987654321;
+ 
+ # Inside or outside the class
+ $person->ssn( 123456789 );      # dies
 
 Property accessors may also be hand-written by declaring the property
 {private} and writing whatever style of accessor is desired.  For example:
@@ -676,7 +701,9 @@ case of blessing an anonymous scalar.
  register( $class ); # same as register( bless \(my $s), $class )
 
 As a convenience, {Class::InsideOut} provides an optional {new} constructor
-for simple objects.
+for simple objects.  This constructor automatically initializes the object
+from key/value pairs passed to the constructor for all keys matching the 
+name of a property (including otherwise "private" or "readonly" properties).
  
 A more advanced technique for object construction uses another object, usually
 a superclass object, as the object reference.  See "black-box inheritance" in
@@ -793,6 +820,16 @@ default options that have been set.
 This is an alias to {property} that also sets the privacy option to 'public'.
 It will override default options or options passed as an argument.
 
+== {readonly}
+
+ readonly ssn => my %ssn;
+ readonly fingerprint => my %fingerprint, { %options };
+
+This is an alias to {property} that sets the privacy option to 'public' and
+adds a {set_hook} option that dies if an attempt is made to use the accessor to
+change the property.  It will override default options or options passed as an
+argument.
+
 == {register}
 
  register( bless( $object, $class ) ); # register the object 
@@ -877,7 +914,7 @@ http://dagolden.com/
 
 = COPYRIGHT AND LICENSE
 
-Copyright (c) 2006 by David A. Golden
+Copyright (c) 2006, 2007 by David A. Golden
 
 This program is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.
