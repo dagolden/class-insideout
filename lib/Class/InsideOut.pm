@@ -1,6 +1,6 @@
 package Class::InsideOut;
 
-$VERSION     = "1.04";
+$VERSION     = "1.05";
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( ); # nothing by default
 @EXPORT_OK   = qw ( new id options private property public readonly register );
@@ -97,7 +97,8 @@ sub new {
     
     # initialization
     croak "Arguments to new must be a hash or hash reference"
-        if ( @_ == 1 && ref($_[0]) && reftype($_[0]) ne 'HASH' ) || ( @_ % 2 );
+        if ( @_ == 1 && ! ( ref $_[0] && reftype($_[0]) eq 'HASH' ) ) 
+        || ( @_ > 1 && @_ % 2 );
      
     my %args = (@_ == 1) ? %{$_[0]} : @_;
 

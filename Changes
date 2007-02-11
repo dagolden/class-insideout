@@ -1,5 +1,8 @@
 Revision history for Perl module Class::InsideOut
 
+1.05 Sun Feb 11 16:29:16 EST 2007
+    - fixed optional new method with hash reference (RT#24839)
+
 1.04 Thu Jan 18 21:47:19 EST 2007
     - added 'readonly' accessor-creator
 
