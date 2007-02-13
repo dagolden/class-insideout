@@ -5,6 +5,12 @@ use Scalar::Util qw( refaddr reftype );
 
 $|++; # try to keep stdout and stderr in order on Win32
 
+# Need Storable 2.04 ( relatively safe STORABLE_freeze support )
+eval { require Storable and Storable->VERSION( 2.04 ) };
+if ( $@ ) {
+    plan skip_all => "Storable >= 2.04 not installed",
+}
+
 sub check_version {
     my ($class, $version) = @_;
     eval { require $class and $class->VERSION($version) };

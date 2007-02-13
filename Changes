@@ -1,5 +1,9 @@
 Revision history for Perl module Class::InsideOut
 
+1.06 Mon Feb 12 19:34:59 EST 2007
+    - all tests involving Storable now skip if Storable isn't installed
+      (instead of only a few) (David Cantrell)
+    
 1.05 Sun Feb 11 16:29:16 EST 2007
     - fixed optional new method with hash reference (RT#24839)
 
