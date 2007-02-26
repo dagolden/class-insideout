@@ -12,10 +12,12 @@ TODO list for Perl module Class::InsideOut
 
 # Possible todos depending on demand
 
+- class accessors via "public foo => my $foo";
 - add public introspection methods (property list and options?)
 - accessor privacy => "protected" and matching property alias
 - look into support for cloning tied objects(?) in the blessed hash(?)
 - pre-clone user hook?? (waiting for someone to say they need it)
+- BUILD method
 
 #--------------------------------------------------------------------------#
 # Thoughts about property accessor styles and options
@@ -46,6 +48,11 @@ Class::InsideOut::options(
 * Security (c.f use perl post)
 
 * advisory encapsulation
+
+* Why "public *foo*" separate from "my %foo"  (e.g. for "my %foo_of")
+
+* Another advantage of InsideOut over accessors -- can use as Lvalue for
+  things like increments: $count_of{ id $self }
 
 #--------------------------------------------------------------------------#
 # Cookbook ideas
