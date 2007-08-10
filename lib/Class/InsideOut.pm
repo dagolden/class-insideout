@@ -1,6 +1,6 @@
 package Class::InsideOut;
 
-$VERSION     = "1.06";
+$VERSION     = '1.07';
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( ); # nothing by default
 @EXPORT_OK   = qw ( new id options private property public readonly register );
@@ -67,10 +67,10 @@ sub import {
     my $caller = caller;
     *{ "$caller\::DESTROY" } = _gen_DESTROY( $caller );
     # check for ":singleton" and do export attach instead of thaw
-    # make ":singleton" an empty tag to Exporter doesn't choke on it
     if ( grep { $_ eq ":singleton" } @_ ) {
         *{ "$caller\::STORABLE_freeze" } = _gen_STORABLE_freeze( $caller, 1 );
         *{ "$caller\::STORABLE_attach" } = _gen_STORABLE_attach( $caller );
+        @_ = grep { $_ ne ':singleton' } @_; # strip it back out
     }
     else {
         *{ "$caller\::STORABLE_freeze" } = _gen_STORABLE_freeze( $caller, 0 );

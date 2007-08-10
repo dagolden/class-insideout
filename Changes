@@ -1,5 +1,9 @@
 Revision history for Perl module Class::InsideOut
 
+1.07 Fri Aug 10 07:41:00 EDT 2007
+    - fixes for using ":storable" with older versions of Exporter
+      that required tags to come first. Now we just strip it during import.
+
 1.06 Mon Feb 12 19:34:59 EST 2007
     - all tests involving Storable now skip if Storable isn't installed
       (instead of only a few) (David Cantrell)

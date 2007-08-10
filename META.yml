@@ -1,6 +1,6 @@
 ---
 name: Class-InsideOut
-version: 1.06
+version: 1.07
 author:
   - 'David A. Golden <dagolden@cpan.org>'
 abstract: 'a safe, simple inside-out object construction kit'
@@ -18,14 +18,14 @@ requires:
 provides:
   Class::InsideOut:
     file: lib/Class/InsideOut.pm
-    version: 1.06
+    version: 1.07
   Class::InsideOut::Manual::About:
     file: lib/Class/InsideOut/Manual/About.pm
-    version: 1.06
+    version: 1.07
   Class::InsideOut::Manual::Advanced:
     file: lib/Class/InsideOut/Manual/Advanced.pm
-    version: 1.06
-generated_by: Module::Build version 0.2805
+    version: 1.07
+generated_by: Module::Build version 0.2808
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html
   version: 1.2
