@@ -2,6 +2,7 @@ TODO list for Perl module Class::InsideOut
 
 # Todos after 1.0
 
+- change to Apache license
 - add support for new DDS serialization hooks
 - test DDS on other serialization tests
 - document DDS support
