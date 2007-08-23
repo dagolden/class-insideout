@@ -9,6 +9,8 @@ Revision history for Perl module Class::InsideOut
       perl585delta alludes to thread fixes when weak references are in use
       and this may be related
     - removed "use warnings" from singleton test files for back compatibility
+    - moved pod/coverage tests to t_extra/ and stopped depending on an
+      environment variable to allow them to run
     
 1.07 Fri Aug 10 07:41:00 EDT 2007
     - fixes for using ":storable" with older versions of Exporter
