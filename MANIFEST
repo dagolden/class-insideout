@@ -36,8 +36,6 @@ t/19_storable_singleton.t
 t/20_storable_singleton_error.t
 t/21_optional_new.t
 t/22_readonly.t
-t/98_pod.t
-t/99_pod_coverage.t
 t/data/testdata.txt
 t/Object/Animal.pm
 t/Object/Animal/Antelope.pm
@@ -59,4 +57,6 @@ t/Object/Synopsis.pm
 t/Object/Trivial.pm
 t/Object/WithNew.pm
 t/Object/WithNew/Inherited.pm
+t_extra/pod.t
+t_extra/pod_coverage.t
 Todo
