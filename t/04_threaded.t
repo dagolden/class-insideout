@@ -22,10 +22,10 @@ BEGIN {
     
     # don't run for Perl prior to 5.8 (with CLONE) (even if
     # threads *are* configured)
-    if( $] < 5.008 ) {
+    if( $] < 5.008005 ) {
         require Test::More;
         Test::More::plan( skip_all => 
-            "thread support requires perl 5.8" );
+            "thread support requires perl 5.8.5" );
     }
 
     # don't run without Scalar::Util::weaken()

@@ -1,5 +1,5 @@
 use strict;
-use warnings;
+local $^W = 1;
 use Test::More;
 use Scalar::Util qw( refaddr );
 use Class::InsideOut ();

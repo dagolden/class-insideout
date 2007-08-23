@@ -8,7 +8,7 @@ Class::InsideOut - a safe, simple inside-out object construction kit
 
 =head1 VERSION
 
-This documentation refers to version 1.07
+This documentation refers to version 1.08
 
 =head1 SYNOPSIS
 
@@ -57,7 +57,7 @@ Overloading-safe
 
 =item *
 
-Thread-safe for Perl 5.8 or better
+Thread-safe for Perl 5.8.5 or better
 
 =item *
 

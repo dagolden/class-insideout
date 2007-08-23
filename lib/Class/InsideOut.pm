@@ -1,6 +1,6 @@
 package Class::InsideOut;
 
-$VERSION     = '1.07';
+$VERSION     = '1.08';
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( ); # nothing by default
 @EXPORT_OK   = qw ( new id options private property public readonly register );
@@ -376,8 +376,9 @@ sub _gen_STORABLE_attach {
             return $class->new();
         }
         else {
-            die "Error attaching to $class:\n" .
+            warn "Error attaching to $class:\n" .
                   "Couldn't find STORABLE_attach_hook() or new() in $class\n";
+            return;
         }
     };
 }
@@ -574,7 +575,7 @@ module aims for minimalism and robustness:
 * Supports any underlying object type including black-box inheritance
 * Does not leak memory on object destruction
 * Overloading-safe
-* Thread-safe for Perl 5.8 or better
+* Thread-safe for Perl 5.8.5 or better
 * {mod_perl} compatible
 * Makes no assumption about inheritance or initializer needs
 

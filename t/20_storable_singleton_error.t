@@ -1,5 +1,5 @@
 use strict;
-use warnings;
+local $^W = 1;
 use Test::More;
 use Scalar::Util qw( refaddr );
 
@@ -15,7 +15,7 @@ if ( $@ ) {
     plan skip_all => "Storable >= 2.14 needed for singleton support",
 }
 else {
-    plan tests => 5 * scalar keys %constructors_for;
+    plan tests => 6 * scalar keys %constructors_for;
 }
 
 #--------------------------------------------------------------------------#
@@ -47,10 +47,18 @@ for my $class ( keys %constructors_for ) {
 
     # thaw object -- should die because no "new()" and no
     # STORABLE_attach_hook
-    eval { $thawed = Storable::thaw( $frozen ) };
+    my $error;
+    eval { 
+        local $SIG{__WARN__} = sub { $error = shift }; 
+        $thawed = Storable::thaw( $frozen );
+    };
 
-    like( $@, '/Error attaching/i',
+    like( $@, "/STORABLE_attach did not return a $class\/",
         "... Thawing without constructor throws error"
+    ); 
+
+    like( $error, "/Error attaching to $class\/",
+        "... Warning message seen"
     ); 
 
 }
