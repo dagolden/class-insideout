@@ -4,9 +4,9 @@ version: 1.08
 author:
   - 'David A. Golden <dagolden@cpan.org>'
 abstract: 'a safe, simple inside-out object construction kit'
-license: perl
+license: apache
 resources:
-  license: http://dev.perl.org/licenses/
+  license: http://apache.org/licenses/LICENSE-2.0
 requires:
   Class::ISA: 0
   Config: 0
