@@ -1,6 +1,6 @@
 Revision history for Perl module Class::InsideOut
 
-1.08
+1.08 Thu Aug 23 07:12:33 EDT 2007
     - STORABLE_attach warns instead of dying if it can't provide a singleton
       back to Storable, leaving Storable to croak instead; on 5.6.2 (and 
       possibly older Perls), this change works around Storable dying during
@@ -11,6 +11,8 @@ Revision history for Perl module Class::InsideOut
     - removed "use warnings" from singleton test files for back compatibility
     - moved pod/coverage tests to t_extra/ and stopped depending on an
       environment variable to allow them to run
+    - changed to the Apache License, version 2.0; (it's clearer, relicensable,
+      and is explicit about contributions)
     
 1.07 Fri Aug 10 07:41:00 EDT 2007
     - fixes for using ":storable" with older versions of Exporter

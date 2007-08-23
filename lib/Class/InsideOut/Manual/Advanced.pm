@@ -148,10 +148,10 @@ Likewise, when a serialized object is thawed, if its class or any
 superclass provides a {THAW} method, they are each called
 ~after~ the object has been thawed with the thawed object as an argument.
 
-{Class::InsideOut} also supports serialization of singleton objects for
-recent vesions of {Storable} that support {STORABLE_attach}.  Users must
-signal that {STORABLE_attach} should be used instead of {STORABLE_thaw}
-by adding {:singleton} to their import line as follows:
+{Class::InsideOut} also supports serialization of singleton objects for recent
+vesions of {Storable} (2.14 or later) that support {STORABLE_attach}.  Users
+must signal that {STORABLE_attach} should be used instead of {STORABLE_thaw} by
+adding {:singleton} to their import line as follows:
 
   use Class::InsideOut qw( :std :singleton );
 
@@ -186,6 +186,8 @@ thread is created, the Perl interpreter is cloned, and all objects in the new
 thread will have new memory addresses.  Starting with Perl 5.8, if a {CLONE}
 function exists in a package, it will be called when a thread is created to
 provide custom responses to thread cloning.  (See [perlmod] for details.)
+To avoid bugs in the implementation of threading, Perl 5.8.5 or later is
+strongly recommended.
 
 {Class::InsideOut} itself has a {CLONE} function that automatically fixes up
 properties in a new thread to reflect the new memory addresses for all classes
@@ -219,42 +221,20 @@ and continue without thread-safety.
 
 David A. Golden (DAGOLDEN)
 
-dagolden@cpan.org
-
-http://dagolden.com/
-
 = COPYRIGHT AND LICENSE
 
-Copyright (c) 2006 by David A. Golden
+Copyright (c) 2006, 2007 by David A. Golden
 
-This program is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at 
+L<http://www.apache.org/licenses/LICENSE-2.0>
 
-The full text of the license can be found in the LICENSE file included with
-this module.
-
-= DISCLAIMER OF WARRANTY
-
-BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
-FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
-OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
-PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
-EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
-ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
-YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
-NECESSARY SERVICING, REPAIR, OR CORRECTION.
-
-IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
-WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
-REDISTRIBUTE THE SOFTWARE AS PERMITTED BY THE ABOVE LICENCE, BE
-LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL,
-OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE
-THE SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
-RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
-FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
-SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
-SUCH DAMAGES.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
 =end wikidoc
 

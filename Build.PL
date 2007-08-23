@@ -60,7 +60,7 @@ SUBCLASS
 my $builder = $class->new( 
     module_name         => 'Class::InsideOut',
     dist_author         => 'David A. Golden <dagolden@cpan.org>',
-    license             => 'perl',
+    license             => 'apache',
     create_readme       => 1,
     create_makefile_pl  => 'traditional',
     requires        => {
