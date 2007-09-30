@@ -1,6 +1,9 @@
 package Class::InsideOut;
+use strict;
 
-$VERSION     = '1.08';
+use vars qw/$VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS/;
+
+$VERSION     = '1.09';
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( ); # nothing by default
 @EXPORT_OK   = qw ( new id options private property public readonly register );
@@ -11,7 +14,6 @@ $VERSION     = '1.08';
     "singleton" => [], # just a flag for import()
 );
 
-use strict;
 use Carp;
 use Exporter;
 use Class::ISA;
@@ -115,26 +117,26 @@ sub new {
     return $self;
 }
 
-sub private($\%;$) {
+sub private($\%;$) { ## no critic -- prototype
     &_check_property;
     $_[2] ||= {};
     $_[2] = { %{$_[2]}, privacy => 'private' };
     goto &_install_property;
 }
 
-sub property($\%;$) {
+sub property($\%;$) { ## no critic -- prototype
     &_check_property;
     goto &_install_property;
 }
 
-sub public($\%;$) {
+sub public($\%;$) { ## no critic -- prototype
     &_check_property;
     $_[2] ||= {};
     $_[2] = { %{$_[2]}, privacy => 'public' };
     goto &_install_property;
 }
 
-sub readonly($\%;$) {
+sub readonly($\%;$) { ## no critic -- prototype
     &_check_property;
     $_[2] ||= {};
     $_[2] = { 

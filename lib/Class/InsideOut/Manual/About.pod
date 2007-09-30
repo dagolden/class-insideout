@@ -9,7 +9,7 @@ inside-out technique
 
 =head1 VERSION
 
-This documentation refers to version 1.08
+This documentation refers to version 1.09
 
 =head1 DESCRIPTION
 
