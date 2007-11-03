@@ -60,3 +60,7 @@ t/Object/WithNew/Inherited.pm
 t_extra/pod.t
 t_extra/pod_coverage.t
 Todo
+xt/criticrc
+xt/perl-critic.t
+xt/pod-coverage.t
+xt/pod.t
