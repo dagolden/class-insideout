@@ -1,6 +1,6 @@
 Revision history for Perl module Class::InsideOut
 
-1.09 Fri Jan  4 18:03:04 EST 2008
+1.09 Fri Jan  4 18:42:41 EST 2008
 
     - bugfix: allow use of upper or mixed case property accessors 
       (David Schmitt)
@@ -10,6 +10,8 @@ Revision history for Perl module Class::InsideOut
     
     - pod: added a note about using "our" instead of "my" for properties 
 
+    - critic: various cleanups to about Perl::Critic level 5
+    
     - moved author tests to xt directory for CPANTS compatibility
 
 1.08 Thu Aug 23 07:12:33 EDT 2007

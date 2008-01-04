@@ -1,8 +1,9 @@
 package Class::InsideOut::Manual::Advanced;
 # Not really a .pm file, but holds wikidoc which will be
 # turned into .pod by the Build.PL
-$VERSION = '1.09';
 use strict; # make CPANTS happy
+use vars /$VERSION/;
+$VERSION = '1.09';
 1;
 __END__
 
