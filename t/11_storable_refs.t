@@ -1,4 +1,15 @@
 use strict;
+
+BEGIN {
+    # don't run without Scalar::Util::weaken()
+    eval "use Scalar::Util 'weaken'";
+    if( $@ =~ /\AWeak references are not implemented/ ) {
+        require Test::More;
+        Test::More::plan( skip_all =>
+            "Can't test storable refs without Scalar::Util::weaken" );
+    }
+}
+
 use Test::More;
 use Class::InsideOut ();
 use Scalar::Util qw( refaddr reftype weaken isweak );

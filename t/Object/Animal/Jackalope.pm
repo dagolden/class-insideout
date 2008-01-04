@@ -1,9 +1,11 @@
 package t::Object::Animal::Jackalope;
 
-use base qw( 
-    t::Object::Animal::Antelope 
-    t::Object::Animal::JackRabbit 
-);
+BEGIN { 
+    for ( 't::Object::Animal::Antelope', 't::Object::Animal::JackRabbit' ) {
+        eval "require $_";
+        push @t::Object::Animal::Jackalope::ISA, $_;
+    }
+}
 
 use Class::InsideOut qw( private property id );
 

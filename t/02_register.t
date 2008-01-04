@@ -51,6 +51,7 @@ for my $class ( @classes ) {
 for my $class ( @classes ) {
     while ( @{$objects_of{$class}} ) {
         my $o = shift @{$objects_of{$class}};
+        Class::InsideOut::_deregister( $o ) if $] < 5.006;
         undef $o;
         ok( ! defined $o,
             "Destroying an object"

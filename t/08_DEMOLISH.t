@@ -30,6 +30,7 @@ is( $t::Object::Animal::animal_count, 2,
     "Count of animals is 2"
 );
 
+Class::InsideOut::_deregister( $p ) if $] < 5.006;
 undef $p;
 ok( ! defined $p,
     "Destroying the subclass object"
@@ -42,6 +43,7 @@ ok( ! scalar @t::Object::Animal::subclass_errors,
         for @t::Object::Animal::subclass_errors;
 };
 
+Class::InsideOut::_deregister( $o ) if $] < 5.006;
 undef $o;
 ok( ! defined $o,
     "Destroying the first object"

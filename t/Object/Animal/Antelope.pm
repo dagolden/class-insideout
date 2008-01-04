@@ -1,6 +1,9 @@
 package t::Object::Animal::Antelope;
 
-use base 't::Object::Animal';
+BEGIN {
+    require t::Object::Animal;
+    @t::Object::Animal::Antelope::ISA = 't::Object::Animal';
+}
 
 use Class::InsideOut qw( property public id );
 

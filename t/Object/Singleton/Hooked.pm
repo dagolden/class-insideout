@@ -4,7 +4,7 @@ use Class::InsideOut qw( public register id :singleton );
 
 public name => my %name; 
 
-our $self;
+use vars qw/$self/;
 
 sub get_instance { 
     $self ||= register( bless \(my $s), shift);

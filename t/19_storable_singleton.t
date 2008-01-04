@@ -70,6 +70,7 @@ for my $class ( keys %constructors_for ) {
     # destroy the singleton
     {
         no strict 'refs';
+        Class::InsideOut::_deregister( $o ) if $] < 5.006;
         ${"$class\::self"} = $thawed = $o = undef;
         is( ${"$class\::self"}, undef,
             "... Destroying $class singleton manually"

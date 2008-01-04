@@ -180,6 +180,16 @@ Hand-written accessors will be very slightly faster as generated accessors hold
 a reference to the property hash rather than accessing the property hash
 directly.
 
+It is also possible to use a package hash instead of a lexical hash to store
+object properties:
+
+  public name => our %name;
+
+However, this makes private object data accessable outside the class and incurs
+a slight performance penalty when accessing the property hash directly; it is
+not recommended to do this unless you really need it for some specialized
+reason.
+
 =head2 Object construction
 
 C<<< Class::InsideOut >>> provides no default constructor method as there are many
@@ -397,6 +407,11 @@ Accessors" in L<Class::InsideOut::Manual::Advanced> for details.
 Programmers seeking a more full-featured approach to inside-out objects are
 encouraged to explore L<Object::InsideOut>.  Other implementations are also
 noted in L<Class::InsideOut::Manual::About>.
+
+=head1 KNOWN LIMITATIONS
+
+Requires weak reference support (Perl E<gt>= 5.6) and Scalar::Util::weaken() to
+avoid memory leaks and to provide thread-safety.
 
 =head1 ROADMAP
 

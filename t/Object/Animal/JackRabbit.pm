@@ -1,6 +1,9 @@
 package t::Object::Animal::JackRabbit;
 
-use base 't::Object::Animal';
+BEGIN {
+    require t::Object::Animal;
+    @t::Object::Animal::JackRabbit::ISA = 't::Object::Animal';
+}
 
 use Class::InsideOut qw( property id );
 

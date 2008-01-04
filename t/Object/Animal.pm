@@ -13,6 +13,7 @@ Class::InsideOut::options(
 Class::InsideOut::property( nickname => my %nickname ); #20997: Duplicate property name
 Class::InsideOut::property( name => my %name );
 Class::InsideOut::property( species => my %species );
+Class::InsideOut::property( Genus => my %genus );
 
 # Globals for testing
 

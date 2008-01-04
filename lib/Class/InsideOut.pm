@@ -24,8 +24,8 @@ BEGIN {
     eval { Scalar::Util->import( "weaken" ) };
     if ( $@ =~ /\AWeak references/ ) {
         warn "Scalar::Util::weaken unavailable: "
-           . "Class::InsideOut will not be thread-safe\n";
-        *weaken = sub { shift };
+           . "Class::InsideOut will not be thread-safe and will leak memory\n";
+        *weaken = sub { return @_ };
     }
 }
 
@@ -177,7 +177,6 @@ sub register {
     return $obj;
 }
 
-
 #--------------------------------------------------------------------------#
 # private functions for implementation
 #--------------------------------------------------------------------------#
@@ -208,7 +207,7 @@ sub CLONE {
 
         # update the registry to the new, cloned object
         weaken ( $OBJECT_REGISTRY{ $new_id } = $object );
-        delete $OBJECT_REGISTRY{ $old_id };
+        _deregister( $old_id );
     }
 }
 
@@ -234,7 +233,7 @@ sub _check_property {
     my ($label, $hash, $opt) = @_;
     local $Carp::CarpLevel = $Carp::CarpLevel + 1;
     croak "Invalid property name '$label': must be a perl identifier"
-        if $label !~ /\A[a-z_]\w*\z/;
+        if $label !~ /\A[a-z_]\w*\z/i;
     croak "Duplicate property name '$label'"
         if grep { $_ eq $label } keys %{ $PROP_DATA_FOR{ caller(1) } }; 
     _check_options( $opt ) if defined $opt;
@@ -245,6 +244,14 @@ sub _class_tree {
     my $class = shift;
     $CLASS_ISA{ $class } ||= [ Class::ISA::self_and_super_path( $class ) ];
     return @{ $CLASS_ISA{ $class } };
+}
+
+# take either object or object id
+sub _deregister {
+    my ($arg) = @_;
+    my $obj_id = ref $arg ? refaddr $arg : $arg;
+    delete $OBJECT_REGISTRY{ $obj_id };
+    return;
 }
 
 # turn object into hash -- see _revert()
@@ -350,7 +357,7 @@ sub _gen_DESTROY {
         # it should only call SUPER::DEMOLISH if need be; still,
         # rest of the destructor doesn't need the registry, so early deletion
         # by a subclass should be safe
-        delete $OBJECT_REGISTRY{ $obj_id };
+        _deregister( $obj );
 
         return;
     };
@@ -673,7 +680,17 @@ Property accessors may also be hand-written by declaring the property
 Hand-written accessors will be very slightly faster as generated accessors hold
 a reference to the property hash rather than accessing the property hash
 directly.
- 
+
+It is also possible to use a package hash instead of a lexical hash to store
+object properties:
+
+ public name => our %name;
+
+However, this makes private object data accessable outside the class and incurs
+a slight performance penalty when accessing the property hash directly; it is
+not recommended to do this unless you really need it for some specialized
+reason.
+
 == Object construction
 
 {Class::InsideOut} provides no default constructor method as there are many
@@ -891,6 +908,11 @@ Accessors" in [Class::InsideOut::Manual::Advanced] for details.
 Programmers seeking a more full-featured approach to inside-out objects are
 encouraged to explore [Object::InsideOut].  Other implementations are also
 noted in [Class::InsideOut::Manual::About].
+
+= KNOWN LIMITATIONS
+
+Requires weak reference support (Perl >= 5.6) and Scalar::Util::weaken() to
+avoid memory leaks and to provide thread-safety.
 
 = ROADMAP
 

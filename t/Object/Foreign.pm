@@ -2,7 +2,10 @@ package t::Object::Foreign;
 use strict;
 
 use Class::InsideOut qw( register public id );
-use base 'IO::File';
+BEGIN {
+    require IO::File;
+    @t::Object::Foreign::ISA = 'IO::File';
+}
 
 public name => my %name;
 

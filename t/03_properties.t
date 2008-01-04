@@ -16,6 +16,7 @@ my $properties = {
         nickname=> "public", #20997: Duplicate property name
         name    => "public",
         species => "public",
+        Genus   => "public", # David Schmitt: uppercase!
     },
     "t::Object::Animal::Antelope" => {
        color    => "public",
@@ -83,11 +84,13 @@ is( $p->kills( "23" ), "23",
     "Setting a kill-count for the second object"
 );
 
+Class::InsideOut::_deregister( $o ) if $] < 5.006;
 undef $o;
 ok( ! defined $o,
     "Destroying the first object"
 );
 
+Class::InsideOut::_deregister( $p ) if $] < 5.006;
 undef $p;
 ok( ! defined $p,
     "Destroying the second object"

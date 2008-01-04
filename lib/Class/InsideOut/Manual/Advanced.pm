@@ -209,8 +209,14 @@ on Perl 5.6.  Win32 Perl 5.8 {fork} is supported.
 
 The technique for thread-safety requires creating weak references using
 {Scalar::Util::weaken()}, which is implemented in XS.  If the XS-version of
-[Scalar::Util] is not installed, {Class::InsideOut} will issue a warning
-and continue without thread-safety.
+[Scalar::Util] is not installed or if run on an older version of Perl without
+support for weak references, {Class::InsideOut} will issue a warning and
+continue without thread-safety.  Also, objects will leak memory unless manually
+deregistered with a private function:
+
+ # destroying an object when weaken() isn't availalbe
+ Class::InsideOut::_deregister( $obj );
+ undef $obj;
 
 = SEE ALSO
 

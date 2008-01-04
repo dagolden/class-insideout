@@ -1,52 +1,77 @@
 Revision history for Perl module Class::InsideOut
 
-1.09
-    - restore author tests in xt directory
+1.09 Fri Jan  4 18:03:04 EST 2008
+
+    - bugfix: allow use of upper or mixed case property accessors 
+      (David Schmitt)
+
+    - testfix: tests will now pass on Perl 5.005 -- though 5.005 is not
+      recommended due to the lack of weak references
+    
+    - pod: added a note about using "our" instead of "my" for properties 
+
+    - moved author tests to xt directory for CPANTS compatibility
 
 1.08 Thu Aug 23 07:12:33 EDT 2007
+    
     - STORABLE_attach warns instead of dying if it can't provide a singleton
       back to Storable, leaving Storable to croak instead; on 5.6.2 (and 
       possibly older Perls), this change works around Storable dying during
       cleanup if STORABLE_attach dies inside an eval()
+    
     - thread tests skip on perl < 5.8.5 due to unexplained thread failures;
       perl585delta alludes to thread fixes when weak references are in use
       and this may be related
+    
     - removed "use warnings" from singleton test files for back compatibility
+    
     - moved pod/coverage tests to t_extra/ and stopped depending on an
       environment variable to allow them to run
+    
     - changed to the Apache License, version 2.0; (it's clearer, relicensable,
       and is explicit about contributions)
     
 1.07 Fri Aug 10 07:41:00 EDT 2007
+    
     - fixes for using ":storable" with older versions of Exporter
       that required tags to come first. Now we just strip it during import.
 
 1.06 Mon Feb 12 19:34:59 EST 2007
+    
     - all tests involving Storable now skip if Storable isn't installed
       (instead of only a few) (David Cantrell)
     
 1.05 Sun Feb 11 16:29:16 EST 2007
+    
     - fixed optional new method with hash reference (RT#24839)
 
 1.04 Thu Jan 18 21:47:19 EST 2007
+    
     - added 'readonly' accessor-creator
 
 1.0301 Wed Nov 15 06:08:47 EST 2006
+    
     - removing email address for bug reports to (hopefully)
       cut down on RT ticket spam
 
 1.03 Wed Oct 11 10:55:28 EDT 2006
+    
     - thread tests skip if thread creation fails
+    
     - added an examples directory with a reference to some of the objects
       used in testing 
 
 1.02 Tue Aug 15 09:26:11 EDT 2006
+    
     - fixed duplicate property name checking (RT#20997)
 
 1.01 Thu Jul 27 12:30:54 EDT 2006
+    
     - register() now handles standard cases with "sufficiently advanced
       technology" and does the right thing
+ 
     - optional simple "new" constructor added
+    
     - changed "foreign" inheritance to "black-box" inheritance in Pod
 
 1.00 Fri May 12 21:25:34 EDT 2006
@@ -61,11 +86,17 @@ Revision history for Perl module Class::InsideOut
 0.90_01 Wed May  3 20:47:34 EDT 2006
 
     - *API CHANGE* renamed serialization hooks to FREEZE and THAW
+    
     - added support for STORABLE_attach for singletons
+    
     - improved test coverage
+    
     - refactored some of the test classes
+    
     - refactored STORABLE_* code
+    
     - refactored documentation
+    
     - added draft (non-working) support for serialization with
       Data::Dump::Streamer
 
