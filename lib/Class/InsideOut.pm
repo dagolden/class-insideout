@@ -78,7 +78,8 @@ sub import {
         *{ "$caller\::STORABLE_freeze" } = _gen_STORABLE_freeze( $caller, 0 );
         *{ "$caller\::STORABLE_thaw" } = _gen_STORABLE_thaw( $caller );
     }
-    goto &Exporter::import;
+    local $Exporter::ExportLevel = $Exporter::ExportLevel + 1;
+    Exporter::import(@_);
 }
 
 BEGIN { *id = \&Scalar::Util::refaddr; }
