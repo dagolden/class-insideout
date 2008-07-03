@@ -1,5 +1,5 @@
 package t::Object::Scalar;
-@ISA = qw( Bogus::Superclass );
+#@ISA = qw( Bogus::Superclass );
 
 use strict;
 
