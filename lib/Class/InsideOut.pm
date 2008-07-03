@@ -3,7 +3,7 @@ use strict;
 
 use vars qw/$VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS/;
 
-$VERSION     = '1.09';
+$VERSION     = '1.10';
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( ); # nothing by default
 @EXPORT_OK   = qw ( new id options private property public readonly register );

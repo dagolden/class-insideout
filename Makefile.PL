@@ -3,18 +3,18 @@ require 5.005;
 use ExtUtils::MakeMaker;
 WriteMakefile
 (
-          'PL_FILES' => {},
-          'INSTALLDIRS' => 'site',
           'NAME' => 'Class::InsideOut',
-          'EXE_FILES' => [],
           'VERSION_FROM' => 'lib/Class/InsideOut.pm',
           'PREREQ_PM' => {
-                           'base' => 0,
-                           'Test::More' => '0.45',
-                           'Scalar::Util' => '1.09',
                            'Class::ISA' => 0,
+                           'Config' => 0,
                            'Exporter' => 0,
-                           'Config' => 0
-                         }
+                           'Scalar::Util' => '1.09',
+                           'Test::More' => '0.45',
+                           'base' => 0
+                         },
+          'INSTALLDIRS' => 'site',
+          'EXE_FILES' => [],
+          'PL_FILES' => {}
         )
 ;

@@ -3,7 +3,7 @@ package Class::InsideOut::Manual::Advanced;
 # turned into .pod by the Build.PL
 use strict; # make CPANTS happy
 use vars /$VERSION/;
-$VERSION = '1.09';
+$VERSION = '1.10';
 1;
 __END__
 

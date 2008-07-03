@@ -49,10 +49,10 @@ my $class = Module::Build->subclass(
         $self->SUPER::ACTION_testpod;
     }
 
-    sub ACTION_distdir {
+    sub ACTION_distmeta {
         my $self = shift;
         $self->depends_on('wikidoc');
-        $self->SUPER::ACTION_distdir;
+        $self->SUPER::ACTION_distmeta;
     }
 
 SUBCLASS
