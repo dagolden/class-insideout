@@ -1,6 +1,6 @@
 Revision history for Perl module Class::InsideOut
 
-1.10
+1.10 Mon Aug 24 20:44:46 EDT 2009
 
     Bug fixes:
     - changed method of calling Exporter::import() to avoid confusing DProf
