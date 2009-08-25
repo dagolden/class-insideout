@@ -33,7 +33,7 @@ BEGIN {
     }
 }
 
-plan tests => 2;
+plan tests => 3;
 
 #--------------------------------------------------------------------------#
 
@@ -52,7 +52,7 @@ my $warning;
 is( $@, q{}, 
     "require $class succeeded without XS" 
 );
-
+ok( $warning, "caught a warning" );
 like( $warning, '/Scalar::Util::weaken/', 
     "Saw warning for Scalar::Util::weaken unavailable"
 );

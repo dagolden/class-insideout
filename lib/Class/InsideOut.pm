@@ -20,9 +20,10 @@ use Class::ISA;
 use Scalar::Util qw( refaddr reftype blessed );
 
 # Check for XS Scalar::Util with weaken() or warn and fallback
+# syntax of error changed in Scalar::Util so we check both versions
 BEGIN {
     eval { Scalar::Util->import( "weaken" ) };
-    if ( $@ =~ /\AWeak references/ ) {
+    if ( $@ =~ /\AWeak references|weaken is only available/ ) {
         warn "Scalar::Util::weaken unavailable: "
            . "Class::InsideOut will not be thread-safe and will leak memory\n";
         *weaken = sub { return @_ };
