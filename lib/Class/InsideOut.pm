@@ -798,6 +798,10 @@ on request.  When called as a class method, it returns a blessed anonymous
 scalar.  Arguments will be used to initialize all matching inside-out class
 properties in the {@ISA} tree.  The argument may be a hash or hash reference.
 
+Note: Properties are set directly, not via accessors.  This means {set_hook} 
+functions will not be called.  For more robust argument checking, you will
+need to implement your own constructor.
+
 == {options}
 
  Class::InsideOut::options( \%new_options );
