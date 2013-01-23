@@ -17,7 +17,7 @@ $VERSION     = '1.10';
 use Carp;
 use Exporter;
 use Class::ISA;
-use Scalar::Util qw( refaddr reftype blessed );
+use Scalar::Util 1.09 qw( refaddr reftype blessed );
 
 # Check for XS Scalar::Util with weaken() or warn and fallback
 # syntax of error changed in Scalar::Util so we check both versions

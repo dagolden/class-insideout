@@ -1,5 +1,5 @@
 use strict;
-use Test::More;
+use Test::More 0.45;
 use Class::InsideOut ();
 
 $|++; # try to keep stdout and stderr in order on Win32
