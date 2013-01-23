@@ -1,11 +1,4 @@
-package Class::InsideOut::Manual::About;
-# Not really a .pm file, but holds wikidoc which will be
-# turned into .pod by the Build.PL
-use strict; # make CPANTS happy
-use vars /$VERSION/;
-$VERSION = '1.10';
-1;
-__END__
+# PODNAME: Class::InsideOut::Manual::About
 
 =begin wikidoc
 
