@@ -11,6 +11,13 @@ if ( $ENV{HARNESS_PERL_SWITCHES} &&
         "no_weaken_fallback tests not compatible with Devel::Cover";
 }
 
+# find what Scalar::Util we have
+my $rc = system($^X, '-e', 'use Scalar::Util; Scalar::Util->VERSION(1.2303)');
+if ( ! $rc ) {
+    plan skip_all => 
+        "Your Scalar::Util is XS only";
+}
+
 # Overload DynaLoader and XSLoader to fake lack of XS for Scalar::Util
 # (which actually calls List::Util)
 BEGIN {
