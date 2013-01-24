@@ -136,7 +136,7 @@ superclass provides a {THAW} method, they are each called
 ~after~ the object has been thawed with the thawed object as an argument.
 
 {Class::InsideOut} also supports serialization of singleton objects for recent
-vesions of {Storable} (2.14 or later) that support {STORABLE_attach}.  Users
+versions of {Storable} (2.14 or later) that support {STORABLE_attach}.  Users
 must signal that {STORABLE_attach} should be used instead of {STORABLE_thaw} by
 adding {:singleton} to their import line as follows:
 

@@ -21,7 +21,7 @@ itself as a data structure.
 The inside-out approach offers three major benefits:
 
 * Enforced encapsulation: object properties cannot be accessed directly
-from ouside the lexical scope that declared them
+from outside the lexical scope that declared them
 * Making the property name part of a lexical variable rather than a hash-key
 means that typos in the name will be caught as compile-time errors (if
 using [strict])

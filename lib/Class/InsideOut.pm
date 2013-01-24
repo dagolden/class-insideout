@@ -800,7 +800,7 @@ need to implement your own constructor.
  Class::InsideOut::options( \%new_options );
  %current_options = Class::InsideOut::options();
 
-The {options} function sets default options for use with all subsquent property
+The {options} function sets default options for use with all subsequent property
 definitions for the calling package.  If called without arguments, this
 function will return the options currently in effect.  When called with a hash
 reference of options, these will be joined with the existing defaults,
