@@ -2,6 +2,11 @@ Revision history for Perl module Class::InsideOut
 
 {{$NEXT}}
 
+    Bug fixes:
+    - fixed tests for recent, XS-only Scalar::Util
+
+    Other:
+    - converted distribution management to Dist::Zilla
 
 1.10 Mon Aug 24 20:44:46 EDT 2009
 
