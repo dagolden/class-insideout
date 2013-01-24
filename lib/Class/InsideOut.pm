@@ -1,9 +1,10 @@
 package Class::InsideOut;
 use strict;
+# ABSTRACT: a safe, simple inside-out object construction kit
+# VERSION
 
-use vars qw/$VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS/;
+use vars qw/@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS/;
 
-$VERSION     = '1.10';
 @ISA         = qw ( Exporter );
 @EXPORT      = qw ( ); # nothing by default
 @EXPORT_OK   = qw ( new id options private property public readonly register );
@@ -550,14 +551,6 @@ __END__
 
 =begin wikidoc
 
-= NAME
-
-Class::InsideOut - a safe, simple inside-out object construction kit
-
-= VERSION
-
-This documentation refers to version %%VERSION%%
-
 = SYNOPSIS
 
  package My::Class;
@@ -927,33 +920,6 @@ Features slated for after the 1.0 release include:
 * Adding support for [Data::Dump::Streamer] serialization hooks
 * Adding additional accessor styles (e.g. get_name()/set_name())
 * Further documentation revisions and clarification
-
-= BUGS
-
-Please report bugs or feature requests using the CPAN Request Tracker:
-[http://rt.cpan.org/Public/Dist/Display.html?Name=Class-InsideOut]
-
-When submitting a bug or request, please include a test-file or a patch to an
-existing test-file that illustrates the bug or desired feature.
-
-= AUTHOR
-
-David A. Golden (DAGOLDEN)
-
-= COPYRIGHT AND LICENSE
-
-Copyright (c) 2006, 2007 by David A. Golden
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at 
-L<http://www.apache.org/licenses/LICENSE-2.0>
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
 
 =end wikidoc
 
