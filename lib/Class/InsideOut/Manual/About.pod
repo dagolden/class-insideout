@@ -41,7 +41,7 @@ the inside-out technique.  All capabilities necessary for robustness should be
 automatic.  Anything that can be optional should be.  The design should not
 introduce new restrictions unrelated to inside-out objects, such as attributes
 and {CHECK} blocks that cause problems for {mod_perl} or the use of source
-filters for syntatic sugar.
+filters for syntactic sugar.
 
 As a result, only a few things are mandatory:
 
