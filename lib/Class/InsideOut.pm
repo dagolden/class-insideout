@@ -52,8 +52,7 @@ my %OBJECT_REGISTRY;    # refaddr => weak object reference
 use vars qw( %_OPTION_VALIDATION );
 
 sub __coderef {
-    no warnings qw ( uninitialized );  # reftype can return undef
-    return 1 if reftype($_[0]) eq 'CODE';
+    return 1 if reftype($_[0])||"" eq 'CODE';
     
     # Avoid loading overload.pm unless we'd have to die otherwise
     require overload;
