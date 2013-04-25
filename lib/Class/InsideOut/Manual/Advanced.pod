@@ -1,4 +1,4 @@
-# PODNAME: Class::InsideOut::Manual::About
+# PODNAME: Class::InsideOut::Manual::Advanced
 # ABSTRACT: guide to advanced usage
 
 =begin wikidoc
