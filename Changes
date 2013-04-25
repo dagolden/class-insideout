@@ -2,6 +2,8 @@ Revision history for Perl module Class::InsideOut
 
 {{$NEXT}}
 
+1.13      2013-04-25 13:59:42 America/New_York
+
     Added:
     
     - allow set_hook and get_hook to be blessed or overloaded objects
