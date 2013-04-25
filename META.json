@@ -4,7 +4,7 @@
       "David A. Golden <dagolden@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.300029, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Dist::Zilla version 4.300034, CPAN::Meta::Converter version 2.130880",
    "license" : [
       "apache_2_0"
    ],
@@ -54,10 +54,13 @@
          "requires" : {
             "Config" : "0",
             "DynaLoader" : "0",
+            "ExtUtils::MakeMaker" : "0",
             "File::Find" : "0",
             "File::Spec" : "0",
+            "File::Spec::Functions" : "0",
             "File::Temp" : "0",
             "IO::File" : "0",
+            "List::Util" : "0",
             "Test::More" : "0.45",
             "XSLoader" : "0",
             "threads" : "0",
@@ -68,14 +71,13 @@
    "provides" : {
       "Class::InsideOut" : {
          "file" : "lib/Class/InsideOut.pm",
-         "version" : "1.11"
+         "version" : "1.12"
       }
    },
    "release_status" : "stable",
    "resources" : {
       "bugtracker" : {
-         "mailto" : "bug-Class-InsideOut@rt.cpan.org",
-         "web" : "https://rt.cpan.org/Public/Dist/Display.html?Name=Class-InsideOut"
+         "web" : "https://github.com/dagolden/class-insideout/issues"
       },
       "homepage" : "https://metacpan.org/release/Class-InsideOut",
       "repository" : {
@@ -84,6 +86,10 @@
          "web" : "https://github.com/dagolden/class-insideout"
       }
    },
-   "version" : "1.11"
+   "version" : "1.12",
+   "x_contributors" : [
+      "David Golden <dagolden@cpan.org>",
+      "Karen Etheridge <ether@cpan.org>"
+   ]
 }
 
