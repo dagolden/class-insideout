@@ -1,7 +1,7 @@
 {
    "abstract" : "a safe, simple inside-out object construction kit",
    "author" : [
-      "David A. Golden <dagolden@cpan.org>"
+      "David Golden <dagolden@cpan.org>"
    ],
    "dynamic_config" : 0,
    "generated_by" : "Dist::Zilla version 4.300034, CPAN::Meta::Converter version 2.130880",
@@ -45,6 +45,7 @@
             "Exporter" : "0",
             "Scalar::Util" : "1.09",
             "Storable" : "0",
+            "overload" : "0",
             "perl" : "5.008",
             "strict" : "0",
             "vars" : "0"
@@ -71,7 +72,7 @@
    "provides" : {
       "Class::InsideOut" : {
          "file" : "lib/Class/InsideOut.pm",
-         "version" : "1.12"
+         "version" : "1.13"
       }
    },
    "release_status" : "stable",
@@ -86,10 +87,10 @@
          "web" : "https://github.com/dagolden/class-insideout"
       }
    },
-   "version" : "1.12",
+   "version" : "1.13",
    "x_contributors" : [
-      "David Golden <dagolden@cpan.org>",
-      "Karen Etheridge <ether@cpan.org>"
+      "Karen Etheridge <ether@cpan.org>",
+      "Toby Inkster <tonyink@cpan.org>"
    ]
 }
 
