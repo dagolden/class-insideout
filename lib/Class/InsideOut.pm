@@ -51,7 +51,16 @@ my %OBJECT_REGISTRY;    # refaddr => weak object reference
 
 use vars qw( %_OPTION_VALIDATION );
 
-sub __coderef { ref shift eq 'CODE' or die "must be a code reference" }
+sub __coderef {
+    no warnings qw ( uninitialized );  # reftype can return undef
+    return 1 if reftype($_[0]) eq 'CODE';
+    
+    # Avoid loading overload.pm unless we'd have to die otherwise
+    require overload;
+    return 1 if overload::Overloaded($_[0]) && overload::Method($_[0], q[&{}]);
+    
+    die "must be a code reference";
+}
 
 %_OPTION_VALIDATION = (
     privacy => sub { 
@@ -891,6 +900,8 @@ aliased to the property value for the object.  ~The return value of the hook is
 passed through as the return value of the accessor.~ See "Customizing Accessors"
 in [Class::InsideOut::Manual::Advanced] for details.
 
+The hook must be a coderef, including blessed coderefs and overloaded objects.
+
 == {set_hook}
 
  public age => my %age, {
@@ -901,6 +912,8 @@ Defines an accessor hook for when values are set. The hook subroutine receives
 the entire argument list.  {$_} is locally aliased to the first argument for
 convenience.  The property receives the value of {$_}. See "Customizing
 Accessors" in [Class::InsideOut::Manual::Advanced] for details.
+
+The hook must be a coderef, including blessed coderefs and overloaded objects.
 
 = SEE ALSO
 
