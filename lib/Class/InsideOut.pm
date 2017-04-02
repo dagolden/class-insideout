@@ -1,7 +1,8 @@
 package Class::InsideOut;
 use strict;
 # ABSTRACT: a safe, simple inside-out object construction kit
-# VERSION
+
+our $VERSION = '1.13';
 
 use vars qw/@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS/;
 
