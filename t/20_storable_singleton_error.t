@@ -1,4 +1,5 @@
 use strict;
+use lib ".";
 local $^W = 1;
 use Test::More;
 use Scalar::Util qw( refaddr );

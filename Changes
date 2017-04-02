@@ -2,6 +2,10 @@ Revision history for Perl module Class::InsideOut
 
 {{$NEXT}}
 
+    Fixed:
+
+    - Passes tests when '.' is not in @INC.
+
 1.13      2013-04-25 13:59:42 America/New_York
 
     Added:

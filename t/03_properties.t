@@ -1,4 +1,5 @@
 use strict;
+use lib ".";
 use Test::More;
 use Class::InsideOut ();
 

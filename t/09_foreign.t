@@ -1,4 +1,5 @@
 use strict;
+use lib ".";
 use Test::More;
 use File::Spec;
 use Class::InsideOut ();

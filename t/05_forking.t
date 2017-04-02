@@ -1,4 +1,5 @@
 use strict;
+use lib ".";
 use Config;
 use Test::More;
 $|++; # try to keep stdout and stderr in order on Win32

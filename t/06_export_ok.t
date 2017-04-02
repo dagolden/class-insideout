@@ -1,4 +1,5 @@
 use strict;
+use lib ".";
 use Test::More;
 
 my @export_std = qw(

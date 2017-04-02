@@ -1,4 +1,5 @@
 use strict;
+use lib ".";
 
 my (@api, @not_api);
 

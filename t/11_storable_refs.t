@@ -1,4 +1,5 @@
 use strict;
+use lib ".";
 
 BEGIN {
     # don't run without Scalar::Util::weaken()
