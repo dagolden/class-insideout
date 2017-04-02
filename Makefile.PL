@@ -32,6 +32,7 @@ my %WriteMakefileArgs = (
     "IO::File" => 0,
     "Test::More" => "0.45",
     "XSLoader" => 0,
+    "lib" => 0,
     "threads" => 0,
     "warnings" => 0
   },
@@ -54,6 +55,7 @@ my %FallbackPrereqs = (
   "Storable" => 0,
   "Test::More" => "0.45",
   "XSLoader" => 0,
+  "lib" => 0,
   "overload" => 0,
   "strict" => 0,
   "threads" => 0,
